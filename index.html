@@ -653,8 +653,8 @@ async function fetchAllInscriptions(address) {
   const outputHrefs = await collectOutputHrefs(address);
   console.log(`[ordinals.com] ${outputHrefs.length} outputs found for address`);
 
-  // Step 2: fetch each output page and parse its inscriptions (batched, 5 at a time)
-  const BATCH = 5;
+  // Step 2: fetch each output page and parse its inscriptions (batched, 10 at a time)
+  const BATCH = 10;
   const all   = [];
   for (let i = 0; i < outputHrefs.length; i += BATCH) {
     setStatus(`Reading outputs… ${Math.min(i + BATCH, outputHrefs.length)}/${outputHrefs.length}`,
@@ -880,24 +880,33 @@ function renderTable() {
     `— ${visible.length} of ${rows.length} UTXOs`;
 }
 
-/* ─── Thumb fallback: swap failed <img> for a scaled /preview/ iframe ───── */
-function thumbFallback(el, id) {
-  const fr = document.createElement('iframe');
-  fr.src = `${ORDINALS}/preview/${encodeURIComponent(id)}`;
-  fr.setAttribute('sandbox', 'allow-scripts allow-same-origin');
-  fr.style.cssText = 'position:absolute;top:0;left:0;width:300%;height:300%;transform:scale(.333);transform-origin:top left;border:none;pointer-events:none';
-  el.parentNode.replaceChildren(fr);
+/* ─── Thumb fallback: replace broken img with a lightweight tile ─────────── */
+// Avoids loading a full iframe page per thumbnail (huge bandwidth/time saving).
+// The real preview loads in the side panel when the row is clicked.
+function thumbFallback(el, num) {
+  // Retrieve the inscription ID from the img's data attribute and load a preview iframe
+  const id = el.dataset.insId;
+  if (id) {
+    const fr = document.createElement('iframe');
+    fr.src = `${ORDINALS}/preview/${encodeURIComponent(id)}`;
+    fr.setAttribute('sandbox', 'allow-scripts allow-same-origin');
+    fr.style.cssText = 'position:absolute;top:0;left:0;width:300%;height:300%;'
+      + 'transform:scale(.333);transform-origin:top left;border:none;pointer-events:none';
+    el.parentNode.replaceChildren(fr);
+  }
 }
 
 /* ─── Thumb HTML (inline, no JS fetch, ordinals.com content URL) ────────── */
 function thumbHtml(ins) {
   const id      = esc(ins.inscriptionId);
+  const num     = ins.inscriptionNumber ?? 'null';
   const content = `${ORDINALS}/content/${id}`;
   const preview = `${ORDINALS}/preview/${id}`;
-  // Try /content as image → /preview as image → scaled iframe via thumbFallback()
-  return `<img src="${content}"
+  // Try /content → /preview as images (lazy); on second failure show a tile.
+  // No iframes in thumbnails — they load full pages and kill performance.
+  return `<img src="${content}" loading="lazy" data-ins-id="${id}"
     style="width:100%;height:100%;object-fit:cover"
-    onerror="if(this.src!=='${preview}'){this.src='${preview}';}else{thumbFallback(this,'${id}');}" />`;
+    onerror="if(this.src!=='${preview}'){this.src='${preview}';}else{thumbFallback(this,${num});}" />`;
 }
 
 function thumbIcon(ct) {
