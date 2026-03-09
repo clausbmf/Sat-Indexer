@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Where's My Money? — Ordinals Inspector</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #0b0b0f;
+      --surface:    #13131a;
+      --surface2:   #1a1a24;
+      --surface3:   #21212e;
+      --border:     #2c2c3e;
+      --border2:    #3a3a52;
+      --accent:     #f7931a;
+      --accent-dim: rgba(247,147,26,.12);
+      --accent-glow:rgba(247,147,26,.25);
+      --purple:     #a855f7;
+      --purple-dim: rgba(168,85,247,.12);
+      --green:      #22c55e;
+      --green-dim:  rgba(34,197,94,.1);
+      --red:        #ef4444;
+      --text:       #e2e2f0;
+      --text2:      #9898b8;
+      --text3:      #55556e;
+      --radius:     12px;
+      --radius-sm:  7px;
+      --panel-w:    420px;
+      --ease:       .2s cubic-bezier(.4,0,.2,1);
+    }
+
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 14px; min-height: 100vh;
+    }
+
+    /* ── file:// warning ──────────────────────────────────────────────────── */
+    #file-warn {
+      display: none;
+      background: #1a1100; border-bottom: 1px solid #7c5700;
+      padding: 10px 20px; font-size: 12px; color: #f5c542;
+      align-items: center; gap: 12px; flex-wrap: wrap;
+    }
+    #file-warn code {
+      background: #000; padding: 1px 6px; border-radius: 4px;
+    }
+    #file-warn button {
+      margin-left: auto; background: none;
+      border: 1px solid #7c5700; color: #f5c542;
+      border-radius: 4px; padding: 2px 8px; cursor: pointer; font-size: 11px;
+    }
+
+    /* ── header ───────────────────────────────────────────────────────────── */
+    .hdr {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 0 28px; height: 58px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .hdr-left { display: flex; align-items: center; gap: 12px; }
+    .btc-icon {
+      width: 34px; height: 34px;
+      background: linear-gradient(135deg, var(--accent), #d97706);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 17px; color: #fff;
+      box-shadow: 0 0 16px var(--accent-glow); flex-shrink: 0;
+    }
+    .hdr h1 { font-size: 15px; font-weight: 700; letter-spacing: -.3px; }
+    .net-tag {
+      background: var(--accent-dim); border: 1px solid rgba(247,147,26,.25);
+      color: var(--accent); font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 99px; letter-spacing: .5px;
+    }
+
+    /* ── shell ────────────────────────────────────────────────────────────── */
+    .shell { transition: padding-right var(--ease); }
+    .shell.panel-open { padding-right: var(--panel-w); }
+    .content { max-width: 1060px; margin: 0 auto; padding: 32px 24px 60px; }
+
+    /* ── page title ───────────────────────────────────────────────────────── */
+    .page-title { margin-bottom: 28px; }
+    .page-title h2 { font-size: 84px; font-weight: 800; letter-spacing: -.5px; }
+    .page-title h2 span { color: var(--accent); }
+    .page-title p { margin-top: 6px; font-size: 39px; color: var(--text3); }
+
+    /* ── search card ──────────────────────────────────────────────────────── */
+    .search-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 22px 24px; margin-bottom: 20px;
+    }
+    .search-card label {
+      display: block; font-size: 11px; font-weight: 600; color: var(--text2);
+      text-transform: uppercase; letter-spacing: .8px; margin-bottom: 10px;
+    }
+    .input-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .addr-wrap { flex: 1; min-width: 240px; position: relative; }
+    .addr-dot {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      width: 8px; height: 8px; border-radius: 50%; background: var(--text3);
+      transition: background var(--ease);
+    }
+    .addr-dot.ok  { background: var(--green); box-shadow: 0 0 6px rgba(34,197,94,.5); }
+    .addr-dot.bad { background: var(--red); }
+
+    input[type="text"] {
+      width: 100%; background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 11px 34px 11px 14px;
+      color: var(--text); font-size: 13.5px;
+      font-family: 'Cascadia Code','Fira Code','Courier New',monospace;
+      outline: none; transition: border-color var(--ease), box-shadow var(--ease);
+    }
+    input[type="text"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+    input[type="text"].ok  { border-color: rgba(34,197,94,.5); }
+    input[type="text"].bad { border-color: rgba(239,68,68,.5); }
+
+    .btn-primary {
+      background: var(--accent); color: #fff; border: none;
+      border-radius: var(--radius-sm); padding: 11px 22px;
+      font-size: 13.5px; font-weight: 700; cursor: pointer; white-space: nowrap;
+      box-shadow: 0 2px 12px var(--accent-glow); transition: all var(--ease);
+    }
+    .btn-primary:hover   { background: #e8851a; }
+    .btn-primary:active  { transform: scale(.97); }
+    .btn-primary:disabled { opacity: .4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .hint { margin-top: 8px; font-size: 12px; color: var(--text3); min-height: 17px; }
+    .hint.err { color: var(--red); }
+    .hint.ok  { color: var(--green); }
+
+    /* ── status ───────────────────────────────────────────────────────────── */
+    .status-bar {
+      display: none; align-items: center; gap: 10px;
+      padding: 12px 16px; background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); margin-bottom: 18px;
+      font-size: 13px; color: var(--text2);
+    }
+    .status-bar.show { display: flex; }
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid var(--border2); border-top-color: var(--accent);
+      border-radius: 50%; flex-shrink: 0; animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .prog-track { flex: 1; height: 3px; background: var(--border); border-radius: 99px; overflow: hidden; }
+    .prog-fill  { height: 100%; background: var(--accent); border-radius: 99px; transition: width .3s; width: 0; }
+
+    /* ── error ────────────────────────────────────────────────────────────── */
+    .err-box {
+      display: none;
+      background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.3);
+      border-radius: var(--radius-sm); padding: 14px 16px;
+      color: var(--red); font-size: 13px; line-height: 1.6; margin-bottom: 18px;
+    }
+    .err-box.show { display: block; }
+    .err-box code { background: rgba(239,68,68,.15); padding: 1px 5px; border-radius: 3px; }
+
+    /* ── summary panel ────────────────────────────────────────────────────── */
+    .summary {
+      display: none; gap: 1px;
+      background: var(--border); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden; margin-bottom: 20px;
+    }
+    .summary.show { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); }
+    .sum-cell {
+      background: var(--surface); padding: 16px 20px;
+    }
+    .sum-val {
+      font-size: 22px; font-weight: 800; line-height: 1;
+      margin-bottom: 5px; font-variant-numeric: tabular-nums;
+    }
+    .sum-lbl { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; }
+    .sum-sub { font-size: 11px; color: var(--text3); margin-top: 3px; }
+    .c-orange { color: var(--accent); }
+    .c-purple { color: var(--purple); }
+    .c-green  { color: var(--green); }
+    .c-muted  { color: var(--text2); }
+
+    /* ── table card ───────────────────────────────────────────────────────── */
+    .table-card {
+      display: none; background: var(--surface);
+      border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden;
+    }
+    .table-card.show { display: block; }
+    .tbl-top {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 20px; border-bottom: 1px solid var(--border);
+      flex-wrap: wrap; gap: 8px;
+    }
+    .tbl-top h2 { font-size: 13px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
+    .tbl-hint { font-size: 11px; color: var(--text3); }
+
+    .scroll { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 640px; }
+
+    thead th {
+      padding: 10px 14px; text-align: left;
+      font-size: 11px; font-weight: 700; color: var(--text3);
+      text-transform: uppercase; letter-spacing: .6px;
+      background: var(--surface2); border-bottom: 1px solid var(--border);
+      white-space: nowrap; user-select: none;
+    }
+    thead th.sortable { cursor: pointer; }
+    thead th.sortable:hover { color: var(--text); }
+    thead th.sorted { color: var(--accent); }
+    .sort-icon { margin-left: 3px; opacity: .5; }
+    thead th.sorted .sort-icon { opacity: 1; }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      cursor: pointer; transition: background var(--ease);
+    }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover  { background: var(--surface2); }
+    tbody tr.active { background: var(--surface3) !important; outline: 2px solid var(--accent); outline-offset: -2px; }
+    tbody tr.has-ins { background: var(--purple-dim); }
+    tbody tr.has-ins:hover { background: rgba(168,85,247,.18); }
+    tbody tr.large   { background: var(--accent-dim); }
+    tbody tr.large:hover { background: rgba(247,147,26,.18); }
+    tbody tr.has-ins.large { background: linear-gradient(90deg,var(--accent-dim),var(--purple-dim)); }
+
+    td { padding: 10px 14px; vertical-align: middle; font-size: 13px; }
+
+    /* preview thumb */
+    .td-pre { width: 68px; padding: 8px 10px 8px 14px; }
+    .thumb {
+      width: 50px; height: 50px; border-radius: 7px; overflow: hidden;
+      background: var(--bg); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      position: relative;
+    }
+    .thumb img, .thumb video { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .thumb iframe {
+      position: absolute; top: 0; left: 0;
+      width: 300%; height: 300%;
+      transform: scale(.333); transform-origin: top left;
+      border: none; pointer-events: none;
+    }
+    .thumb-icon { font-size: 20px; }
+    .no-ins-thumb { color: var(--text3); font-size: 18px; }
+
+    /* inscription # */
+    .ins-num { font-weight: 700; color: var(--purple); font-variant-numeric: tabular-nums; }
+    .no-ins-label { font-size: 12px; color: var(--text3); }
+
+    /* sats */
+    .sats-val { font-weight: 700; font-variant-numeric: tabular-nums; }
+    .sats-val.large { color: var(--accent); }
+    .sats-unit { font-size: 11px; color: var(--text3); margin-left: 2px; }
+
+    /* txid */
+    .mono { font-family: 'Cascadia Code','Fira Code','Courier New',monospace; font-size: 12px; color: var(--text2); }
+
+    /* vout */
+    .td-vout { color: var(--text3); font-variant-numeric: tabular-nums; }
+
+    /* arrow */
+    .td-arr { color: var(--text3); font-size: 12px; width: 26px; text-align: right; }
+    tbody tr.active .td-arr { color: var(--accent); }
+
+    .empty-row td { text-align: center; padding: 40px; color: var(--text3); }
+
+    /* ── side panel ───────────────────────────────────────────────────────── */
+    .overlay {
+      display: none; position: fixed; inset: 0; z-index: 199;
+    }
+    .overlay.show { display: block; }
+
+    .panel {
+      position: fixed; top: 58px; right: 0; bottom: 0; width: var(--panel-w);
+      background: var(--surface); border-left: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      transform: translateX(100%); transition: transform var(--ease);
+      z-index: 200; overflow: hidden;
+    }
+    .panel.open { transform: translateX(0); }
+
+    .panel-hdr {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+    }
+    .panel-hdr h3 { font-size: 13px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
+    .panel-close {
+      width: 28px; height: 28px; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 6px; color: var(--text2); font-size: 16px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; transition: all var(--ease);
+    }
+    .panel-close:hover { background: var(--surface3); color: var(--text); }
+
+    .panel-body { flex: 1; overflow-y: auto; padding: 20px; }
+    .panel-body::-webkit-scrollbar { width: 5px; }
+    .panel-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+
+    .panel-preview {
+      width: 100%; aspect-ratio: 1;
+      background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);
+      overflow: hidden; display: flex; align-items: center; justify-content: center;
+      margin-bottom: 18px;
+    }
+    .panel-preview img   { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+    .panel-preview video { max-width: 100%; max-height: 100%; display: block; }
+    .panel-preview iframe{ width: 100%; height: 100%; border: none; }
+    .prev-fallback {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 10px; color: var(--text3); padding: 20px; text-align: center;
+    }
+    .prev-fallback span { font-size: 40px; opacity: .3; }
+    .prev-fallback a { color: var(--accent); font-size: 12px; text-decoration: none; }
+    .prev-fallback a:hover { text-decoration: underline; }
+    .no-ins-panel {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 30px; text-align: center;
+      color: var(--text3); margin-bottom: 18px; font-size: 13px;
+    }
+
+    .p-section { margin-bottom: 20px; }
+    .p-title {
+      font-size: 10px; font-weight: 700; color: var(--text3);
+      text-transform: uppercase; letter-spacing: .8px; margin-bottom: 10px;
+    }
+    .m-row {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 9px 12px;
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 10px; margin-bottom: 6px;
+    }
+    .m-row:last-child { margin-bottom: 0; }
+    .m-key { font-size: 11px; color: var(--text3); flex-shrink: 0; }
+    .m-val { font-size: 12px; color: var(--text); font-family: 'Cascadia Code','Courier New',monospace; word-break: break-all; text-align: right; }
+    .m-val.big  { color: var(--accent); font-weight: 700; font-family: inherit; font-size: 15px; }
+    .m-val.sm   { font-size: 10.5px; }
+    .m-val.pur  { color: var(--purple); }
+    .m-col { flex-direction: column; gap: 5px; }
+    .m-col .m-val { text-align: left; }
+
+    .btn-copy {
+      background: var(--surface3); border: 1px solid var(--border);
+      border-radius: 5px; color: var(--text2); font-size: 11px;
+      padding: 4px 10px; cursor: pointer; width: 100%; margin-top: 6px;
+      display: block; text-align: center; transition: all var(--ease);
+    }
+    .btn-copy:hover  { border-color: var(--accent); color: var(--accent); }
+    .btn-copy.copied { border-color: var(--green); color: var(--green); }
+
+    .links { display: flex; flex-direction: column; gap: 6px; }
+    .ext {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 9px;
+      color: var(--text2); text-decoration: none; font-size: 12px;
+      transition: all var(--ease);
+    }
+    .ext:hover { border-color: var(--accent); color: var(--accent); }
+    .ext.pur:hover { border-color: var(--purple); color: var(--purple); }
+
+    /* ── exclude button ───────────────────────────────────────────────────── */
+    .btn-exclude {
+      background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.3);
+      border-radius: 5px; color: var(--red); font-size: 11px;
+      padding: 4px 10px; cursor: pointer; width: 100%; margin-top: 6px;
+      display: block; text-align: center; transition: all var(--ease);
+    }
+    .btn-exclude:hover { background: rgba(239,68,68,.18); }
+
+    /* ── hidden-count badge ───────────────────────────────────────────────── */
+    .badge-hidden {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.3);
+      color: var(--red); font-size: 11px; font-weight: 600;
+      padding: 3px 10px; border-radius: 99px; cursor: pointer;
+      transition: background var(--ease);
+    }
+    .badge-hidden:hover { background: rgba(239,68,68,.2); }
+
+    /* ── metadata loading placeholder ────────────────────────────────────── */
+    .meta-loading { color: var(--text3); font-size: 11px; padding: 6px 0; }
+
+    footer { text-align: center; padding: 20px; font-size: 11px; color: var(--text3); }
+    footer a { color: var(--text3); text-decoration: none; }
+    footer a:hover { color: var(--text2); }
+
+    @media (max-width: 680px) {
+      :root { --panel-w: 100vw; }
+      .panel { top: 0; border-left: none; }
+      .shell.panel-open { padding-right: 0; }
+      .hdr { padding: 0 16px; }
+      .content { padding: 20px 12px 50px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- file:// warning -->
+<div id="file-warn">
+  <span>&#9888; Open via a local server to avoid fetch restrictions &mdash;
+    <code>npx serve .</code> or <code>python -m http.server 8080</code>
+    then open <code>http://localhost:8080</code></span>
+  <button onclick="this.parentElement.style.display='none'">Dismiss</button>
+</div>
+
+<!-- header -->
+<header class="hdr">
+  <div class="hdr-left">
+    <div class="btc-icon">&#8383;</div>
+    <h1>Ordinals Wallet Inspector</h1>
+  </div>
+  <span class="net-tag">MAINNET</span>
+</header>
+
+<div class="shell" id="shell">
+<div class="content">
+
+  <div class="page-title" style="display:flex;align-items:center;gap:32px;flex-wrap:wrap;">
+    <img src="https://pbs.twimg.com/media/HC_OUulaMAEpCQd?format=jpg&name=4096x4096"
+      alt="Motocat"
+      style="width:180px;height:180px;object-fit:cover;border-radius:16px;box-shadow:0 0 32px rgba(247,147,26,.3);flex-shrink:0;" />
+    <img src="https://pbs.twimg.com/media/HCv6w1UacAA0PTZ?format=jpg&name=4096x4096"
+      alt="Motocat"
+      style="width:180px;height:180px;object-fit:cover;border-radius:16px;box-shadow:0 0 32px rgba(247,147,26,.3);flex-shrink:0;" />
+    <img src="https://pbs.twimg.com/media/HCBgY60aMAARW1-?format=jpg&name=4096x4096"
+      alt="Motocat"
+      style="width:180px;height:180px;object-fit:cover;border-radius:16px;box-shadow:0 0 32px rgba(247,147,26,.3);flex-shrink:0;" />
+    <img src="https://pbs.twimg.com/media/G_xPDiebUAEb7z1?format=jpg&name=large"
+      alt="Motocat"
+      style="width:180px;height:180px;object-fit:cover;border-radius:16px;box-shadow:0 0 32px rgba(247,147,26,.3);flex-shrink:0;" />
+    <div>
+      <h2>Where's My <span>Money?</span></h2>
+      <p>Find BTC trapped inside Ordinals</p>
+    </div>
+  </div>
+
+  <!-- search -->
+  <div class="search-card">
+    <label for="addr">Bitcoin Taproot Address (bc1p)</label>
+    <div class="input-row">
+      <div class="addr-wrap">
+        <input type="text" id="addr" placeholder="bc1p…" autocomplete="off" spellcheck="false" />
+        <div class="addr-dot" id="dot"></div>
+      </div>
+      <button class="btn-primary" id="btn-go" onclick="run()">Analyze</button>
+    </div>
+    <div class="hint" id="hint">Paste a Taproot address starting with <code>bc1p</code></div>
+  </div>
+
+  <!-- error -->
+  <div class="err-box" id="err-box"></div>
+
+  <!-- status -->
+  <div class="status-bar" id="status-bar">
+    <div class="spinner"></div>
+    <span id="status-txt">Loading…</span>
+    <div class="prog-track"><div class="prog-fill" id="prog"></div></div>
+  </div>
+
+  <!-- summary -->
+  <div class="summary" id="summary">
+    <div class="sum-cell">
+      <div class="sum-val c-orange" id="s-sats">—</div>
+      <div class="sum-lbl">Total Sats</div>
+      <div class="sum-sub" id="s-btc">—</div>
+    </div>
+    <div class="sum-cell">
+      <div class="sum-val c-muted" id="s-utxos">—</div>
+      <div class="sum-lbl">UTXOs</div>
+    </div>
+    <div class="sum-cell">
+      <div class="sum-val c-purple" id="s-ins">—</div>
+      <div class="sum-lbl">Inscriptions</div>
+    </div>
+    <div class="sum-cell">
+      <div class="sum-val c-green" id="s-clean">—</div>
+      <div class="sum-lbl">Clean UTXOs</div>
+      <div class="sum-sub">no inscription</div>
+    </div>
+  </div>
+
+  <!-- table -->
+  <div class="table-card" id="table-card">
+    <div class="tbl-top">
+      <h2>UTXOs <span id="row-count" style="color:var(--text3);font-weight:400;font-size:12px"></span></h2>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span id="hidden-badge" style="display:none" class="badge-hidden" onclick="clearExclusions()" title="Click to show all">
+          <span id="hidden-count">0</span> hidden &times;
+        </span>
+        <span class="tbl-hint">Click any row to inspect</span>
+      </div>
+    </div>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Preview</th>
+            <th class="sortable sorted" id="th-val" onclick="sortBy('value')">
+              Sats <span class="sort-icon" id="si-val">&#9660;</span>
+            </th>
+            <th>Ins #</th>
+            <th>TXID</th>
+            <th class="sortable" id="th-vout" onclick="sortBy('vout')">
+              Vout <span class="sort-icon" id="si-vout">&#9660;</span>
+            </th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>
+    UTXOs: <a href="https://mempool.space" target="_blank" rel="noopener">mempool.space</a>
+    &nbsp;·&nbsp;
+    Inscriptions &amp; Previews: <a href="https://ordinals.com" target="_blank" rel="noopener">ordinals.com</a>
+  </footer>
+</div>
+</div>
+
+<!-- panel overlay -->
+<div class="overlay" id="overlay" onclick="closePanel()"></div>
+
+<!-- side panel -->
+<div class="panel" id="panel">
+  <div class="panel-hdr">
+    <h3>Inspector</h3>
+    <button class="panel-close" onclick="closePanel()" title="Esc">&#10005;</button>
+  </div>
+  <div class="panel-body" id="panel-body"></div>
+</div>
+
+<script>
+/* ─── APIs ──────────────────────────────────────────────────────────────── */
+const MEMPOOL  = 'https://mempool.space/api';
+const ORDINALS = 'https://ordinals.com';
+
+/* ─── State ─────────────────────────────────────────────────────────────── */
+let rows      = [];   // merged { utxo, inscription|null }
+let sortField = 'value';
+let sortAsc   = false;
+let activeIdx = -1;
+
+// Excluded inscription IDs — persisted in localStorage
+const EXCL_KEY  = 'ordinals-excluded-v1';
+let excludedIds = new Set(JSON.parse(localStorage.getItem(EXCL_KEY) || '[]'));
+
+function saveExclusions() {
+  localStorage.setItem(EXCL_KEY, JSON.stringify([...excludedIds]));
+}
+function excludeInscription(inscriptionId) {
+  excludedIds.add(inscriptionId);
+  saveExclusions();
+  closePanel();
+  renderTable();
+  updateHiddenBadge();
+}
+function clearExclusions() {
+  excludedIds.clear();
+  saveExclusions();
+  renderTable();
+  updateHiddenBadge();
+}
+function updateHiddenBadge() {
+  const n     = excludedIds.size;
+  const badge = document.getElementById('hidden-badge');
+  const count = document.getElementById('hidden-count');
+  if (!badge) return;
+  badge.style.display = n ? 'inline-flex' : 'none';
+  if (count) count.textContent = n;
+}
+
+/* ─── Address validation ────────────────────────────────────────────────── */
+const addrEl = document.getElementById('addr');
+const dotEl  = document.getElementById('dot');
+const hintEl = document.getElementById('hint');
+
+function isTaproot(v) { return /^bc1p[ac-hj-np-z02-9]{6,87}$/i.test(v); }
+
+addrEl.addEventListener('input', () => {
+  const v = addrEl.value.trim();
+  if (!v) {
+    addrEl.className = ''; dotEl.className = 'addr-dot';
+    hintEl.className = 'hint'; hintEl.textContent = 'Paste a Taproot address starting with bc1p';
+    return;
+  }
+  if (isTaproot(v)) {
+    addrEl.className = 'ok'; dotEl.className = 'addr-dot ok';
+    hintEl.className = 'hint ok'; hintEl.textContent = 'Valid Taproot address';
+  } else {
+    addrEl.className = 'bad'; dotEl.className = 'addr-dot bad';
+    hintEl.className = 'hint err'; hintEl.textContent = 'Must be a bc1p bech32m address';
+  }
+});
+addrEl.addEventListener('keydown', e => { if (e.key === 'Enter') run(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePanel(); });
+
+/* ─── UI helpers ────────────────────────────────────────────────────────── */
+function setStatus(msg, pct) {
+  document.getElementById('status-bar').classList.add('show');
+  document.getElementById('status-txt').textContent = msg;
+  if (pct != null) document.getElementById('prog').style.width = pct + '%';
+}
+function hideStatus() { document.getElementById('status-bar').classList.remove('show'); }
+
+function showErr(msg) {
+  const b = document.getElementById('err-box');
+  b.innerHTML = esc(msg); b.classList.add('show');
+}
+function hideErr() { document.getElementById('err-box').classList.remove('show'); }
+
+function fmt(n)    { return Number(n).toLocaleString('en-US'); }
+function satsBtc(s){ return (s / 1e8).toFixed(8).replace(/\.?0+$/, '') + ' BTC'; }
+function short(s)  { return s ? s.slice(0,10) + '…' + s.slice(-6) : '—'; }
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                  .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ─── Fetch helpers ─────────────────────────────────────────────────────── */
+async function apiFetch(url, headers = {}) {
+  let res;
+  try { res = await fetch(url, { headers }); }
+  catch(e) { throw new Error(`Network error (${new URL(url).hostname}): ${e.message}`); }
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '');
+    throw new Error(`HTTP ${res.status} from ${new URL(url).hostname}${txt ? ' — ' + txt.slice(0,120) : ''}`);
+  }
+  return res.json();
+}
+
+/* ─── 1. Fetch UTXOs from mempool.space ─────────────────────────────────── */
+async function fetchUTXOs(address) {
+  return apiFetch(`${MEMPOOL}/address/${encodeURIComponent(address)}/utxo`);
+}
+
+/* ─── 2. Fetch inscription data from ordinals.com address page (paginated) ── */
+/* ─── HTML fetch helper ──────────────────────────────────────────────────── */
+async function fetchHtml(url) {
+  let res;
+  try { res = await fetch(url); }
+  catch (e) {
+    throw new Error(
+      `Cannot reach ordinals.com — CORS may be blocking this. ` +
+      `Serve the file via a local server (npx serve .) and check browser console. Detail: ${e.message}`
+    );
+  }
+  if (!res.ok) throw new Error(`HTTP ${res.status} from ordinals.com`);
+  return res.text();
+}
+
+/* ─── 2. Fetch inscription data via address page + individual output pages ── */
+async function fetchAllInscriptions(address) {
+  // Step 1: collect all output hrefs from the address page (paginated)
+  const outputHrefs = await collectOutputHrefs(address);
+  console.log(`[ordinals.com] ${outputHrefs.length} outputs found for address`);
+
+  // Step 2: fetch each output page and parse its inscriptions (batched, 5 at a time)
+  const BATCH = 5;
+  const all   = [];
+  for (let i = 0; i < outputHrefs.length; i += BATCH) {
+    setStatus(`Reading outputs… ${Math.min(i + BATCH, outputHrefs.length)}/${outputHrefs.length}`,
+              10 + Math.round(80 * i / Math.max(outputHrefs.length, 1)));
+    const batch = outputHrefs.slice(i, i + BATCH);
+    const results = await Promise.all(batch.map(async href => {
+      const outStr = href.slice('/output/'.length);        // "txid:vout"
+      const colon  = outStr.lastIndexOf(':');
+      if (colon === -1) return [];
+      const txid = outStr.slice(0, colon);
+      const vout = parseInt(outStr.slice(colon + 1), 10);
+      if (!txid || isNaN(vout)) return [];
+      try {
+        const html = await fetchHtml(`${ORDINALS}${href}`);
+        const doc  = new DOMParser().parseFromString(html, 'text/html');
+        return parseOutputPage(doc, txid, vout);
+      } catch (e) {
+        console.warn(`[output] failed ${txid}:${vout} —`, e.message);
+        return [];
+      }
+    }));
+    results.forEach(r => all.push(...r));
+  }
+
+  console.log(`[ordinals.com] ${all.length} inscriptions found across all outputs`);
+  if (all.length > 0) console.log('[ordinals.com] first:', all[0]);
+  return all;
+}
+
+/* ─── Collect unique /output/ hrefs from address page (follows pagination) ── */
+async function collectOutputHrefs(address) {
+  const seen = new Set();
+  let page   = 0;
+
+  while (true) {
+    const url  = `${ORDINALS}/address/${encodeURIComponent(address)}` + (page ? `?page=${page}` : '');
+    const html = await fetchHtml(url);
+    const doc  = new DOMParser().parseFromString(html, 'text/html');
+
+    let added = 0;
+    for (const a of doc.querySelectorAll('a[href^="/output/"]')) {
+      const href = a.getAttribute('href');
+      if (!seen.has(href)) { seen.add(href); added++; }
+    }
+
+    // Follow pagination
+    const nextLink = doc.querySelector('a[href*="page="]');
+    const nextHref = nextLink?.getAttribute('href') || '';
+    const nextPage = Number(new URLSearchParams(nextHref.split('?')[1]).get('page'));
+    if (added === 0 || !nextPage || nextPage <= page) break;
+    page = nextPage;
+  }
+
+  return [...seen];
+}
+
+/* ─── Parse a single /output/txid:vout page for its inscriptions ─────────── */
+function parseOutputPage(doc, txid, vout) {
+  const results = [];
+  for (const link of doc.querySelectorAll('a[href^="/inscription/"]')) {
+    const inscriptionId     = link.getAttribute('href').slice('/inscription/'.length).trim();
+    const text              = link.textContent.trim();
+    const inscriptionNumber = /^\d+$/.test(text) ? parseInt(text, 10) : null;
+    if (inscriptionId) results.push({ inscriptionId, inscriptionNumber, contentType: '', txid, vout });
+  }
+  return results;
+}
+
+/* ─── 3. Match inscriptions → UTXOs by txid:vout ────────────────────────── */
+function matchAndMerge(utxos, inscriptions) {
+  // inscriptions from ordinals.com already carry txid + vout from the output link
+  const insMap = new Map();
+  for (const ins of inscriptions) {
+    const key = ins.txid != null && ins.vout != null ? `${ins.txid}:${ins.vout}` : '';
+    if (key && !insMap.has(key)) insMap.set(key, ins);
+  }
+
+  const result = utxos.map(u => ({ utxo: u, ins: insMap.get(`${u.txid}:${u.vout}`) || null }));
+
+  const matched = result.filter(r => r.ins).length;
+  console.log(`[match] ${matched}/${inscriptions.length} inscriptions matched to UTXOs`);
+  return result;
+}
+
+/* ─── Main ──────────────────────────────────────────────────────────────── */
+async function run() {
+  const address = addrEl.value.trim();
+  if (!isTaproot(address)) {
+    addrEl.className = 'bad'; dotEl.className = 'addr-dot bad';
+    hintEl.className = 'hint err'; hintEl.textContent = 'Enter a valid bc1p address first';
+    return;
+  }
+
+  closePanel();
+  hideErr();
+  rows = []; activeIdx = -1;
+  document.getElementById('summary').classList.remove('show');
+  document.getElementById('table-card').classList.remove('show');
+  document.getElementById('btn-go').disabled = true;
+
+  try {
+    // Fetch UTXOs from mempool.space and inscription data from ordinals.com
+    setStatus('Fetching UTXOs…', 5);
+    const [utxos, inscriptions] = await Promise.all([
+      fetchUTXOs(address),
+      fetchAllInscriptions(address).catch(e => {
+        console.warn('Inscription fetch failed, continuing with UTXOs only:', e.message);
+        showErr(e.message);
+        return [];
+      }),
+    ]);
+
+    setStatus('Matching data…', 90);
+    rows = matchAndMerge(utxos, inscriptions);
+
+    // Default sort: largest UTXO first
+    sortField = 'value'; sortAsc = false;
+    applySort();
+
+    renderSummary(utxos, inscriptions);
+    renderTable();
+    document.getElementById('summary').classList.add('show');
+    document.getElementById('table-card').classList.add('show');
+    hideStatus();
+
+  } catch (e) {
+    hideStatus();
+    showErr(e.message);
+  } finally {
+    document.getElementById('btn-go').disabled = false;
+  }
+}
+
+/* ─── Summary ───────────────────────────────────────────────────────────── */
+function renderSummary(utxos, inscriptions) {
+  const totalSats  = utxos.reduce((s, u) => s + u.value, 0);
+  const cleanUTXOs = rows.filter(r => !r.ins).length;
+
+  document.getElementById('s-sats').textContent  = fmt(totalSats);
+  document.getElementById('s-btc').textContent   = satsBtc(totalSats);
+  document.getElementById('s-utxos').textContent = fmt(utxos.length);
+  document.getElementById('s-ins').textContent   = fmt(inscriptions.length);
+  document.getElementById('s-clean').textContent = fmt(cleanUTXOs);
+}
+
+/* ─── Sort ──────────────────────────────────────────────────────────────── */
+function sortBy(field) {
+  if (sortField === field) sortAsc = !sortAsc;
+  else { sortField = field; sortAsc = field === 'vout'; }
+  if (activeIdx >= 0) { activeIdx = -1; closePanel(); }
+  applySort();
+  renderTable();
+  updateSortUI();
+}
+function applySort() {
+  rows.sort((a, b) => {
+    const va = sortField === 'value' ? a.utxo.value : a.utxo.vout;
+    const vb = sortField === 'value' ? b.utxo.value : b.utxo.vout;
+    return sortAsc ? va - vb : vb - va;
+  });
+}
+function updateSortUI() {
+  ['value','vout'].forEach(f => {
+    const th = document.getElementById('th-' + (f === 'value' ? 'val' : 'vout'));
+    const si = document.getElementById('si-' + (f === 'value' ? 'val' : 'vout'));
+    if (!th || !si) return;
+    if (f === sortField) { th.classList.add('sorted'); si.textContent = sortAsc ? '▲' : '▼'; }
+    else { th.classList.remove('sorted'); si.textContent = '▼'; }
+  });
+}
+
+/* ─── Table ─────────────────────────────────────────────────────────────── */
+function renderTable() {
+  const tbody = document.getElementById('tbody');
+  updateHiddenBadge();
+
+  if (!rows.length) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="6">No UTXOs found for this address.</td></tr>`;
+    document.getElementById('row-count').textContent = '';
+    return;
+  }
+
+  // Filter out excluded inscriptions
+  const visible = rows.map((r, idx) => ({ ...r, idx }))
+    .filter(r => !r.ins || !excludedIds.has(r.ins.inscriptionId));
+
+  if (!visible.length) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="6">All inscribed UTXOs are hidden. Click the badge above to restore.</td></tr>`;
+    document.getElementById('row-count').textContent = '';
+    return;
+  }
+
+  tbody.innerHTML = visible.map(r => {
+    const { utxo, ins, idx } = r;
+    const isLarge = utxo.value > 10000;
+    let cls = idx === activeIdx ? 'active' : '';
+    if (ins)     cls += ' has-ins';
+    if (isLarge) cls += ' large';
+
+    // Preview thumbnail
+    const thumb = ins ? thumbHtml(ins) : `<span class="no-ins-thumb">&#8212;</span>`;
+
+    // Sats
+    const satsClass = isLarge ? 'sats-val large' : 'sats-val';
+    const satsCell  = `<span class="${satsClass}">${fmt(utxo.value)}</span><span class="sats-unit">sats</span>`;
+
+    // Inscription number
+    const insNum = ins
+      ? `<span class="ins-num">${ins.inscriptionNumber != null ? '#' + fmt(ins.inscriptionNumber) : 'inscribed'}</span>`
+      : `<span class="no-ins-label">—</span>`;
+
+    return `<tr class="${cls.trim()}" onclick="selectRow(${idx})">
+      <td class="td-pre"><div class="thumb">${thumb}</div></td>
+      <td>${satsCell}</td>
+      <td>${insNum}</td>
+      <td><span class="mono">${short(utxo.txid)}</span></td>
+      <td class="td-vout">${utxo.vout}</td>
+      <td class="td-arr">&#8250;</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('row-count').textContent =
+    `— ${visible.length} of ${rows.length} UTXOs`;
+}
+
+/* ─── Thumb fallback: swap failed <img> for a scaled /preview/ iframe ───── */
+function thumbFallback(el, id) {
+  const fr = document.createElement('iframe');
+  fr.src = `${ORDINALS}/preview/${encodeURIComponent(id)}`;
+  fr.setAttribute('sandbox', 'allow-scripts allow-same-origin');
+  fr.style.cssText = 'position:absolute;top:0;left:0;width:300%;height:300%;transform:scale(.333);transform-origin:top left;border:none;pointer-events:none';
+  el.parentNode.replaceChildren(fr);
+}
+
+/* ─── Thumb HTML (inline, no JS fetch, ordinals.com content URL) ────────── */
+function thumbHtml(ins) {
+  const id      = esc(ins.inscriptionId);
+  const content = `${ORDINALS}/content/${id}`;
+  const preview = `${ORDINALS}/preview/${id}`;
+  // Try /content as image → /preview as image → scaled iframe via thumbFallback()
+  return `<img src="${content}"
+    style="width:100%;height:100%;object-fit:cover"
+    onerror="if(this.src!=='${preview}'){this.src='${preview}';}else{thumbFallback(this,'${id}');}" />`;
+}
+
+function thumbIcon(ct) {
+  if (ct.startsWith('video/')) return '&#127909;';
+  if (ct.startsWith('audio/')) return '&#127925;';
+  if (ct.startsWith('text/'))  return '&#128196;';
+  return '&#128247;';
+}
+
+/* ─── Row selection ─────────────────────────────────────────────────────── */
+function selectRow(idx) {
+  if (activeIdx === idx) { closePanel(); return; }
+  // Toggle active class without re-rendering (preserves loaded images)
+  const tbody = document.getElementById('tbody');
+  const prev = tbody.querySelector('tr.active');
+  if (prev) prev.classList.remove('active');
+  const next = tbody.querySelectorAll('tr')[idx];
+  if (next) next.classList.add('active');
+  activeIdx = idx;
+  openPanel(rows[idx]);
+}
+
+/* ─── Panel ─────────────────────────────────────────────────────────────── */
+function openPanel(row) {
+  document.getElementById('shell').classList.add('panel-open');
+  document.getElementById('panel').classList.add('open');
+  document.getElementById('overlay').classList.add('show');
+  renderPanel(row);
+}
+
+function closePanel() {
+  document.getElementById('shell').classList.remove('panel-open');
+  document.getElementById('panel').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+  if (activeIdx >= 0) {
+    const tbody = document.getElementById('tbody');
+    const active = tbody?.querySelector('tr.active');
+    if (active) active.classList.remove('active');
+    activeIdx = -1;
+  }
+}
+
+function renderPanel({ utxo, ins }) {
+  const body = document.getElementById('panel-body');
+
+  // ── inscription preview ──────────────────────────────────────────────────
+  let previewHtml;
+  if (!ins) {
+    previewHtml = `<div class="no-ins-panel">
+      <div style="font-size:32px;margin-bottom:8px">&#128274;</div>
+      No inscription on this UTXO — it is clean and freely spendable.
+    </div>`;
+  } else {
+    const id      = esc(ins.inscriptionId);
+    const url     = `${ORDINALS}/content/${id}`;
+    const preview = `${ORDINALS}/preview/${id}`;
+    // Use /preview/ in an iframe — ordinals.com renders every content type
+    // (image, HTML, SVG, text, video) correctly through this endpoint.
+    previewHtml = `<div class="panel-preview">
+      <iframe src="${preview}" sandbox="allow-scripts allow-same-origin"
+        style="width:100%;height:100%;border:none;"
+        onerror="this.parentNode.innerHTML='<div class=prev-fallback><span>&#128247;</span><a href=\\'${url}\\' target=\\'_blank\\'>Open content ↗</a></div>'">
+      </iframe>
+    </div>`;
+  }
+
+  // ── inscription metadata ─────────────────────────────────────────────────
+  let insMeta = '';
+  if (ins) {
+    const id     = esc(ins.inscriptionId);
+    const url    = `${ORDINALS}/content/${id}`;
+    const ordUrl = `${ORDINALS}/inscription/${id}`;
+    const numRow = ins.inscriptionNumber != null
+      ? `<div class="m-row"><span class="m-key">Number</span><span class="m-val">#${fmt(ins.inscriptionNumber)}</span></div>` : '';
+
+    insMeta = `
+      <div class="p-section">
+        <div class="p-title">Inscription</div>
+        <div class="m-row m-col">
+          <span class="m-key">ID</span>
+          <span class="m-val sm">${id}</span>
+        </div>
+        ${numRow}
+        <div id="ins-meta-detail" class="meta-loading">Loading metadata…</div>
+      </div>
+      <div class="p-section">
+        <div class="p-title">Links</div>
+        <div class="links">
+          <a class="ext" href="${ordUrl}" target="_blank" rel="noopener">&#10138; View on ordinals.com</a>
+          <a class="ext" href="${url}" target="_blank" rel="noopener">&#10138; Raw content</a>
+        </div>
+      </div>
+      <div class="p-section">
+        <div class="p-title">Actions</div>
+        <button class="btn-exclude" onclick="excludeInscription('${id}')">
+          Hide this UTXO from results
+        </button>
+      </div>`;
+
+    // Fetch full metadata async and inject into the placeholder
+    fetchInscriptionMeta(ins.inscriptionId).then(meta => {
+      const el = document.getElementById('ins-meta-detail');
+      if (!el || !meta) { if (el) el.remove(); return; }
+      const rows = [
+        ['Content type', esc(meta.content_type  || '—')],
+        ['Genesis block', meta.genesis_height != null ? fmt(meta.genesis_height) : '—'],
+        ['Sat',           meta.sat             != null ? fmt(meta.sat)           : '—'],
+        ['Sat rarity',    esc(meta.rarity       || meta.sat_rarity || '—')],
+        ['Parent',        meta.parent ? `<span class="m-val sm" style="word-break:break-all">${esc(meta.parent)}</span>` : '—'],
+      ].map(([k, v]) =>
+        `<div class="m-row"><span class="m-key">${k}</span><span class="m-val">${v}</span></div>`
+      ).join('');
+      el.outerHTML = rows;
+    });
+  }
+
+  // ── UTXO metadata ────────────────────────────────────────────────────────
+  const mempoolUrl = `https://mempool.space/tx/${esc(utxo.txid)}`;
+  body.innerHTML = `
+    ${previewHtml}
+    <div class="p-section">
+      <div class="p-title">UTXO</div>
+      <div class="m-row"><span class="m-key">Value</span><span class="m-val big">${fmt(utxo.value)} sats</span></div>
+      <div class="m-row"><span class="m-key">Vout</span><span class="m-val">${utxo.vout}</span></div>
+      <div class="m-row m-col">
+        <span class="m-key">TXID</span>
+        <span class="m-val sm">${esc(utxo.txid)}</span>
+      </div>
+      <button class="btn-copy" id="copy-btn" onclick="copyText('${esc(utxo.txid)}','copy-btn','Copy TXID')">
+        Copy TXID
+      </button>
+      <a class="ext" style="margin-top:6px" href="${mempoolUrl}" target="_blank" rel="noopener">
+        &#10138; View on mempool.space
+      </a>
+    </div>
+    ${insMeta}`;
+}
+
+/* ─── Fetch inscription metadata from ordinals.com/r/inscription/{id} ───── */
+async function fetchInscriptionMeta(id) {
+  try {
+    const res = await fetch(`${ORDINALS}/r/inscription/${encodeURIComponent(id)}`);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch { return null; }
+}
+
+/* ─── Copy ──────────────────────────────────────────────────────────────── */
+function copyText(text, btnId, label) {
+  navigator.clipboard.writeText(text).catch(() => {
+    const t = Object.assign(document.createElement('textarea'), { value: text, style: 'position:fixed;opacity:0' });
+    document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove();
+  });
+  const btn = document.getElementById(btnId);
+  if (btn) { btn.textContent = 'Copied!'; btn.classList.add('copied'); setTimeout(() => { btn.textContent = label; btn.classList.remove('copied'); }, 1800); }
+}
+
+/* ─── file:// warning ───────────────────────────────────────────────────── */
+if (location.protocol === 'file:') {
+  document.getElementById('file-warn').style.display = 'flex';
+}
+updateHiddenBadge();
+</script>
+</body>
+</html>
