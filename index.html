@@ -513,6 +513,52 @@
     }
     .btn-clean-wallet:hover { border-color: var(--accent); color: var(--accent); }
 
+    /* ── selection toolbar ──────────────────────────────────────────────── */
+    .sel-toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 9px 20px; border-bottom: 1px solid var(--border);
+      background: var(--surface2); flex-wrap: wrap; gap: 8px;
+    }
+    .btn-sel {
+      background: var(--surface3); border: 1px solid var(--border2);
+      border-radius: var(--radius-sm); padding: 5px 12px;
+      font-size: 11px; font-weight: 600; cursor: pointer; color: var(--text2);
+      transition: all var(--ease); white-space: nowrap;
+    }
+    .btn-sel:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-merge-sel {
+      background: var(--accent); color: #fff; border: none;
+      border-radius: var(--radius-sm); padding: 6px 14px;
+      font-size: 12px; font-weight: 700; cursor: pointer;
+      box-shadow: 0 2px 8px var(--accent-glow); transition: all var(--ease);
+      white-space: nowrap;
+    }
+    .btn-merge-sel:hover { background: #e8851a; }
+    /* checkbox column */
+    .td-sel {
+      width: 36px; padding: 0 4px 0 14px; text-align: center; vertical-align: middle;
+    }
+    thead .td-sel { padding: 10px 4px 10px 14px; }
+    .td-sel input[type="checkbox"] { cursor: pointer; width: 15px; height: 15px; accent-color: var(--accent); }
+    /* selected row */
+    tbody tr.sel-row { background: rgba(247,147,26,.07) !important; outline: 1px solid rgba(247,147,26,.3); outline-offset: -1px; }
+    tbody tr.sel-row:hover { background: rgba(247,147,26,.13) !important; }
+    /* danger warning badges in checkbox cell */
+    .warn-ico {
+      display: inline-block; font-size: 11px; line-height: 1;
+      margin-top: 3px; cursor: default;
+    }
+    .wi-fat   { color: var(--accent); }
+    .wi-whale { color: var(--purple); }
+    .wi-rare  { color: var(--red); }
+    .wi-attr  { color: #eab308; }
+    /* warning box inside merge preview */
+    .merge-warn-box {
+      background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.3);
+      border-radius: var(--radius-sm); padding: 10px 14px;
+      color: var(--red); font-size: 12px; line-height: 1.6; margin-bottom: 14px;
+    }
+
     footer { text-align: center; padding: 20px; font-size: 11px; color: var(--text3); }
     footer a { color: var(--text3); text-decoration: none; }
     footer a:hover { color: var(--text2); }
@@ -653,10 +699,26 @@
         <span class="tbl-hint">Click any row to inspect</span>
       </div>
     </div>
+    <!-- selection toolbar -->
+    <div class="sel-toolbar">
+      <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;">
+        <button class="btn-sel" onclick="selectJunk()">Select Junk</button>
+        <button class="btn-sel" onclick="selectAll()">Select All</button>
+        <button class="btn-sel" onclick="clearSelection()">Clear Selection</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span id="sel-count" style="font-size:11px;color:var(--text3);"></span>
+        <button class="btn-merge-sel" id="btn-merge-sel" style="display:none;" onclick="mergeSelected()">
+          Merge Selected (<span id="sel-n">0</span>)
+        </button>
+      </div>
+    </div>
+
     <div class="scroll">
       <table>
         <thead>
           <tr>
+            <th class="td-sel"><input type="checkbox" id="chk-all" title="Select / deselect all" onclick="toggleSelectAll(this)"></th>
             <th>Preview</th>
             <th class="sortable sorted" id="th-val" onclick="sortBy('value')">
               Sats <span class="sort-icon" id="si-val">&#9660;</span>
@@ -1265,7 +1327,7 @@ async function run() {
 
   closePanel();
   hideErr();
-  rows = []; activeIdx = -1;
+  rows = []; activeIdx = -1; selectedIdxs.clear();
   document.getElementById('summary').classList.remove('show');
   document.getElementById('table-card').classList.remove('show');
   document.getElementById('btn-go').disabled = true;
@@ -1358,7 +1420,7 @@ function renderTable() {
   updateHiddenBadge();
 
   if (!rows.length) {
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="9">No UTXOs found for this address.</td></tr>`;
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="10">No UTXOs found for this address.</td></tr>`;
     document.getElementById('row-count').textContent = '';
     return;
   }
@@ -1368,7 +1430,7 @@ function renderTable() {
     .filter(r => !r.ins || !excludedIds.has(r.ins.inscriptionId));
 
   if (!visible.length) {
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="9">All inscribed UTXOs are hidden. Click the badge above to restore.</td></tr>`;
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="10">All inscribed UTXOs are hidden. Click the badge above to restore.</td></tr>`;
     document.getElementById('row-count').textContent = '';
     return;
   }
@@ -1379,6 +1441,15 @@ function renderTable() {
     let cls = idx === activeIdx ? 'active' : '';
     if (ins)     cls += ' has-ins';
     if (isLarge) cls += ' large';
+    if (selectedIdxs.has(idx)) cls += ' sel-row';
+
+    // Danger warning icons for checkbox cell
+    const sz = ordinalSize(utxo.value);
+    let warnIcos = '';
+    if (sz === 'whale') warnIcos += `<span class="warn-ico wi-whale" title="Whale ordinal — dangerous to merge">&#9679;</span>`;
+    else if (sz === 'fat') warnIcos += `<span class="warn-ico wi-fat" title="Fat ordinal — dangerous to merge">&#9679;</span>`;
+    if (r.rarity && r.rarity !== 'common') warnIcos += `<span class="warn-ico wi-rare" title="Rare sat (${r.rarity}) — dangerous to merge">&#9733;</span>`;
+    if (r.satributes && r.satributes.length) warnIcos += `<span class="warn-ico wi-attr" title="Has satributes — dangerous to merge">&#9670;</span>`;
 
     // Preview thumbnail
     const thumb = ins ? thumbHtml(ins) : `<span class="no-ins-thumb">&#8212;</span>`;
@@ -1406,7 +1477,12 @@ function renderTable() {
         ? `<span class="no-satributes">…</span>`
         : satributesHtml([]);
 
-    return `<tr class="${cls.trim()}" onclick="selectRow(${idx})">
+    return `<tr class="${cls.trim()}" data-idx="${idx}" onclick="selectRow(${idx})">
+      <td class="td-sel" onclick="event.stopPropagation()">
+        <input type="checkbox" data-chk-idx="${idx}" ${selectedIdxs.has(idx) ? 'checked' : ''}
+          onclick="toggleSelect(${idx}, event)">
+        ${warnIcos}
+      </td>
       <td class="td-pre"><div class="thumb">${thumb}</div></td>
       <td>${satsCell}</td>
       <td>${insNum}</td>
@@ -1421,6 +1497,8 @@ function renderTable() {
 
   document.getElementById('row-count').textContent =
     `— ${visible.length} of ${rows.length} UTXOs`;
+  updateSelectionUI();
+  updateHeaderCheckbox();
 }
 
 /* ─── Thumb fallback: replace broken img with a lightweight tile ─────────── */
@@ -1744,6 +1822,99 @@ async function connectOpNet() {
   finally     { btn.disabled = false; }
 }
 
+/* ─── Row selection ─────────────────────────────────────────────────────── */
+let selectedIdxs = new Set();
+
+function toggleSelect(idx, e) {
+  if (e) e.stopPropagation();
+  if (selectedIdxs.has(idx)) selectedIdxs.delete(idx);
+  else selectedIdxs.add(idx);
+  const tr = document.querySelector(`tr[data-idx="${idx}"]`);
+  if (tr) tr.classList.toggle('sel-row', selectedIdxs.has(idx));
+  updateSelectionUI();
+  updateHeaderCheckbox();
+}
+
+function toggleSelectAll(cb) {
+  const visible = rows.map((r, idx) => ({ ...r, idx }))
+    .filter(r => !r.ins || !excludedIds.has(r.ins.inscriptionId));
+  if (cb.checked) visible.forEach(r => selectedIdxs.add(r.idx));
+  else            visible.forEach(r => selectedIdxs.delete(r.idx));
+  syncCheckboxes();
+  updateSelectionUI();
+}
+
+function selectJunk() {
+  selectedIdxs.clear();
+  rows.forEach((r, idx) => {
+    if (!r.ins) return;
+    if (r.utxo.value > JUNK_MAX_SATS) return;
+    if (r.rarity && r.rarity !== 'common') return;
+    if (r.satributes && r.satributes.length > 0) return;
+    if (ordinalSize(r.utxo.value) !== 'normal') return;
+    selectedIdxs.add(idx);
+  });
+  syncCheckboxes();
+  updateSelectionUI();
+}
+
+function selectAll() {
+  rows.map((r, idx) => ({ ...r, idx }))
+    .filter(r => !r.ins || !excludedIds.has(r.ins.inscriptionId))
+    .forEach(r => selectedIdxs.add(r.idx));
+  syncCheckboxes();
+  updateSelectionUI();
+}
+
+function clearSelection() {
+  selectedIdxs.clear();
+  syncCheckboxes();
+  updateSelectionUI();
+}
+
+function syncCheckboxes() {
+  document.querySelectorAll('input[data-chk-idx]').forEach(cb => {
+    const idx = parseInt(cb.dataset.chkIdx, 10);
+    cb.checked = selectedIdxs.has(idx);
+    const tr = cb.closest('tr');
+    if (tr) tr.classList.toggle('sel-row', selectedIdxs.has(idx));
+  });
+  updateHeaderCheckbox();
+}
+
+function updateHeaderCheckbox() {
+  const chkAll = document.getElementById('chk-all');
+  if (!chkAll) return;
+  const visible = rows.map((r, idx) => ({ ...r, idx }))
+    .filter(r => !r.ins || !excludedIds.has(r.ins.inscriptionId));
+  const allSel  = visible.length > 0 && visible.every(r => selectedIdxs.has(r.idx));
+  const someSel = visible.some(r => selectedIdxs.has(r.idx));
+  chkAll.checked       = allSel;
+  chkAll.indeterminate = someSel && !allSel;
+}
+
+function updateSelectionUI() {
+  const n        = selectedIdxs.size;
+  const countEl  = document.getElementById('sel-count');
+  const mergeBtn = document.getElementById('btn-merge-sel');
+  const selN     = document.getElementById('sel-n');
+  if (countEl)  countEl.textContent  = n ? `${n} selected` : '';
+  if (mergeBtn) mergeBtn.style.display = n ? '' : 'none';
+  if (selN)     selN.textContent     = n;
+}
+
+async function mergeSelected() {
+  if (!selectedIdxs.size) return;
+  if (!addrEl.value.trim() || !isTaproot(addrEl.value.trim())) {
+    showErr('Connect a wallet or enter a valid bc1p address before merging.');
+    return;
+  }
+  const selectedRows = [...selectedIdxs].map(idx => rows[idx]).filter(Boolean);
+  if (!selectedRows.length) return;
+  document.getElementById('clean-modal').style.display = 'flex';
+  await buildMergePreview(selectedRows);
+}
+
 /* ─── Clean Wallet ──────────────────────────────────────────────────────── */
 const SERVICE_FEE_ADDR = 'bc1p3temu3hskhz843mc8sh4wpsazvyzra6pdrkf0nupmcqhgchrnnuqtu5ms6';
 const SERVICE_FEE_SATS = 2000;
@@ -1840,6 +2011,17 @@ async function buildMergePreview(junk) {
   const body = document.getElementById('clean-s2-body');
   body.innerHTML = `<div style="color:var(--text3);font-size:12px;padding:10px 0;">Fetching recommended fee rate…</div>`;
 
+  // Danger check — warn if any selected UTXO is risky to merge
+  const dangerous = junk.filter(r =>
+    ordinalSize(r.utxo.value) !== 'normal' ||
+    (r.rarity && r.rarity !== 'common') ||
+    (r.satributes && r.satributes.length > 0)
+  );
+  const dangerWarn = dangerous.length
+    ? `<div class="merge-warn-box">&#9888; <strong>${dangerous.length} UTXO(s)</strong> in your selection contain fat/whale ordinals or rare sats.
+       Merging will consolidate these — verify you intend to include them.</div>`
+    : '';
+
   let feeRate = 5;
   try {
     const fees = await apiFetch(`${MEMPOOL}/v1/fees/recommended`);
@@ -1863,8 +2045,8 @@ async function buildMergePreview(junk) {
     return;
   }
 
-  body.innerHTML = `
-    <div class="p-title" style="margin-bottom:8px;">Inputs (${nIn} junk UTXOs)</div>
+  body.innerHTML = dangerWarn + `
+    <div class="p-title" style="margin-bottom:8px;">Inputs (${nIn} UTXOs)</div>
     <div style="max-height:130px;overflow-y:auto;margin-bottom:16px;">
       ${junk.slice(0, 25).map(r => `
         <div class="m-row" style="margin-bottom:3px;">
