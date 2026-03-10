@@ -552,6 +552,21 @@
     .wi-whale { color: var(--purple); }
     .wi-rare  { color: var(--red); }
     .wi-attr  { color: #eab308; }
+    .btn-panel-sel {
+      background: var(--accent-dim); border: 1px solid rgba(247,147,26,.4);
+      border-radius: 5px; color: var(--accent); font-size: 11px; font-weight: 600;
+      padding: 7px 10px; cursor: pointer; width: 100%;
+      display: block; text-align: center; transition: all var(--ease);
+    }
+    .btn-panel-sel:hover { background: rgba(247,147,26,.2); }
+    .btn-panel-desel {
+      background: var(--green-dim); border: 1px solid rgba(34,197,94,.4);
+      border-radius: 5px; color: var(--green); font-size: 11px; font-weight: 600;
+      padding: 7px 10px; cursor: pointer; width: 100%;
+      display: block; text-align: center; transition: all var(--ease);
+    }
+    .btn-panel-desel:hover { background: rgba(34,197,94,.18); }
+
     /* warning box inside merge preview */
     .merge-warn-box {
       background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.3);
@@ -695,7 +710,6 @@
         <span id="hidden-badge" style="display:none" class="badge-hidden" onclick="clearExclusions()" title="Click to show all">
           <span id="hidden-count">0</span> hidden &times;
         </span>
-        <button class="btn-clean-wallet" onclick="openCleanWallet()">Clean Wallet</button>
         <span class="tbl-hint">Click any row to inspect</span>
       </div>
     </div>
@@ -1645,7 +1659,12 @@ function renderPanel({ utxo, ins, rarity, meta, satributes, specialSats }) {
       </div>
       <div class="p-section">
         <div class="p-title">Actions</div>
-        <button class="btn-exclude" onclick="excludeInscription('${id}')">
+        <button id="panel-sel-btn"
+          class="${selectedIdxs.has(activeIdx) ? 'btn-panel-desel' : 'btn-panel-sel'}"
+          onclick="togglePanelSelect()">
+          ${selectedIdxs.has(activeIdx) ? '&#10003; Selected for merge — click to remove' : '+ Add to merge selection'}
+        </button>
+        <button class="btn-exclude" onclick="excludeInscription('${id}')" style="margin-top:6px;">
           Hide this UTXO from results
         </button>
       </div>`;
@@ -1833,6 +1852,21 @@ function toggleSelect(idx, e) {
   if (tr) tr.classList.toggle('sel-row', selectedIdxs.has(idx));
   updateSelectionUI();
   updateHeaderCheckbox();
+}
+
+function togglePanelSelect() {
+  if (activeIdx < 0) return;
+  toggleSelect(activeIdx);
+  // Sync the checkbox for this row
+  const cb = document.querySelector(`input[data-chk-idx="${activeIdx}"]`);
+  if (cb) cb.checked = selectedIdxs.has(activeIdx);
+  // Update the panel button label + style
+  const btn = document.getElementById('panel-sel-btn');
+  if (btn) {
+    const isSel = selectedIdxs.has(activeIdx);
+    btn.className   = isSel ? 'btn-panel-desel' : 'btn-panel-sel';
+    btn.innerHTML   = isSel ? '&#10003; Selected for merge — click to remove' : '+ Add to merge selection';
+  }
 }
 
 function toggleSelectAll(cb) {
