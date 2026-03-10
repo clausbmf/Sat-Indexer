@@ -377,6 +377,82 @@
     /* ── metadata loading placeholder ────────────────────────────────────── */
     .meta-loading { color: var(--text3); font-size: 11px; padding: 6px 0; }
 
+    /* ── ordinal size badges ─────────────────────────────────────────────── */
+    .size-badge {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 99px;
+      text-transform: uppercase; letter-spacing: .4px;
+      border: 1px solid; white-space: nowrap;
+    }
+    .sz-normal { color: var(--text2);  border-color: var(--border2);         background: transparent; }
+    .sz-fat    { color: var(--accent); border-color: rgba(247,147,26,.35);   background: var(--accent-dim); }
+    .sz-whale  { color: var(--purple); border-color: rgba(168,85,247,.35);   background: var(--purple-dim); }
+
+    /* ── satribute badges ────────────────────────────────────────────────── */
+    .sat-badges { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+    .sat-badge {
+      display: inline-block; font-size: 9px; font-weight: 700;
+      padding: 2px 6px; border-radius: 99px;
+      text-transform: uppercase; letter-spacing: .4px;
+      border: 1px solid; white-space: nowrap;
+    }
+    .sb-default           { color: var(--text3);  border-color: var(--border2);              background: transparent; }
+    .sb-uncommon          { color: #eab308;        border-color: rgba(234,179,8,.35);          background: rgba(234,179,8,.1); }
+    .sb-pizza             { color: var(--accent);  border-color: rgba(247,147,26,.35);         background: var(--accent-dim); }
+    .sb-nakamoto          { color: var(--purple);  border-color: rgba(168,85,247,.35);         background: var(--purple-dim); }
+    .sb-block9            { color: var(--red);     border-color: rgba(239,68,68,.35);          background: rgba(239,68,68,.1); }
+    .sb-palindrome        { color: #06b6d4;        border-color: rgba(6,182,212,.35);          background: rgba(6,182,212,.1); }
+    .sb-vintage           { color: #f59e0b;        border-color: rgba(245,158,11,.35);         background: rgba(245,158,11,.1); }
+    .sb-first-transaction { color: var(--green);   border-color: rgba(34,197,94,.35);          background: var(--green-dim); }
+    .sb-cursed            { color: #f87171;        border-color: rgba(248,113,113,.35);        background: rgba(248,113,113,.1); }
+    .sb-nineball          { color: #fbbf24;        border-color: rgba(251,191,36,.35);         background: rgba(251,191,36,.1); }
+    .sb-coin              { color: #fbbf24;        border-color: rgba(251,191,36,.35);         background: rgba(251,191,36,.1); }
+    .sb-epic              { color: var(--purple);  border-color: rgba(168,85,247,.35);         background: var(--purple-dim); }
+    .sb-legendary         { color: var(--red);     border-color: rgba(239,68,68,.35);          background: rgba(239,68,68,.1); }
+    .sb-mythic            { color: #ec4899;        border-color: rgba(236,72,153,.35);         background: rgba(236,72,153,.1); }
+    .sb-reinscription     { color: var(--text2);   border-color: var(--border2);               background: transparent; }
+    .no-satributes        { color: var(--text3);   font-size: 11px; }
+    .sat-offset {
+      font-size: 9px; color: var(--text3); font-family: 'Cascadia Code','Fira Code',monospace;
+      white-space: nowrap; cursor: default;
+    }
+
+    /* ── rarity badges ────────────────────────────────────────────────────── */
+    .rarity-badge {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 99px;
+      text-transform: uppercase; letter-spacing: .5px;
+      border: 1px solid; white-space: nowrap;
+    }
+    .rar-common    { color: var(--text3);   border-color: var(--border2);            background: transparent; }
+    .rar-uncommon  { color: #eab308;        border-color: rgba(234,179,8,.35);        background: rgba(234,179,8,.1); }
+    .rar-rare      { color: var(--accent);  border-color: rgba(247,147,26,.35);       background: var(--accent-dim); }
+    .rar-epic      { color: var(--purple);  border-color: rgba(168,85,247,.35);       background: var(--purple-dim); }
+    .rar-legendary { color: var(--red);     border-color: rgba(239,68,68,.35);        background: rgba(239,68,68,.1); }
+    .rar-mythic    { color: #ec4899;        border-color: rgba(236,72,153,.35);       background: rgba(236,72,153,.1); }
+    .rar-loading   { color: var(--text3);   font-size: 11px; }
+
+    /* ── wallet connect ────────────────────────────────────────────────────── */
+    .wallet-connect {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 14px 24px; margin-bottom: 16px;
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .wallet-connect-label {
+      font-size: 11px; font-weight: 600; color: var(--text2);
+      text-transform: uppercase; letter-spacing: .8px; flex-shrink: 0; margin-right: 4px;
+    }
+    .btn-wallet {
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: var(--radius-sm); padding: 7px 16px;
+      font-size: 12px; font-weight: 600; cursor: pointer;
+      color: var(--text); transition: all var(--ease); white-space: nowrap;
+    }
+    .btn-wallet:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+    .btn-wallet.connected { border-color: var(--green); color: var(--green); background: var(--green-dim); }
+    .btn-wallet:disabled { opacity: .4; cursor: not-allowed; }
+    .wallet-status { font-size: 11px; color: var(--text3); margin-left: auto; }
+
     footer { text-align: center; padding: 20px; font-size: 11px; color: var(--text3); }
     footer a { color: var(--text3); text-decoration: none; }
     footer a:hover { color: var(--text2); }
@@ -436,6 +512,15 @@
     </div>
   </div>
 
+  <!-- wallet connect -->
+  <div class="wallet-connect">
+    <span class="wallet-connect-label">Connect Wallet</span>
+    <button class="btn-wallet" id="btn-xverse" onclick="connectXverse()">Xverse</button>
+    <button class="btn-wallet" id="btn-unisat" onclick="connectUniSat()">UniSat</button>
+    <button class="btn-wallet" id="btn-opnet"  onclick="connectOpNet()">OP_NET</button>
+    <span class="wallet-status" id="wallet-status">or paste address below</span>
+  </div>
+
   <!-- search -->
   <div class="search-card">
     <label for="addr">Bitcoin Taproot Address (bc1p)</label>
@@ -479,6 +564,21 @@
       <div class="sum-lbl">Clean UTXOs</div>
       <div class="sum-sub">no inscription</div>
     </div>
+    <div class="sum-cell">
+      <div class="sum-val c-orange" id="s-fat">—</div>
+      <div class="sum-lbl">Fat Ordinals</div>
+      <div class="sum-sub">5,000 – 19,999 sats</div>
+    </div>
+    <div class="sum-cell">
+      <div class="sum-val c-purple" id="s-whale">—</div>
+      <div class="sum-lbl">Whale Ordinals</div>
+      <div class="sum-sub">20,000+ sats</div>
+    </div>
+    <div class="sum-cell">
+      <div class="sum-val c-green" id="s-ord-btc">—</div>
+      <div class="sum-lbl">BTC in Ordinals</div>
+      <div class="sum-sub" id="s-ord-sats">—</div>
+    </div>
   </div>
 
   <!-- table -->
@@ -501,6 +601,9 @@
               Sats <span class="sort-icon" id="si-val">&#9660;</span>
             </th>
             <th>Ins #</th>
+            <th>Sat Rarity</th>
+            <th>Satributes</th>
+            <th>Ordinal Size</th>
             <th>TXID</th>
             <th class="sortable" id="th-vout" onclick="sortBy('vout')">
               Vout <span class="sort-icon" id="si-vout">&#9660;</span>
@@ -537,6 +640,294 @@
 /* ─── APIs ──────────────────────────────────────────────────────────────── */
 const MEMPOOL  = 'https://mempool.space/api';
 const ORDINALS = 'https://ordinals.com';
+
+/* ─── Rarity ────────────────────────────────────────────────────────────── */
+const RARITY_ORDER = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'];
+
+function rarityRank(r) {
+  const i = RARITY_ORDER.indexOf((r || 'common').toLowerCase());
+  return i === -1 ? 0 : i;
+}
+
+function rarityBadge(r) {
+  const label = (r || 'common').toLowerCase();
+  const cls   = RARITY_ORDER.includes(label) ? 'rar-' + label : 'rar-common';
+  return `<span class="rarity-badge ${cls}">${esc(label)}</span>`;
+}
+
+/* ─── Ordinal size classification ───────────────────────────────────────── */
+function ordinalSize(sats) {
+  if (sats >= 20000) return 'whale';
+  if (sats >= 5000)  return 'fat';
+  return 'normal';
+}
+
+function ordinalSizeBadge(sats) {
+  const tier = ordinalSize(sats);
+  const label = tier === 'whale' ? 'whale ordinal'
+              : tier === 'fat'   ? 'fat ordinal'
+              :                    'normal';
+  return `<span class="size-badge sz-${tier}">${label}</span>`;
+}
+
+/* ─── Satributes ────────────────────────────────────────────────────────── */
+// Maps satribute key → CSS modifier class
+const SAT_CSS = {
+  uncommon:          'uncommon',
+  pizza:             'pizza',
+  nakamoto:          'nakamoto',
+  block9:            'block9',
+  palindrome:        'palindrome',
+  vintage:           'vintage',
+  first_transaction: 'first-transaction',
+  cursed:            'cursed',
+  nineball:          'nineball',
+  coin:              'coin',
+  epic:              'epic',
+  legendary:         'legendary',
+  mythic:            'mythic',
+  reinscription:     'reinscription',
+};
+
+function satributeBadge(name) {
+  const cls = SAT_CSS[name] ? 'sb-' + SAT_CSS[name] : 'sb-default';
+  return `<span class="sat-badge ${cls}">${esc(name.replace(/_/g, ' '))}</span>`;
+}
+
+function satributesHtml(list, specialSats) {
+  if (!list || !list.length) return `<span class="no-satributes">none</span>`;
+  const badges = list.map(satributeBadge).join('');
+  // In the table cell, show the smallest non-zero offset as a compact hint
+  const first  = specialSats?.find(s => s.offset > 0 && s.attributes.length > 0);
+  const hint   = first
+    ? ` <span class="sat-offset" title="Sat ${first.sat.toLocaleString('en-US')} at offset +${first.offset.toLocaleString('en-US')} within this UTXO">+${fmt(first.offset)}</span>`
+    : '';
+  return `<div class="sat-badges">${badges}${hint}</div>`;
+}
+
+// Extract satributes from inscription metadata.
+// Primary source: meta.charms (ordinals.com standard).
+// Supplemented by: palindrome check on the sat number (computed locally).
+function extractSatributes(meta) {
+  const attrs = new Set();
+
+  // Charms returned by ordinals.com /r/inscription/{id}
+  for (const c of (meta?.charms || [])) attrs.add(String(c).toLowerCase());
+
+  // Compute palindrome from sat number if ordinals.com didn't include it
+  const sat = meta?.sat;
+  if (sat != null && !attrs.has('palindrome')) {
+    const s = String(sat);
+    if (s.length > 1 && s === s.split('').reverse().join('')) attrs.add('palindrome');
+  }
+
+  return [...attrs];
+}
+
+/* ─── Sat-range constants ───────────────────────────────────────────────── */
+// Block subsidy in epoch 0 (blocks 0–209 999): exactly 50 BTC = 5 000 000 000 sats
+const SUBSIDY_0 = 5_000_000_000;
+
+// Named sat ranges from known Bitcoin history.
+// Used for local detection — no API required.
+const KNOWN_SAT_RANGES = [
+  // Satoshi's first 10 blocks (widely considered "nakamoto" sats)
+  { name: 'nakamoto',          start: 0,                       end: 10  * SUBSIDY_0 - 1 },
+  // Block 9 coinbase only
+  { name: 'block9',            start: 9  * SUBSIDY_0,          end: 10  * SUBSIDY_0 - 1 },
+  // First 1 000 blocks ("vintage")
+  { name: 'vintage',           start: 0,                       end: 1_000 * SUBSIDY_0 - 1 },
+  // Block 170 — first non-coinbase transaction (Satoshi → Hal Finney)
+  { name: 'first_transaction', start: 170 * SUBSIDY_0,         end: 171 * SUBSIDY_0 - 1 },
+  // Block 57 043 — the Bitcoin pizza transaction
+  { name: 'pizza',             start: 57_043 * SUBSIDY_0,      end: 57_044 * SUBSIDY_0 - 1 },
+];
+
+/* ─── Parse sat ranges from ordinals.com output-page HTML ───────────────── */
+// ordinals.com renders sat ranges as pairs of <a href="/sat/N">N</a> links.
+function parseSatRangesFromDoc(doc) {
+  const ranges = [];
+
+  // Primary: look for /sat/{digits} links (these appear only in the sat-ranges section)
+  const satLinks = [...doc.querySelectorAll('a[href^="/sat/"]')]
+    .filter(a => /^\/sat\/\d+$/.test(a.getAttribute('href')));
+
+  for (let i = 0; i + 1 < satLinks.length; i += 2) {
+    const start = Number(satLinks[i].textContent.trim().replace(/,/g, ''));
+    const end   = Number(satLinks[i + 1].textContent.trim().replace(/,/g, ''));
+    // Sanity: valid numbers, end ≥ start, range < 50 000 BTC
+    if (Number.isFinite(start) && Number.isFinite(end) &&
+        end >= start && end - start < 5_000_000_000_000) {
+      ranges.push({ start, end });
+    }
+  }
+
+  // Fallback: regex scan for "N–M" patterns (en-dash, em-dash, or hyphen)
+  if (!ranges.length) {
+    const text = doc.body?.textContent || '';
+    const re   = /(\d{9,16})\s*[–—\-]\s*(\d{9,16})/g;
+    let m;
+    while ((m = re.exec(text)) !== null) {
+      const start = Number(m[1]);
+      const end   = Number(m[2]);
+      if (end >= start && end - start < 5_000_000_000_000) ranges.push({ start, end });
+    }
+  }
+
+  return ranges;
+}
+
+/* ─── Efficient palindrome finder ───────────────────────────────────────── */
+// Returns the smallest palindrome number ≥ n in O(log n) time.
+function nextPalindrome(n) {
+  n = Math.ceil(n);
+  if (n <= 0) return 0;
+  const s   = String(n);
+  const len = s.length;
+  const arr = s.split('').map(Number);
+
+  // Candidate A: mirror the left half onto the right
+  const cA = [...arr];
+  for (let i = 0; i < Math.floor(len / 2); i++) cA[len - 1 - i] = cA[i];
+  if (Number(cA.join('')) >= n) return Number(cA.join(''));
+
+  // Candidate B: increment the middle of the left half, then mirror
+  const cB    = [...arr];
+  const pivot = Math.ceil(len / 2) - 1;
+  let carry   = 1;
+  for (let i = pivot; i >= 0 && carry; i--) {
+    cB[i] += carry;
+    carry  = Math.floor(cB[i] / 10);
+    cB[i] %= 10;
+  }
+  if (carry) {
+    // Overflow (e.g. 999 → 1001)
+    const nl = len + 1;
+    return Number('1' + '0'.repeat(nl - 2) + '1');
+  }
+  for (let i = 0; i < Math.floor(len / 2); i++) cB[len - 1 - i] = cB[i];
+  return Number(cB.join(''));
+}
+
+function findFirstPalindromeInRange(start, end) {
+  if (start > end) return null;
+  const p = nextPalindrome(start);
+  return p <= end ? p : null;
+}
+
+/* ─── Offset of a sat within a UTXO's sat-range list ────────────────────── */
+function computeSatOffset(satRanges, sat) {
+  let offset = 0;
+  for (const { start, end } of satRanges) {
+    if (sat >= start && sat <= end) return offset + (sat - start);
+    offset += (end - start + 1);
+  }
+  return -1; // sat not in these ranges
+}
+
+/* ─── Local special-sat detection (no API calls) ────────────────────────── */
+// Returns [{ sat, offset, attributes[] }] sorted by offset ascending.
+function detectSpecialSatsLocal(satRanges) {
+  const found   = new Map(); // sat → Set<attribute>
+  const addAttr = (sat, attr) => {
+    if (!found.has(sat)) found.set(sat, new Set());
+    found.get(sat).add(attr);
+  };
+
+  for (const { start, end } of satRanges) {
+    // Hardcoded Bitcoin-history ranges
+    for (const sr of KNOWN_SAT_RANGES) {
+      if (start <= sr.end && end >= sr.start) {
+        addAttr(Math.max(start, sr.start), sr.name);
+      }
+    }
+    // Mathematical palindrome check
+    const p = findFirstPalindromeInRange(start, end);
+    if (p !== null) addAttr(p, 'palindrome');
+  }
+
+  return [...found.entries()]
+    .map(([sat, attrs]) => ({
+      sat,
+      offset: computeSatOffset(satRanges, sat),
+      attributes: [...attrs],
+    }))
+    .filter(s => s.attributes.length > 0)
+    .sort((a, b) => a.offset - b.offset);
+}
+
+/* ─── Fetch ordinals.com sat charms via /r/sat/{n} ─────────────────────── */
+async function fetchSatCharms(sat) {
+  try {
+    const res = await fetch(`${ORDINALS}/r/sat/${encodeURIComponent(sat)}`);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch { return null; }
+}
+
+/* ─── Build panel satributes block (shows offsets for non-zero positions) ── */
+function buildPanelSatBlock(satributes, specialSats) {
+  if (!satributes?.length) return `<span class="no-satributes">none</span>`;
+
+  const hasOffsets = specialSats?.some(s => s.offset > 0);
+  const allBadges  = `<div class="sat-badges" style="margin-bottom:${hasOffsets ? '10px' : '0'}">${satributes.map(satributeBadge).join('')}</div>`;
+
+  const details = (specialSats || [])
+    .filter(s => s.offset > 0 && s.attributes.length > 0)
+    .map(s => `
+      <div class="m-row" style="margin-top:4px;align-items:flex-start;">
+        <span class="m-key" style="white-space:nowrap;padding-top:2px;">sat #${fmt(s.sat)}</span>
+        <div style="text-align:right;">
+          <div class="sat-badges" style="justify-content:flex-end;margin-bottom:4px;">${s.attributes.map(satributeBadge).join('')}</div>
+          <div style="font-size:10px;color:var(--text3);">offset <span style="font-family:monospace">+${fmt(s.offset)}</span> in UTXO</div>
+        </div>
+      </div>`)
+    .join('');
+
+  return allBadges + details;
+}
+
+/* ─── Background rarity loader (runs after table renders) ───────────────── */
+// Three-phase:
+//   1. Fetch sat ranges for UTXOs whose output page wasn't already fetched
+//   2. Fetch inscription metadata for rarity
+//   3a. Local special-sat detection (instant)
+//   3b. API enrichment via /r/sat/{n} (async, updates cells as results arrive)
+async function loadRarities() {
+  const BATCH = 5;
+  const inscribed = rows.map((r, i) => ({ r, i })).filter(({ r }) => r.ins);
+
+  // Mark clean UTXOs immediately — no inscription means no charms
+  rows.forEach((r, i) => {
+    if (!r.ins) {
+      r.rarity     = 'common';
+      r.satributes = [];
+      const rarCell = document.getElementById('rar-' + i);
+      if (rarCell) rarCell.innerHTML = rarityBadge('common');
+      const satCell = document.getElementById('sat-' + i);
+      if (satCell) satCell.innerHTML = satributesHtml([]);
+    }
+  });
+
+  for (let b = 0; b < inscribed.length; b += BATCH) {
+    await Promise.all(inscribed.slice(b, b + BATCH).map(async ({ r, i }) => {
+      try {
+        const meta   = await fetchInscriptionMeta(r.ins.inscriptionId);
+        const raw    = meta?.rarity || meta?.sat_rarity || 'common';
+        r.rarity     = raw.toLowerCase();
+        r.meta       = meta;
+        r.satributes = extractSatributes(meta);
+      } catch {
+        r.rarity     = 'common';
+        r.satributes = [];
+      }
+      const rarCell = document.getElementById('rar-' + i);
+      if (rarCell) rarCell.innerHTML = rarityBadge(r.rarity);
+      const satCell = document.getElementById('sat-' + i);
+      if (satCell) satCell.innerHTML = satributesHtml(r.satributes);
+    }));
+  }
+}
 
 /* ─── State ─────────────────────────────────────────────────────────────── */
 let rows      = [];   // merged { utxo, inscription|null }
@@ -785,6 +1176,9 @@ async function run() {
     document.getElementById('table-card').classList.add('show');
     hideStatus();
 
+    // Fetch sat rarity in the background — updates cells as data arrives
+    loadRarities();
+
   } catch (e) {
     hideStatus();
     showErr(e.message);
@@ -797,12 +1191,20 @@ async function run() {
 function renderSummary(utxos, inscriptions) {
   const totalSats  = utxos.reduce((s, u) => s + u.value, 0);
   const cleanUTXOs = rows.filter(r => !r.ins).length;
+  const inscribed  = rows.filter(r => r.ins);
+  const fatCount   = inscribed.filter(r => ordinalSize(r.utxo.value) === 'fat').length;
+  const whaleCount = inscribed.filter(r => ordinalSize(r.utxo.value) === 'whale').length;
+  const ordSats    = inscribed.reduce((s, r) => s + r.utxo.value, 0);
 
-  document.getElementById('s-sats').textContent  = fmt(totalSats);
-  document.getElementById('s-btc').textContent   = satsBtc(totalSats);
-  document.getElementById('s-utxos').textContent = fmt(utxos.length);
-  document.getElementById('s-ins').textContent   = fmt(inscriptions.length);
-  document.getElementById('s-clean').textContent = fmt(cleanUTXOs);
+  document.getElementById('s-sats').textContent     = fmt(totalSats);
+  document.getElementById('s-btc').textContent      = satsBtc(totalSats);
+  document.getElementById('s-utxos').textContent    = fmt(utxos.length);
+  document.getElementById('s-ins').textContent      = fmt(inscriptions.length);
+  document.getElementById('s-clean').textContent    = fmt(cleanUTXOs);
+  document.getElementById('s-fat').textContent      = fmt(fatCount);
+  document.getElementById('s-whale').textContent    = fmt(whaleCount);
+  document.getElementById('s-ord-btc').textContent  = satsBtc(ordSats);
+  document.getElementById('s-ord-sats').textContent = fmt(ordSats) + ' sats';
 }
 
 /* ─── Sort ──────────────────────────────────────────────────────────────── */
@@ -837,7 +1239,7 @@ function renderTable() {
   updateHiddenBadge();
 
   if (!rows.length) {
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="6">No UTXOs found for this address.</td></tr>`;
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="9">No UTXOs found for this address.</td></tr>`;
     document.getElementById('row-count').textContent = '';
     return;
   }
@@ -847,7 +1249,7 @@ function renderTable() {
     .filter(r => !r.ins || !excludedIds.has(r.ins.inscriptionId));
 
   if (!visible.length) {
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="6">All inscribed UTXOs are hidden. Click the badge above to restore.</td></tr>`;
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="9">All inscribed UTXOs are hidden. Click the badge above to restore.</td></tr>`;
     document.getElementById('row-count').textContent = '';
     return;
   }
@@ -871,10 +1273,27 @@ function renderTable() {
       ? `<span class="ins-num">${ins.inscriptionNumber != null ? '#' + fmt(ins.inscriptionNumber) : 'inscribed'}</span>`
       : `<span class="no-ins-label">—</span>`;
 
+    // Rarity cell — shows cached value or loading indicator
+    const rarCell = r.rarity
+      ? rarityBadge(r.rarity)
+      : ins
+        ? `<span class="rarity-badge rar-loading">…</span>`
+        : rarityBadge('common');
+
+    // Satributes cell — shows cached badges or loading indicator
+    const satCell = r.satributes
+      ? satributesHtml(r.satributes)
+      : ins
+        ? `<span class="no-satributes">…</span>`
+        : satributesHtml([]);
+
     return `<tr class="${cls.trim()}" onclick="selectRow(${idx})">
       <td class="td-pre"><div class="thumb">${thumb}</div></td>
       <td>${satsCell}</td>
       <td>${insNum}</td>
+      <td id="rar-${idx}">${rarCell}</td>
+      <td id="sat-${idx}">${satCell}</td>
+      <td>${ins ? ordinalSizeBadge(utxo.value) : `<span style="color:var(--text3);font-size:11px">—</span>`}</td>
       <td><span class="mono">${short(utxo.txid)}</span></td>
       <td class="td-vout">${utxo.vout}</td>
       <td class="td-arr">&#8250;</td>
@@ -954,7 +1373,7 @@ function closePanel() {
   }
 }
 
-function renderPanel({ utxo, ins }) {
+function renderPanel({ utxo, ins, rarity, meta, satributes, specialSats }) {
   const body = document.getElementById('panel-body');
 
   // ── inscription preview ──────────────────────────────────────────────────
@@ -987,9 +1406,32 @@ function renderPanel({ utxo, ins }) {
     const numRow = ins.inscriptionNumber != null
       ? `<div class="m-row"><span class="m-key">Number</span><span class="m-val">#${fmt(ins.inscriptionNumber)}</span></div>` : '';
 
+    // Rarity badge
+    const rarBadgeHtml = rarity
+      ? `<div style="margin-bottom:10px;display:flex;align-items:center;gap:8px;">
+           <span style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;font-weight:700;">Sat Rarity</span>
+           ${rarityBadge(rarity)}
+         </div>`
+      : `<div style="margin-bottom:10px;" id="panel-rar-badge">
+           <span class="rarity-badge rar-loading" style="font-size:11px;">fetching rarity…</span>
+         </div>`;
+
+    // Satributes block (with per-sat offset detail when sat ranges are known)
+    const satBlockHtml = satributes != null
+      ? `<div style="margin-bottom:14px;">
+           <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">Satributes</div>
+           ${buildPanelSatBlock(satributes, specialSats)}
+         </div>`
+      : `<div style="margin-bottom:14px;" id="panel-sat-block">
+           <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">Satributes</div>
+           <span class="no-satributes">loading…</span>
+         </div>`;
+
     insMeta = `
       <div class="p-section">
         <div class="p-title">Inscription</div>
+        ${rarBadgeHtml}
+        ${satBlockHtml}
         <div class="m-row m-col">
           <span class="m-key">ID</span>
           <span class="m-val sm">${id}</span>
@@ -1011,20 +1453,47 @@ function renderPanel({ utxo, ins }) {
         </button>
       </div>`;
 
-    // Fetch full metadata async and inject into the placeholder
-    fetchInscriptionMeta(ins.inscriptionId).then(meta => {
+    // Use cached metadata if already fetched by loadRarities(), otherwise fetch now
+    const metaPromise = meta
+      ? Promise.resolve(meta)
+      : fetchInscriptionMeta(ins.inscriptionId).then(m => { if (m) { ins.meta = m; } return m; });
+
+    metaPromise.then(meta => {
       const el = document.getElementById('ins-meta-detail');
       if (!el || !meta) { if (el) el.remove(); return; }
-      const rows = [
+
+      // Update rarity badge in panel if it wasn't shown yet (rarity not cached)
+      const panelRar = document.getElementById('panel-rar-badge');
+      const rarVal   = (meta.rarity || meta.sat_rarity || 'common').toLowerCase();
+      if (panelRar) panelRar.outerHTML =
+        `<div style="margin-bottom:10px;display:flex;align-items:center;gap:8px;">
+           <span style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;font-weight:700;">Sat Rarity</span>
+           ${rarityBadge(rarVal)}
+         </div>`;
+
+      // Update satributes block in panel if it wasn't shown yet
+      const panelSat = document.getElementById('panel-sat-block');
+      if (panelSat) {
+        // Use already-computed specialSats if available, else fall back to inscription charms
+        const useSats  = ins.specialSats?.length ? ins.specialSats
+          : extractSatributes(meta).map(a => ({ sat: meta.sat ?? 0, offset: 0, attributes: [a] }));
+        const useAttrs = ins.satributes?.length  ? ins.satributes : extractSatributes(meta);
+        panelSat.outerHTML =
+          `<div style="margin-bottom:14px;">
+             <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">Satributes</div>
+             ${buildPanelSatBlock(useAttrs, useSats)}
+           </div>`;
+      }
+
+      const metaRows = [
         ['Content type', esc(meta.content_type  || '—')],
         ['Genesis block', meta.genesis_height != null ? fmt(meta.genesis_height) : '—'],
         ['Sat',           meta.sat             != null ? fmt(meta.sat)           : '—'],
-        ['Sat rarity',    esc(meta.rarity       || meta.sat_rarity || '—')],
         ['Parent',        meta.parent ? `<span class="m-val sm" style="word-break:break-all">${esc(meta.parent)}</span>` : '—'],
       ].map(([k, v]) =>
         `<div class="m-row"><span class="m-key">${k}</span><span class="m-val">${v}</span></div>`
       ).join('');
-      el.outerHTML = rows;
+      el.outerHTML = metaRows;
     });
   }
 
@@ -1034,7 +1503,13 @@ function renderPanel({ utxo, ins }) {
     ${previewHtml}
     <div class="p-section">
       <div class="p-title">UTXO</div>
-      <div class="m-row"><span class="m-key">Value</span><span class="m-val big">${fmt(utxo.value)} sats</span></div>
+      <div class="m-row">
+        <span class="m-key">Value</span>
+        <span class="m-val big" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          ${fmt(utxo.value)} sats
+          ${ins ? ordinalSizeBadge(utxo.value) : ''}
+        </span>
+      </div>
       <div class="m-row"><span class="m-key">Vout</span><span class="m-val">${utxo.vout}</span></div>
       <div class="m-row m-col">
         <span class="m-key">TXID</span>
@@ -1067,6 +1542,87 @@ function copyText(text, btnId, label) {
   });
   const btn = document.getElementById(btnId);
   if (btn) { btn.textContent = 'Copied!'; btn.classList.add('copied'); setTimeout(() => { btn.textContent = label; btn.classList.remove('copied'); }, 1800); }
+}
+
+/* ─── Wallet connection ─────────────────────────────────────────────────── */
+function setWalletAddress(address, walletName) {
+  addrEl.value = address;
+  addrEl.dispatchEvent(new Event('input'));
+  const statusEl = document.getElementById('wallet-status');
+  if (statusEl) statusEl.textContent = walletName + ' connected';
+}
+
+async function connectXverse() {
+  const btn = document.getElementById('btn-xverse');
+  try {
+    btn.disabled = true;
+
+    // Xverse injects under both paths depending on version
+    const provider = window.XverseProviders?.BitcoinProvider ?? window.BitcoinProvider;
+    if (!provider) throw new Error('Xverse wallet not detected. Make sure the Xverse extension is installed and the page is served over http/https (not file://).');
+
+    let addr;
+    // Try both method names — sats-connect v1 uses 'getAddresses', v2 uses 'getAccounts'
+    for (const method of ['getAccounts', 'getAddresses']) {
+      try {
+        const res  = await provider.request(method, {
+          purposes: ['ordinals'],
+          message:  'Connect to Ordinals Inspector',
+        });
+        const list = res?.result?.addresses ?? res?.result ?? [];
+        const hit  = Array.isArray(list)
+          ? list.find(a => a.purpose === 'ordinals' || a.purposes?.includes('ordinals')) ?? list[0]
+          : null;
+        addr = hit?.address;
+        if (addr) break;
+      } catch { /* try next method */ }
+    }
+
+    if (!addr) throw new Error('No Taproot address returned by Xverse. Please approve the connection in the popup.');
+    setWalletAddress(addr, 'Xverse');
+    document.querySelectorAll('.btn-wallet').forEach(b => b.classList.remove('connected'));
+    btn.classList.add('connected');
+  } catch (e) { showErr(e.message); }
+  finally     { btn.disabled = false; }
+}
+
+async function connectUniSat() {
+  const btn = document.getElementById('btn-unisat');
+  try {
+    btn.disabled = true;
+    if (!window.unisat) throw new Error('UniSat wallet not detected. Install the UniSat browser extension.');
+    const accounts = await window.unisat.requestAccounts();
+    const addr      = accounts?.[0];
+    if (!addr) throw new Error('No address returned by UniSat.');
+    setWalletAddress(addr, 'UniSat');
+    document.querySelectorAll('.btn-wallet').forEach(b => b.classList.remove('connected'));
+    btn.classList.add('connected');
+  } catch (e) { showErr(e.message); }
+  finally     { btn.disabled = false; }
+}
+
+async function connectOpNet() {
+  const btn = document.getElementById('btn-opnet');
+  try {
+    btn.disabled = true;
+    const provider = window.opnet;
+    if (!provider) throw new Error('OP_NET wallet not detected. Install the OP_NET browser extension.');
+    let addr;
+    if (typeof provider.connect === 'function') {
+      const result = await provider.connect();
+      addr = Array.isArray(result) ? result[0]
+           : (result?.taproot ?? result?.address ?? result);
+    } else if (typeof provider.requestAccounts === 'function') {
+      const accounts = await provider.requestAccounts();
+      addr = accounts?.[0];
+    }
+    if (typeof addr !== 'string' || !addr) throw new Error('No address returned by OP_NET.');
+    if (!isTaproot(addr)) throw new Error('OP_NET returned a non-Taproot address: ' + addr);
+    setWalletAddress(addr, 'OP_NET');
+    document.querySelectorAll('.btn-wallet').forEach(b => b.classList.remove('connected'));
+    btn.classList.add('connected');
+  } catch (e) { showErr(e.message); }
+  finally     { btn.disabled = false; }
 }
 
 /* ─── file:// warning ───────────────────────────────────────────────────── */
