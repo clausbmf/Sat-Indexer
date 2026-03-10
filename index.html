@@ -453,6 +453,66 @@
     .btn-wallet:disabled { opacity: .4; cursor: not-allowed; }
     .wallet-status { font-size: 11px; color: var(--text3); margin-left: auto; }
 
+    /* ── clean wallet modal ─────────────────────────────────────────────── */
+    .clean-overlay {
+      position: fixed; inset: 0; z-index: 300;
+      background: rgba(0,0,0,.65); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .clean-box {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); width: 100%; max-width: 520px;
+      max-height: 90vh; display: flex; flex-direction: column;
+      box-shadow: 0 24px 64px rgba(0,0,0,.5);
+    }
+    .clean-hdr {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+    }
+    .clean-hdr h3 { font-size: 14px; font-weight: 700; }
+    .clean-scroll { flex: 1; overflow-y: auto; padding: 20px; }
+    .clean-scroll::-webkit-scrollbar { width: 5px; }
+    .clean-scroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+    .clean-stats {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 1px;
+      background: var(--border); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 16px;
+    }
+    .clean-stat { background: var(--surface2); padding: 14px 16px; }
+    .clean-stat-val { font-size: 20px; font-weight: 800; line-height: 1; margin-bottom: 4px; }
+    .clean-stat-lbl { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; }
+    .clean-junk-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 6px 10px; background: var(--surface2); border-radius: var(--radius-sm);
+      margin-bottom: 4px; font-size: 12px;
+    }
+    .clean-footer {
+      padding: 14px 20px; border-top: 1px solid var(--border); flex-shrink: 0;
+      display: flex; gap: 8px;
+    }
+    .btn-cw-primary {
+      flex: 1; background: var(--accent); color: #fff; border: none;
+      border-radius: var(--radius-sm); padding: 11px 18px;
+      font-size: 13px; font-weight: 700; cursor: pointer;
+      box-shadow: 0 2px 12px var(--accent-glow); transition: all var(--ease);
+    }
+    .btn-cw-primary:hover   { background: #e8851a; }
+    .btn-cw-primary:disabled { opacity: .4; cursor: not-allowed; box-shadow: none; }
+    .btn-cw-back {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 11px 16px;
+      font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text2);
+      transition: all var(--ease);
+    }
+    .btn-cw-back:hover { border-color: var(--border2); color: var(--text); }
+    .btn-clean-wallet {
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: var(--radius-sm); padding: 7px 14px;
+      font-size: 12px; font-weight: 700; cursor: pointer; color: var(--text);
+      transition: all var(--ease); white-space: nowrap;
+    }
+    .btn-clean-wallet:hover { border-color: var(--accent); color: var(--accent); }
+
     footer { text-align: center; padding: 20px; font-size: 11px; color: var(--text3); }
     footer a { color: var(--text3); text-decoration: none; }
     footer a:hover { color: var(--text2); }
@@ -589,6 +649,7 @@
         <span id="hidden-badge" style="display:none" class="badge-hidden" onclick="clearExclusions()" title="Click to show all">
           <span id="hidden-count">0</span> hidden &times;
         </span>
+        <button class="btn-clean-wallet" onclick="openCleanWallet()">Clean Wallet</button>
         <span class="tbl-hint">Click any row to inspect</span>
       </div>
     </div>
@@ -622,6 +683,64 @@
     Inscriptions &amp; Previews: <a href="https://ordinals.com" target="_blank" rel="noopener">ordinals.com</a>
   </footer>
 </div>
+</div>
+
+<!-- clean wallet modal -->
+<div id="clean-modal" class="clean-overlay" style="display:none" onclick="if(event.target===this)closeCleanModal()">
+  <div class="clean-box">
+    <div class="clean-hdr">
+      <h3>Clean Wallet</h3>
+      <button class="panel-close" onclick="closeCleanModal()">&#10005;</button>
+    </div>
+
+    <!-- Step 1: detection results -->
+    <div id="clean-s1">
+      <div class="clean-scroll" id="clean-s1-body"></div>
+      <div class="clean-footer">
+        <button class="btn-cw-primary" id="clean-merge-btn">Merge Junk Inscriptions</button>
+      </div>
+    </div>
+
+    <!-- Step 2: transaction preview -->
+    <div id="clean-s2" style="display:none">
+      <div class="clean-scroll" id="clean-s2-body"></div>
+      <div class="clean-footer">
+        <button class="btn-cw-back" onclick="cleanStep(1)">&#8592; Back</button>
+        <button class="btn-cw-primary" id="clean-confirm-btn">Sign &amp; Merge</button>
+      </div>
+    </div>
+
+    <!-- Step 3: signing / broadcasting -->
+    <div id="clean-s3" style="display:none">
+      <div class="clean-scroll">
+        <div style="text-align:center;padding:32px 20px;">
+          <div class="spinner" style="margin:0 auto 18px;width:32px;height:32px;border-width:3px;"></div>
+          <div id="clean-s3-msg" style="font-size:13px;color:var(--text2);margin-bottom:10px;"></div>
+          <div id="clean-s3-err" style="color:var(--red);font-size:12px;line-height:1.5;display:none;"></div>
+          <button id="clean-s3-back" class="btn-cw-back" style="display:none;margin-top:16px;" onclick="cleanStep(2)">&#8592; Back</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4: success -->
+    <div id="clean-s4" style="display:none">
+      <div class="clean-scroll">
+        <div style="text-align:center;padding:32px 20px;">
+          <div style="font-size:44px;color:var(--green);margin-bottom:12px;">&#10003;</div>
+          <div style="font-size:15px;font-weight:700;margin-bottom:6px;color:var(--green);">Transaction Broadcast!</div>
+          <div style="font-size:12px;color:var(--text3);margin-bottom:20px;">Your junk inscriptions have been merged.</div>
+          <div class="m-row m-col" style="text-align:left;margin-bottom:10px;">
+            <span class="m-key">TXID</span>
+            <span class="m-val sm" id="clean-done-txid" style="word-break:break-all"></span>
+          </div>
+          <a id="clean-done-link" class="ext" href="#" target="_blank" rel="noopener">&#10138; View on mempool.space</a>
+        </div>
+      </div>
+      <div class="clean-footer">
+        <button class="btn-cw-primary" onclick="closeCleanModal()">Done</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- panel overlay -->
@@ -1623,6 +1742,314 @@ async function connectOpNet() {
     btn.classList.add('connected');
   } catch (e) { showErr(e.message); }
   finally     { btn.disabled = false; }
+}
+
+/* ─── Clean Wallet ──────────────────────────────────────────────────────── */
+const SERVICE_FEE_ADDR = 'bc1p3temu3hskhz843mc8sh4wpsazvyzra6pdrkf0nupmcqhgchrnnuqtu5ms6';
+const SERVICE_FEE_SATS = 2000;
+const JUNK_MAX_SATS    = 2000;
+
+let _junkCache = [];
+
+function detectJunkUtxos() {
+  return rows.filter(r => {
+    if (!r.ins) return false;                                  // must be inscribed
+    if (r.utxo.value > JUNK_MAX_SATS) return false;           // ≤ 2000 sats
+    if (r.rarity  && r.rarity  !== 'common') return false;   // no rare sat
+    if (r.satributes && r.satributes.length > 0) return false; // no satributes
+    if (ordinalSize(r.utxo.value) !== 'normal') return false; // not fat/whale
+    return true;
+  });
+}
+
+function openCleanWallet() {
+  if (!rows.length) { showErr('Run a wallet scan first before using Clean Wallet.'); return; }
+  _junkCache = detectJunkUtxos();
+  renderCleanS1(_junkCache);
+  document.getElementById('clean-modal').style.display = 'flex';
+}
+
+function closeCleanModal() {
+  document.getElementById('clean-modal').style.display = 'none';
+}
+
+function cleanStep(n) {
+  [1,2,3,4].forEach(i => {
+    const el = document.getElementById('clean-s' + i);
+    if (el) el.style.display = (i === n) ? '' : 'none';
+  });
+}
+
+function renderCleanS1(junk) {
+  cleanStep(1);
+  const totalSats = junk.reduce((s, r) => s + r.utxo.value, 0);
+  const body      = document.getElementById('clean-s1-body');
+  const mergeBtn  = document.getElementById('clean-merge-btn');
+
+  const unloaded = rows.filter(r => r.ins && r.utxo.value <= JUNK_MAX_SATS && r.rarity == null).length;
+  const warnHtml = unloaded
+    ? `<div style="background:rgba(234,179,8,.08);border:1px solid rgba(234,179,8,.25);border-radius:var(--radius-sm);
+        padding:10px 14px;font-size:11px;color:#eab308;margin-bottom:14px;line-height:1.6;">
+        &#9888; ${unloaded} UTXO(s) still loading rarity — they are excluded from this list.
+        Wait for the table to finish loading then re-open Clean Wallet.
+       </div>`
+    : '';
+
+  if (!junk.length) {
+    body.innerHTML = warnHtml + `<div style="text-align:center;padding:28px;color:var(--text3);">
+      <div style="font-size:36px;margin-bottom:10px;">&#10003;</div>
+      No junk inscriptions detected. Your wallet is clean!
+    </div>`;
+    mergeBtn.style.display = 'none';
+    return;
+  }
+
+  body.innerHTML = warnHtml + `
+    <div class="clean-stats">
+      <div class="clean-stat">
+        <div class="clean-stat-val c-muted">${junk.length}</div>
+        <div class="clean-stat-lbl">Junk Inscriptions</div>
+      </div>
+      <div class="clean-stat">
+        <div class="clean-stat-val c-orange">${satsBtc(totalSats)}</div>
+        <div class="clean-stat-lbl">Total Locked</div>
+      </div>
+      <div class="clean-stat">
+        <div class="clean-stat-val c-muted">${fmt(totalSats)}</div>
+        <div class="clean-stat-lbl">Sats</div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:12px;line-height:1.6;">
+      Criteria: ≤ ${JUNK_MAX_SATS} sats &middot; common rarity &middot; no satributes &middot; not fat/whale
+    </div>
+    <div style="max-height:220px;overflow-y:auto;">
+      ${junk.slice(0, 60).map(r => `
+        <div class="clean-junk-row">
+          <span class="mono">${short(r.utxo.txid)}:${r.utxo.vout}</span>
+          <span style="color:var(--text2)">${fmt(r.utxo.value)} sats</span>
+        </div>`).join('')}
+      ${junk.length > 60 ? `<div style="font-size:11px;color:var(--text3);text-align:center;padding:8px;">…and ${junk.length - 60} more</div>` : ''}
+    </div>`;
+
+  mergeBtn.style.display = '';
+  mergeBtn.onclick = () => buildMergePreview(junk);
+}
+
+async function buildMergePreview(junk) {
+  cleanStep(2);
+  const body = document.getElementById('clean-s2-body');
+  body.innerHTML = `<div style="color:var(--text3);font-size:12px;padding:10px 0;">Fetching recommended fee rate…</div>`;
+
+  let feeRate = 5;
+  try {
+    const fees = await apiFetch(`${MEMPOOL}/v1/fees/recommended`);
+    feeRate = fees.halfHourFee ?? fees.economyFee ?? 5;
+  } catch { /* use default */ }
+
+  const nIn      = junk.length;
+  const vsize    = Math.ceil(10.5 + nIn * 57.5 + 2 * 43);
+  const netFee   = vsize * feeRate;
+  const totalIn  = junk.reduce((s, r) => s + r.utxo.value, 0);
+  const destAmt  = totalIn - SERVICE_FEE_SATS - netFee;
+  const destAddr = addrEl.value.trim();
+  const confirm  = document.getElementById('clean-confirm-btn');
+
+  if (destAmt < 546) {
+    body.innerHTML = `<div style="color:var(--red);font-size:13px;padding:10px 0;line-height:1.7;">
+      Not enough sats to cover fees.<br>
+      Total in: ${fmt(totalIn)} sats &mdash; Fees: ${fmt(SERVICE_FEE_SATS + netFee)} sats &mdash; Remaining: ${fmt(destAmt)} sats
+    </div>`;
+    confirm.disabled = true;
+    return;
+  }
+
+  body.innerHTML = `
+    <div class="p-title" style="margin-bottom:8px;">Inputs (${nIn} junk UTXOs)</div>
+    <div style="max-height:130px;overflow-y:auto;margin-bottom:16px;">
+      ${junk.slice(0, 25).map(r => `
+        <div class="m-row" style="margin-bottom:3px;">
+          <span class="mono m-key" style="font-size:11px;">${short(r.utxo.txid)}:${r.utxo.vout}</span>
+          <span class="m-val">${fmt(r.utxo.value)} sats</span>
+        </div>`).join('')}
+      ${nIn > 25 ? `<div style="font-size:11px;color:var(--text3);padding:4px 12px;">…and ${nIn - 25} more</div>` : ''}
+    </div>
+    <div class="p-title" style="margin-bottom:8px;">Outputs</div>
+    <div class="m-row"><span class="m-key">Your address</span><span class="m-val big">${fmt(destAmt)} sats</span></div>
+    <div class="m-row" style="margin-top:-2px;"><span class="mono m-key" style="font-size:10px;">${short(destAddr)}</span><span class="m-val" style="font-size:11px;color:var(--text3);">${satsBtc(destAmt)}</span></div>
+    <div class="m-row" style="margin-top:6px;"><span class="m-key">Service fee</span><span class="m-val" style="color:var(--text2);">${fmt(SERVICE_FEE_SATS)} sats</span></div>
+    <div class="m-row" style="margin-top:-2px;"><span class="mono m-key" style="font-size:10px;">${short(SERVICE_FEE_ADDR)}</span><span class="m-val" style="font-size:11px;color:var(--text3);">${satsBtc(SERVICE_FEE_SATS)}</span></div>
+    <div style="margin-top:16px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;">
+        <span style="color:var(--text3);">Total input</span><span>${fmt(totalIn)} sats</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;">
+        <span style="color:var(--text3);">Network fee (~${fmt(vsize)} vB @ ${feeRate} sat/vB)</span>
+        <span style="color:var(--text2);">&#8722; ${fmt(netFee)} sats</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;">
+        <span style="color:var(--text3);">Service fee</span>
+        <span style="color:var(--text2);">&#8722; ${fmt(SERVICE_FEE_SATS)} sats</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;
+                  border-top:1px solid var(--border);padding-top:8px;margin-top:4px;">
+        <span>You receive</span><span style="color:var(--green);">${fmt(destAmt)} sats</span>
+      </div>
+    </div>`;
+
+  confirm.disabled = false;
+  confirm.onclick  = () => executeCleanMerge(junk, destAddr, netFee);
+}
+
+async function executeCleanMerge(junk, destAddr, netFee) {
+  cleanStep(3);
+  const msg  = document.getElementById('clean-s3-msg');
+  const err  = document.getElementById('clean-s3-err');
+  const back = document.getElementById('clean-s3-back');
+  err.style.display = 'none';
+  back.style.display = 'none';
+
+  try {
+    msg.textContent = 'Building transaction…';
+    const psbtB64 = buildMergePsbt(junk.map(r => r.utxo), destAddr, SERVICE_FEE_ADDR, SERVICE_FEE_SATS, netFee);
+
+    msg.textContent = 'Waiting for wallet signature…';
+    const txid = await signAndBroadcast(psbtB64, junk.length, destAddr);
+
+    document.getElementById('clean-done-txid').textContent = txid;
+    document.getElementById('clean-done-link').href = `https://mempool.space/tx/${encodeURIComponent(txid)}`;
+    cleanStep(4);
+  } catch (e) {
+    msg.textContent = '';
+    err.textContent = e.message;
+    err.style.display = '';
+    back.style.display = '';
+  }
+}
+
+/* ─── bech32m → P2TR scriptPubKey ───────────────────────────────────────── */
+const _B32A = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
+const _B32C = 0x2bc830a3;
+
+function _b32Poly(v) {
+  const G = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3];
+  let c = 1;
+  for (const d of v) { const b = c >> 25; c = ((c & 0x1ffffff) << 5) ^ d; for (let i = 0; i < 5; i++) if ((b>>i)&1) c ^= G[i]; }
+  return c;
+}
+function _b32Exp(hrp) {
+  const e = []; for (let i=0;i<hrp.length;i++) e.push(hrp.charCodeAt(i)>>5); e.push(0); for (let i=0;i<hrp.length;i++) e.push(hrp.charCodeAt(i)&31); return e;
+}
+function _b32Dec(addr) {
+  const s = addr.toLowerCase(), p = s.lastIndexOf('1');
+  if (p < 1) return null;
+  const hrp = s.slice(0, p), data = [];
+  for (let i = p+1; i < s.length; i++) { const d = _B32A.indexOf(s[i]); if (d < 0) return null; data.push(d); }
+  if (_b32Poly([..._b32Exp(hrp), ...data]) !== _B32C) return null;
+  return { hrp, words: data.slice(0, -6) };
+}
+function _cvt58(data) {
+  let acc=0, bits=0; const out=[], max=0xff;
+  for (const v of data) { acc=(acc<<5)|v; bits+=5; while(bits>=8){bits-=8;out.push((acc>>bits)&max);} }
+  return out;
+}
+function p2trScript(addr) {
+  const d = _b32Dec(addr);
+  if (!d || d.words[0] !== 1) return null;
+  const prog = _cvt58(d.words.slice(1));
+  if (prog.length !== 32) return null;
+  return new Uint8Array([0x51, 0x20, ...prog]);
+}
+
+/* ─── PSBT v0 builder ───────────────────────────────────────────────────── */
+function _numLE(n, bytes) { const b=new Uint8Array(bytes); for(let i=0;i<bytes;i++){b[i]=n&0xff;n=Math.floor(n/256);} return b; }
+function _vi(n) { if(n<0xfd)return new Uint8Array([n]); if(n<0x10000)return new Uint8Array([0xfd,n&0xff,n>>8]); return new Uint8Array([0xfe,n&0xff,(n>>8)&0xff,(n>>16)&0xff,(n>>24)&0xff]); }
+function _cat(...a) { const out=new Uint8Array(a.reduce((s,x)=>s+x.length,0)); let o=0; for(const x of a){out.set(x,o);o+=x.length;} return out; }
+function _fromHex(h) { const b=new Uint8Array(h.length/2); for(let i=0;i<h.length;i+=2)b[i/2]=parseInt(h.slice(i,i+2),16); return b; }
+function _psbtKV(k,v) { return _cat(_vi(k.length),k,_vi(v.length),v); }
+
+function buildMergePsbt(utxos, destAddr, feeAddr, feeSats, netFee) {
+  const totalIn = utxos.reduce((s,u)=>s+u.value,0);
+  const destAmt = totalIn - feeSats - netFee;
+  if (destAmt < 546) throw new Error(`Insufficient funds: only ${destAmt} sats remain after fees.`);
+
+  const destSc = p2trScript(destAddr);
+  const feeSc  = p2trScript(feeAddr);
+  if (!destSc) throw new Error('Cannot derive scriptPubKey from destination address.');
+  if (!feeSc)  throw new Error('Cannot derive scriptPubKey from service fee address.');
+
+  // Unsigned transaction (no witness, segwit marker absent for unsigned tx)
+  const txIns = utxos.map(u =>
+    _cat(_fromHex(u.txid).reverse(), _numLE(u.vout,4), new Uint8Array([0x00]), _numLE(0xffffffff,4))
+  );
+  const txOuts = [
+    _cat(_numLE(destAmt,8), _vi(destSc.length), destSc),
+    _cat(_numLE(feeSats,8), _vi(feeSc.length),  feeSc),
+  ];
+  const rawTx = _cat(_numLE(2,4), _vi(txIns.length), ...txIns, _vi(txOuts.length), ...txOuts, _numLE(0,4));
+
+  // PSBT v0 structure
+  const parts = [
+    new Uint8Array([0x70,0x73,0x62,0x74,0xff]),      // magic "psbt\xff"
+    _psbtKV(new Uint8Array([0x00]), rawTx),            // global: unsigned tx
+    new Uint8Array([0x00]),                            // global separator
+  ];
+  for (const u of utxos) {
+    const sc = p2trScript(destAddr);
+    const wu = _cat(_numLE(u.value,8), _vi(sc.length), sc);
+    parts.push(_psbtKV(new Uint8Array([0x01]), wu));   // PSBT_IN_WITNESS_UTXO
+    parts.push(new Uint8Array([0x00]));                // input separator
+  }
+  parts.push(new Uint8Array([0x00]));                  // output 0 separator
+  parts.push(new Uint8Array([0x00]));                  // output 1 separator
+
+  const bytes = _cat(...parts);
+  return btoa(String.fromCharCode(...bytes));
+}
+
+/* ─── Sign + broadcast dispatch ─────────────────────────────────────────── */
+function _b64toHex(b64) {
+  return [...atob(b64)].map(c=>c.charCodeAt(0).toString(16).padStart(2,'0')).join('');
+}
+
+async function signAndBroadcast(psbtB64, inputCount, signerAddr) {
+  const indices = Array.from({length: inputCount}, (_, i) => i);
+
+  // UniSat: sign → autoFinalized raw tx hex → broadcast via mempool.space
+  if (window.unisat) {
+    const psbtHex   = _b64toHex(psbtB64);
+    const signedHex = await window.unisat.signPsbt(psbtHex, {
+      autoFinalized: true,
+      toSignInputs:  indices.map(i => ({ index: i, address: signerAddr })),
+    });
+    const res = await fetch(`${MEMPOOL}/tx`, { method:'POST', headers:{'Content-Type':'text/plain'}, body: signedHex });
+    if (!res.ok) throw new Error('Broadcast failed: ' + (await res.text()).slice(0,200));
+    return await res.text();
+  }
+
+  // Xverse: sign + broadcast in one call → returns txid
+  const xverse = window.XverseProviders?.BitcoinProvider ?? window.BitcoinProvider;
+  if (xverse) {
+    const res = await xverse.request('signPsbt', {
+      psbt:           psbtB64,
+      signInputs:     { [signerAddr]: indices },
+      broadcast:      true,
+      allowedSighash: [0x01],
+    });
+    const txid = res?.result?.txid ?? res?.result;
+    if (!txid) throw new Error('Xverse did not return a txid. Check the extension for errors.');
+    return txid;
+  }
+
+  // OP_NET fallback
+  if (window.opnet?.signPsbt) {
+    const signed = await window.opnet.signPsbt(psbtB64);
+    const hex    = typeof signed === 'string' && !signed.includes('=') ? signed : _b64toHex(signed);
+    const res    = await fetch(`${MEMPOOL}/tx`, { method:'POST', headers:{'Content-Type':'text/plain'}, body: hex });
+    if (!res.ok) throw new Error('Broadcast failed: ' + (await res.text()).slice(0,200));
+    return await res.text();
+  }
+
+  throw new Error('No wallet connected. Connect Xverse, UniSat, or OP_NET before merging.');
 }
 
 /* ─── file:// warning ───────────────────────────────────────────────────── */
