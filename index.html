@@ -1931,16 +1931,19 @@ async function mergeSelected() {
     showErr('Connect a wallet or enter a valid bc1p address before merging.');
     return;
   }
-  const selectedRows = [...selectedIdxs].map(idx => rows[idx]).filter(Boolean);
-  if (!selectedRows.length) return;
+  renderCleanS1();
   document.getElementById('clean-modal').style.display = 'flex';
-  await buildMergePreview(selectedRows);
 }
 
 /* ─── Clean Wallet ──────────────────────────────────────────────────────── */
 const SERVICE_FEE_ADDR = 'bc1p3temu3hskhz843mc8sh4wpsazvyzra6pdrkf0nupmcqhgchrnnuqtu5ms6';
-const SERVICE_FEE_SATS = 2000;
 const JUNK_MAX_SATS    = 2000;
+
+function calcServiceFee(n) {
+  if (n <= 10) return 1000;
+  if (n <= 50) return 2000;
+  return 3000;
+}
 
 let _junkCache = [];
 
@@ -1957,8 +1960,8 @@ function detectJunkUtxos() {
 
 function openCleanWallet() {
   if (!rows.length) { showErr('Run a wallet scan first before using Clean Wallet.'); return; }
-  _junkCache = detectJunkUtxos();
-  renderCleanS1(_junkCache);
+  selectJunk();
+  renderCleanS1();
   document.getElementById('clean-modal').style.display = 'flex';
 }
 
@@ -1973,23 +1976,26 @@ function cleanStep(n) {
   });
 }
 
-function renderCleanS1(junk) {
+function renderCleanS1() {
   cleanStep(1);
-  const totalSats = junk.reduce((s, r) => s + r.utxo.value, 0);
-  const body      = document.getElementById('clean-s1-body');
-  const mergeBtn  = document.getElementById('clean-merge-btn');
+  const selected   = [...selectedIdxs].map(idx => rows[idx]).filter(Boolean);
+  const n          = selected.length;
+  const totalSats  = selected.reduce((s, r) => s + r.utxo.value, 0);
+  const serviceFee = calcServiceFee(n);
+  const body       = document.getElementById('clean-s1-body');
+  const mergeBtn   = document.getElementById('clean-merge-btn');
 
   const unloaded = rows.filter(r => r.ins && r.utxo.value <= JUNK_MAX_SATS && r.rarity == null).length;
-  const warnHtml = unloaded
+  const unloadedHtml = unloaded
     ? `<div style="background:rgba(234,179,8,.08);border:1px solid rgba(234,179,8,.25);border-radius:var(--radius-sm);
-        padding:10px 14px;font-size:11px;color:#eab308;margin-bottom:14px;line-height:1.6;">
-        &#9888; ${unloaded} UTXO(s) still loading rarity — they are excluded from this list.
+        padding:10px 14px;font-size:11px;color:#eab308;margin-bottom:10px;line-height:1.6;">
+        &#9888; ${unloaded} UTXO(s) still loading rarity — they are excluded from the auto-selection.
         Wait for the table to finish loading then re-open Clean Wallet.
        </div>`
     : '';
 
-  if (!junk.length) {
-    body.innerHTML = warnHtml + `<div style="text-align:center;padding:28px;color:var(--text3);">
+  if (!n) {
+    body.innerHTML = unloadedHtml + `<div style="text-align:center;padding:28px;color:var(--text3);">
       <div style="font-size:36px;margin-bottom:10px;">&#10003;</div>
       No junk inscriptions detected. Your wallet is clean!
     </div>`;
@@ -1997,35 +2003,69 @@ function renderCleanS1(junk) {
     return;
   }
 
-  body.innerHTML = warnHtml + `
-    <div class="clean-stats">
+  const tierLabel = n <= 10 ? '1–10' : n <= 50 ? '11–50' : '51–100';
+
+  body.innerHTML = unloadedHtml + `
+    <div style="background:rgba(234,179,8,.08);border:1px solid rgba(234,179,8,.3);border-radius:var(--radius-sm);
+        padding:10px 14px;font-size:11px;color:#eab308;margin-bottom:12px;line-height:1.6;">
+      &#9888; Auto-selected inscriptions may include valuable items.
+      Please review the selection before merging.
+    </div>
+    <div class="clean-stats" style="margin-bottom:10px;">
       <div class="clean-stat">
-        <div class="clean-stat-val c-muted">${junk.length}</div>
-        <div class="clean-stat-lbl">Junk Inscriptions</div>
+        <div class="clean-stat-val c-muted">${n}</div>
+        <div class="clean-stat-lbl">Selected</div>
       </div>
       <div class="clean-stat">
         <div class="clean-stat-val c-orange">${satsBtc(totalSats)}</div>
         <div class="clean-stat-lbl">Total Locked</div>
       </div>
       <div class="clean-stat">
-        <div class="clean-stat-val c-muted">${fmt(totalSats)}</div>
-        <div class="clean-stat-lbl">Sats</div>
+        <div class="clean-stat-val" style="color:var(--green)">${fmt(serviceFee)}</div>
+        <div class="clean-stat-lbl">Service Fee (sats)</div>
       </div>
     </div>
-    <div style="font-size:11px;color:var(--text3);margin-bottom:12px;line-height:1.6;">
+    <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.6;">
+      Fee tier: ${tierLabel} inscriptions → ${fmt(serviceFee)} sats &nbsp;|&nbsp;
       Criteria: ≤ ${JUNK_MAX_SATS} sats &middot; common rarity &middot; no satributes &middot; not fat/whale
     </div>
-    <div style="max-height:220px;overflow-y:auto;">
-      ${junk.slice(0, 60).map(r => `
-        <div class="clean-junk-row">
-          <span class="mono">${short(r.utxo.txid)}:${r.utxo.vout}</span>
-          <span style="color:var(--text2)">${fmt(r.utxo.value)} sats</span>
-        </div>`).join('')}
-      ${junk.length > 60 ? `<div style="font-size:11px;color:var(--text3);text-align:center;padding:8px;">…and ${junk.length - 60} more</div>` : ''}
-    </div>`;
+    <div style="max-height:190px;overflow-y:auto;margin-bottom:12px;">
+      ${selected.map((r, i) => {
+        const idx = [...selectedIdxs][i];
+        return `<div class="clean-junk-row" style="display:flex;align-items:center;gap:8px;">
+          <button onclick="removeFromCleanSelection(${idx})" title="Remove"
+            style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:13px;padding:0 2px;flex-shrink:0;"
+            onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text3)'">&#10005;</button>
+          <span class="mono" style="flex:1;overflow:hidden;text-overflow:ellipsis;">${short(r.utxo.txid)}:${r.utxo.vout}</span>
+          <span style="color:var(--text2);flex-shrink:0;">${fmt(r.utxo.value)} sats</span>
+        </div>`;
+      }).join('')}
+    </div>
+    <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);
+        cursor:pointer;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);
+        border-radius:var(--radius-sm);margin-bottom:2px;">
+      <input type="checkbox" id="clean-review-chk" onchange="toggleCleanMergeBtn()"
+        style="width:15px;height:15px;accent-color:var(--orange);cursor:pointer;flex-shrink:0;">
+      I have reviewed the selected inscriptions
+    </label>`;
 
+  mergeBtn.textContent  = `Merge Selected (${n})`;
   mergeBtn.style.display = '';
-  mergeBtn.onclick = () => buildMergePreview(junk);
+  mergeBtn.disabled      = true;
+  mergeBtn.onclick       = () => buildMergePreview([...selectedIdxs].map(i => rows[i]).filter(Boolean));
+}
+
+function toggleCleanMergeBtn() {
+  const chk = document.getElementById('clean-review-chk');
+  const btn = document.getElementById('clean-merge-btn');
+  if (btn) btn.disabled = !chk?.checked;
+}
+
+function removeFromCleanSelection(idx) {
+  selectedIdxs.delete(idx);
+  syncCheckboxes();
+  updateSelectionUI();
+  renderCleanS1();
 }
 
 async function buildMergePreview(junk) {
@@ -2054,6 +2094,7 @@ async function buildMergePreview(junk) {
   const vsize    = Math.ceil(10.5 + nIn * 57.5 + 2 * 43);
   const netFee   = vsize * feeRate;
   const totalIn  = junk.reduce((s, r) => s + r.utxo.value, 0);
+  const SERVICE_FEE_SATS = calcServiceFee(nIn);
   const destAmt  = totalIn - SERVICE_FEE_SATS - netFee;
   const destAddr = addrEl.value.trim();
   const confirm  = document.getElementById('clean-confirm-btn');
@@ -2080,7 +2121,7 @@ async function buildMergePreview(junk) {
     <div class="p-title" style="margin-bottom:8px;">Outputs</div>
     <div class="m-row"><span class="m-key">Your address</span><span class="m-val big">${fmt(destAmt)} sats</span></div>
     <div class="m-row" style="margin-top:-2px;"><span class="mono m-key" style="font-size:10px;">${short(destAddr)}</span><span class="m-val" style="font-size:11px;color:var(--text3);">${satsBtc(destAmt)}</span></div>
-    <div class="m-row" style="margin-top:6px;"><span class="m-key">Service fee</span><span class="m-val" style="color:var(--text2);">${fmt(SERVICE_FEE_SATS)} sats</span></div>
+    <div class="m-row" style="margin-top:6px;"><span class="m-key">Service fee <span style="color:var(--text3);font-size:10px;">(${nIn <= 10 ? '1–10' : nIn <= 50 ? '11–50' : '51–100'} inscriptions)</span></span><span class="m-val" style="color:var(--text2);">${fmt(SERVICE_FEE_SATS)} sats</span></div>
     <div class="m-row" style="margin-top:-2px;"><span class="mono m-key" style="font-size:10px;">${short(SERVICE_FEE_ADDR)}</span><span class="m-val" style="font-size:11px;color:var(--text3);">${satsBtc(SERVICE_FEE_SATS)}</span></div>
     <div style="margin-top:16px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;">
       <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;">
@@ -2101,20 +2142,21 @@ async function buildMergePreview(junk) {
     </div>`;
 
   confirm.disabled = false;
-  confirm.onclick  = () => executeCleanMerge(junk, destAddr, netFee);
+  confirm.onclick  = () => executeCleanMerge(junk, destAddr, netFee, SERVICE_FEE_SATS);
 }
 
-async function executeCleanMerge(junk, destAddr, netFee) {
+async function executeCleanMerge(junk, destAddr, netFee, serviceFee) {
   cleanStep(3);
   const msg  = document.getElementById('clean-s3-msg');
   const err  = document.getElementById('clean-s3-err');
   const back = document.getElementById('clean-s3-back');
   err.style.display = 'none';
   back.style.display = 'none';
+  const resolvedFee = serviceFee ?? calcServiceFee(junk.length);
 
   try {
     msg.textContent = 'Building transaction…';
-    const psbtB64 = buildMergePsbt(junk.map(r => r.utxo), destAddr, SERVICE_FEE_ADDR, SERVICE_FEE_SATS, netFee);
+    const psbtB64 = buildMergePsbt(junk.map(r => r.utxo), destAddr, SERVICE_FEE_ADDR, resolvedFee, netFee);
 
     msg.textContent = 'Waiting for wallet signature…';
     const txid = await signAndBroadcast(psbtB64, junk.length, destAddr);
