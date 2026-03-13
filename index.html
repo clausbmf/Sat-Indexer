@@ -388,6 +388,37 @@
     .sz-fat    { color: var(--accent); border-color: rgba(247,147,26,.35);   background: var(--accent-dim); }
     .sz-whale  { color: var(--purple); border-color: rgba(168,85,247,.35);   background: var(--purple-dim); }
 
+    /* ── token/protocol badges ───────────────────────────────────────────── */
+    .rune-badge {
+      display: inline-block; font-size: 9px; font-weight: 700;
+      padding: 2px 6px; border-radius: 99px;
+      text-transform: uppercase; letter-spacing: .4px;
+      border: 1px solid; white-space: nowrap;
+      color: #06b6d4; border-color: rgba(6,182,212,.35); background: rgba(6,182,212,.1);
+    }
+    .rune-amount { font-size: 9px; color: var(--text3); margin-left: 2px; }
+    .stamp-badge {
+      display: inline-block; font-size: 9px; font-weight: 700;
+      padding: 2px 6px; border-radius: 99px;
+      text-transform: uppercase; letter-spacing: .4px;
+      border: 1px solid; white-space: nowrap;
+      color: #f59e0b; border-color: rgba(245,158,11,.35); background: rgba(245,158,11,.1);
+    }
+    .atomical-badge {
+      display: inline-block; font-size: 9px; font-weight: 700;
+      padding: 2px 6px; border-radius: 99px;
+      text-transform: uppercase; letter-spacing: .4px;
+      border: 1px solid; white-space: nowrap;
+      color: #10b981; border-color: rgba(16,185,129,.35); background: rgba(16,185,129,.1);
+    }
+    .cbrc20-badge {
+      display: inline-block; font-size: 9px; font-weight: 700;
+      padding: 2px 6px; border-radius: 99px;
+      text-transform: uppercase; letter-spacing: .4px;
+      border: 1px solid; white-space: nowrap;
+      color: #818cf8; border-color: rgba(129,140,248,.35); background: rgba(129,140,248,.1);
+    }
+
     /* ── satribute badges ────────────────────────────────────────────────── */
     .sat-badges { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
     .sat-badge {
@@ -451,7 +482,7 @@
     .btn-wallet:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
     .btn-wallet.connected { border-color: var(--green); color: var(--green); background: var(--green-dim); }
     .btn-wallet:disabled { opacity: .4; cursor: not-allowed; }
-    .wallet-status { font-size: 11px; color: var(--text3); margin-left: auto; }
+    .wallet-status { font-size: 13px; font-weight: 600; color: var(--red); margin-left: auto; }
 
     /* ── clean wallet modal ─────────────────────────────────────────────── */
     .clean-overlay {
@@ -534,6 +565,14 @@
       white-space: nowrap;
     }
     .btn-merge-sel:hover { background: #e8851a; }
+    .btn-send-sel {
+      background: var(--purple); color: #fff; border: none;
+      border-radius: var(--radius-sm); padding: 6px 14px;
+      font-size: 12px; font-weight: 700; cursor: pointer;
+      box-shadow: 0 2px 8px var(--purple-dim); transition: all var(--ease);
+      white-space: nowrap;
+    }
+    .btn-send-sel:hover { background: #9333ea; }
     /* checkbox column */
     .td-sel {
       width: 36px; padding: 0 4px 0 14px; text-align: center; vertical-align: middle;
@@ -578,6 +617,86 @@
     footer a { color: var(--text3); text-decoration: none; }
     footer a:hover { color: var(--text2); }
 
+    /* ── README / FAQ buttons ─────────────────────────────────────────────── */
+    .btn-readme {
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: var(--radius-sm); padding: 6px 14px;
+      font-size: 12px; font-weight: 600; cursor: pointer;
+      color: var(--text2); transition: all var(--ease); white-space: nowrap;
+    }
+    .btn-readme:hover { border-color: var(--purple); color: var(--purple); background: var(--purple-dim); }
+
+    /* ── FAQ button ───────────────────────────────────────────────────────── */
+    .btn-faq {
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: var(--radius-sm); padding: 6px 14px;
+      font-size: 12px; font-weight: 600; cursor: pointer;
+      color: var(--text2); transition: all var(--ease); white-space: nowrap;
+    }
+    .btn-faq:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+    /* ── FAQ modal ────────────────────────────────────────────────────────── */
+    .faq-overlay {
+      position: fixed; inset: 0; z-index: 300;
+      background: rgba(0,0,0,.65); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .faq-box {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); width: 100%; max-width: 620px;
+      max-height: 90vh; display: flex; flex-direction: column;
+      box-shadow: 0 24px 64px rgba(0,0,0,.5);
+    }
+    .faq-hdr {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+    }
+    .faq-hdr h3 { font-size: 14px; font-weight: 700; }
+    .faq-scroll { flex: 1; overflow-y: auto; padding: 24px 20px; }
+    .faq-scroll::-webkit-scrollbar { width: 5px; }
+    .faq-scroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+    .faq-item { margin-bottom: 28px; }
+    .faq-item:last-child { margin-bottom: 0; }
+    .faq-q {
+      font-size: 13px; font-weight: 700; color: var(--text);
+      margin-bottom: 10px; line-height: 1.5;
+      padding-left: 12px; border-left: 3px solid var(--accent);
+    }
+    .faq-a { font-size: 13px; color: var(--text2); line-height: 1.7; }
+    .faq-a p { margin-bottom: 10px; }
+    .faq-a p:last-child { margin-bottom: 0; }
+    .faq-table {
+      width: 100%; border-collapse: collapse; margin: 10px 0;
+      font-size: 12px;
+    }
+    .faq-table th {
+      background: var(--surface2); color: var(--text3);
+      font-size: 10px; text-transform: uppercase; letter-spacing: .6px;
+      padding: 7px 12px; text-align: left; border-bottom: 1px solid var(--border);
+    }
+    .faq-table td {
+      padding: 7px 12px; border-bottom: 1px solid var(--border); color: var(--text);
+    }
+    .faq-table tr:last-child td { border-bottom: none; }
+    .faq-divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    .faq-tag {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 99px; margin-right: 4px;
+      border: 1px solid;
+    }
+    .faq-footer {
+      padding: 12px 20px; border-top: 1px solid var(--border); flex-shrink: 0; text-align: right;
+    }
+
+    .btn-filter {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 99px; padding: 5px 14px;
+      font-size: 11px; font-weight: 600; cursor: pointer;
+      color: var(--text3); transition: all var(--ease);
+    }
+    .btn-filter:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-filter.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+
     @media (max-width: 680px) {
       :root { --panel-w: 100vw; }
       .panel { top: 0; border-left: none; }
@@ -608,7 +727,12 @@
     <div class="btc-icon">&#8383;</div>
     <h1>Ordinals Wallet Inspector</h1>
   </div>
-  <span class="net-tag">MAINNET</span>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <button class="btn-readme" onclick="openReadme()">&#128214; README</button>
+    <button class="btn-faq" onclick="openFaq()">&#10067; FAQ</button>
+    <span class="net-tag">MAINNET</span>
+    <span id="btc-price" style="font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.3px;">—</span>
+  </div>
 </header>
 
 <div class="shell" id="shell">
@@ -627,7 +751,7 @@
     <button class="btn-wallet" id="btn-xverse" onclick="connectXverse()">Xverse</button>
     <button class="btn-wallet" id="btn-unisat" onclick="connectUniSat()">UniSat</button>
     <button class="btn-wallet" id="btn-opnet"  onclick="connectOpNet()">OP_NET</button>
-    <span class="wallet-status" id="wallet-status">or paste address below</span>
+    <span class="wallet-status" id="wallet-status">Wallet connection only required for Merge &amp; Send — to scan, just paste your address below</span>
   </div>
 
   <!-- search -->
@@ -635,10 +759,19 @@
     <label for="addr">Bitcoin Taproot Address (bc1p)</label>
     <div class="input-row">
       <div class="addr-wrap">
-        <input type="text" id="addr" placeholder="bc1p…" autocomplete="off" spellcheck="false" />
+        <input type="text" id="addr" placeholder="bc1p…" autocomplete="off" spellcheck="false" list="addr-history" />
+        <datalist id="addr-history"></datalist>
         <div class="addr-dot" id="dot"></div>
       </div>
       <button class="btn-primary" id="btn-go" onclick="run()">Analyze</button>
+      <button class="btn-primary" id="btn-refresh" style="display:none;background:var(--surface2);border:1px solid var(--border2);color:var(--text2);box-shadow:none;" onclick="run()" title="Re-scan address">&#8635;</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap;">
+      <span style="font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.6px;">Fee rate:</span>
+      <label style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="feerate" value="economy" style="accent-color:var(--accent)"> Economy</label>
+      <label style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="feerate" value="standard" checked style="accent-color:var(--accent)"> Standard</label>
+      <label style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="feerate" value="priority" style="accent-color:var(--accent)"> Priority</label>
+      <span id="feerate-hint" style="font-size:11px;color:var(--text3);margin-left:4px;"></span>
     </div>
     <div class="hint" id="hint">Paste a Taproot address starting with <code>bc1p</code></div>
   </div>
@@ -688,6 +821,21 @@
       <div class="sum-lbl">BTC in Ordinals</div>
       <div class="sum-sub" id="s-ord-sats">—</div>
     </div>
+    <div class="sum-cell">
+      <div class="sum-val c-green" id="s-clean-usd">—</div>
+      <div class="sum-lbl">Est. Clean Value</div>
+      <div class="sum-sub">USD (clean UTXOs)</div>
+    </div>
+  </div>
+
+  <!-- filter bar -->
+  <div id="filter-bar" style="display:none;margin-bottom:10px;gap:6px;flex-wrap:wrap;">
+    <button class="btn-filter active" data-filter="all" onclick="setFilter('all')">All</button>
+    <button class="btn-filter" data-filter="clean" onclick="setFilter('clean')">Clean</button>
+    <button class="btn-filter" data-filter="inscribed" onclick="setFilter('inscribed')">Inscribed</button>
+    <button class="btn-filter" data-filter="rune" onclick="setFilter('rune')">Runes</button>
+    <button class="btn-filter" data-filter="fat" onclick="setFilter('fat')">Fat</button>
+    <button class="btn-filter" data-filter="whale" onclick="setFilter('whale')">Whale</button>
   </div>
 
   <!-- table -->
@@ -698,6 +846,7 @@
         <span id="hidden-badge" style="display:none" class="badge-hidden" onclick="clearExclusions()" title="Click to show all">
           <span id="hidden-count">0</span> hidden &times;
         </span>
+        <button class="btn-sel" id="btn-export" style="display:none;" onclick="exportCsv()" title="Export all UTXOs to CSV">&#11015; Export CSV</button>
         <span class="tbl-hint">Click any row to inspect</span>
       </div>
     </div>
@@ -705,13 +854,18 @@
     <div class="sel-toolbar">
       <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;">
         <button class="btn-sel" onclick="selectJunk()">Select Junk</button>
+        <button class="btn-sel" onclick="selectClean()">Select Clean</button>
         <button class="btn-sel" onclick="selectAll()">Select All</button>
         <button class="btn-sel" onclick="clearSelection()">Clear Selection</button>
+        <button class="btn-sel" onclick="copyAllUtxos()" title="Copy all TXID:vout pairs to clipboard">Copy UTXOs</button>
       </div>
       <div style="display:flex;align-items:center;gap:10px;">
         <span id="sel-count" style="font-size:11px;color:var(--text3);"></span>
         <button class="btn-merge-sel" id="btn-merge-sel" style="display:none;" onclick="mergeSelected()">
           Merge Selected (<span id="sel-n">0</span>)
+        </button>
+        <button class="btn-send-sel" id="btn-send-sel" style="display:none;" onclick="sendSelected()">
+          Send Selected (<span id="sel-n-send">0</span>)
         </button>
       </div>
     </div>
@@ -728,6 +882,7 @@
             <th>Ins #</th>
             <th>Sat Rarity</th>
             <th>Satributes</th>
+            <th>Tokens</th>
             <th>Ordinal Size</th>
             <th>TXID</th>
             <th class="sortable" id="th-vout" onclick="sortBy('vout')">
@@ -803,6 +958,479 @@
       <div class="clean-footer">
         <button class="btn-cw-primary" onclick="closeCleanModal()">Done</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- send modal -->
+<div id="send-modal" class="clean-overlay" style="display:none" onclick="if(event.target===this)closeSendModal()">
+  <div class="clean-box">
+    <div class="clean-hdr">
+      <h3>Send UTXOs</h3>
+      <button class="panel-close" onclick="closeSendModal()">&#10005;</button>
+    </div>
+
+    <!-- Step 1: recipient + preview -->
+    <div id="send-s1">
+      <div class="clean-scroll" id="send-s1-body"></div>
+      <div class="clean-footer">
+        <button class="btn-cw-back" onclick="closeSendModal()">Cancel</button>
+        <button class="btn-cw-primary" id="send-confirm-btn" disabled>Sign &amp; Send</button>
+      </div>
+    </div>
+
+    <!-- Step 2: signing / broadcasting -->
+    <div id="send-s2" style="display:none">
+      <div class="clean-scroll">
+        <div style="text-align:center;padding:32px 20px;">
+          <div class="spinner" style="margin:0 auto 18px;width:32px;height:32px;border-width:3px;"></div>
+          <div id="send-s2-msg" style="font-size:13px;color:var(--text2);margin-bottom:10px;"></div>
+          <div id="send-s2-err" style="color:var(--red);font-size:12px;line-height:1.5;display:none;"></div>
+          <button id="send-s2-back" class="btn-cw-back" style="display:none;margin-top:16px;" onclick="sendStep(1)">&#8592; Back</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: success -->
+    <div id="send-s3" style="display:none">
+      <div class="clean-scroll">
+        <div style="text-align:center;padding:32px 20px;">
+          <div style="font-size:44px;color:var(--green);margin-bottom:12px;">&#10003;</div>
+          <div style="font-size:15px;font-weight:700;margin-bottom:6px;color:var(--green);">Transaction Broadcast!</div>
+          <div style="font-size:12px;color:var(--text3);margin-bottom:20px;">Your UTXOs have been sent.</div>
+          <div class="m-row m-col" style="text-align:left;margin-bottom:10px;">
+            <span class="m-key">TXID</span>
+            <span class="m-val sm" id="send-done-txid" style="word-break:break-all"></span>
+          </div>
+          <a id="send-done-link" class="ext" href="#" target="_blank" rel="noopener">&#10138; View on mempool.space</a>
+        </div>
+      </div>
+      <div class="clean-footer">
+        <button class="btn-cw-primary" onclick="closeSendModal()">Done</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- README modal -->
+<div id="readme-modal" class="faq-overlay" style="display:none" onclick="if(event.target===this)closeReadme()">
+  <div class="faq-box" style="max-width:680px;">
+    <div class="faq-hdr">
+      <h3>&#128214; README — How to Use This Tool</h3>
+      <button class="panel-close" onclick="closeReadme()">&#10005;</button>
+    </div>
+    <div class="faq-scroll">
+
+      <div class="faq-item">
+        <div class="faq-q">What is the best strategy for using this tool — should I send all valued Ordinals and Runes out first, then merge the rest?</div>
+        <div class="faq-a">
+          <p><strong>Yes — always move valuable assets out first before merging anything.</strong> Follow the steps below in order. Skipping steps or merging before everything has loaded can result in permanent loss of inscriptions, Runes, or rare sats.</p>
+        </div>
+      </div>
+
+      <hr class="faq-divider">
+
+      <div style="margin-bottom:22px;">
+        <div class="p-title" style="font-size:11px;margin-bottom:14px;">&#9312; Scan and wait for full load</div>
+        <div class="faq-a">
+          <p>Paste your <code>bc1p</code> address and click <strong>Analyze</strong>. Wait until every row in the table has finished loading — rarity badges will show <code>…</code> while loading. <strong>Do not take any action until all badges have resolved.</strong> Making decisions before loading is complete risks overlooking rare sats.</p>
+        </div>
+      </div>
+
+      <div style="margin-bottom:22px;">
+        <div class="p-title" style="font-size:11px;margin-bottom:14px;">&#9313; Identify and send valuable assets out first</div>
+        <div class="faq-a">
+          <p>Before merging anything, send the following UTXO types to your Ordinals wallet (<code>bc1p</code>) using Xverse or UniSat:</p>
+          <table class="faq-table">
+            <thead><tr><th>What to look for</th><th>How to spot it</th></tr></thead>
+            <tbody>
+              <tr><td>Rare sats</td><td>Rarity badge: uncommon / rare / epic / legendary / mythic</td></tr>
+              <tr><td>Satributes</td><td>Any badge in the Satributes column (nakamoto, pizza, palindrome…)</td></tr>
+              <tr><td>Fat or Whale Ordinals</td><td>Orange "fat ordinal" or purple "whale ordinal" badge</td></tr>
+              <tr><td>Runes</td><td>Cyan badge in the Tokens column</td></tr>
+              <tr><td>Stamps</td><td>Yellow STAMP badge in the Tokens column</td></tr>
+              <tr><td>Atomicals</td><td>Green ATOMICAL badge in the Tokens column</td></tr>
+              <tr><td>cBRC-20</td><td>Purple cBRC-20 badge in the Tokens column</td></tr>
+            </tbody>
+          </table>
+          <p>Sell inscriptions and Runes on <strong>Satflow.com</strong>, Gamma, or Ordinals Wallet marketplace — never send them directly to an exchange.</p>
+        </div>
+      </div>
+
+      <div style="margin-bottom:22px;">
+        <div class="p-title" style="font-size:11px;margin-bottom:14px;">&#9314; Merge junk inscriptions</div>
+        <div class="faq-a">
+          <p>Once all valued assets are safely out, click <strong>Select Junk</strong>. The tool will automatically select only small common inscriptions (≤ 2,000 sats, common rarity, no satributes, no tokens). Review the list in the merge modal, tick the confirmation checkbox, and merge.</p>
+          <p>The merged sats land back in your Ordinals wallet (<code>bc1p</code>) as <strong>regular spendable Bitcoin</strong> — Xverse and UniSat both show your full BTC balance and let you send it anywhere from there.</p>
+        </div>
+      </div>
+
+      <div style="margin-bottom:22px;">
+        <div class="p-title" style="font-size:11px;margin-bottom:14px;">&#9315; Merge clean UTXOs</div>
+        <div class="faq-a">
+          <p>Click <strong>Select Clean</strong> to select all inscription-free UTXOs and merge them into a single clean output. Again, the result lands in your <code>bc1p</code> wallet as plain BTC. Once it arrives you can send it to any exchange (<code>bc1q</code>) directly from Xverse or UniSat.</p>
+        </div>
+      </div>
+
+      <div style="margin-bottom:22px;">
+        <div class="p-title" style="font-size:11px;margin-bottom:14px;">&#9316; The correct order — summary</div>
+        <div class="faq-a">
+          <table class="faq-table">
+            <thead><tr><th>Step</th><th>Action</th><th>Result</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>Wait for full load</td><td>—</td></tr>
+              <tr><td>2</td><td>Send rare / fat / whale / rune / stamp UTXOs out</td><td>Safe in your Ordinals wallet</td></tr>
+              <tr><td>3</td><td>Merge junk inscriptions</td><td>Recovered sats visible as BTC in Xverse / UniSat</td></tr>
+              <tr><td>4</td><td>Merge clean UTXOs</td><td>All fragmented BTC consolidated into one output</td></tr>
+              <tr><td>5</td><td>Send from Xverse / UniSat to exchange (<code>bc1q</code>)</td><td>BTC credited on exchange — ready to sell</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style="margin-bottom:22px;">
+        <div class="p-title" style="font-size:11px;margin-bottom:14px;">&#9888; What NOT to do</div>
+        <div class="faq-a">
+          <table class="faq-table">
+            <tbody>
+              <tr><td>❌</td><td>Do not merge before rarity has fully loaded — you may destroy rare sats</td></tr>
+              <tr><td>❌</td><td>Do not select all and merge blindly — fat, whale, and Rune UTXOs will be permanently destroyed</td></tr>
+              <tr><td>❌</td><td>Do not send <strong>valued</strong> inscribed UTXOs (rare, fat, whale, rune) directly to a <code>bc1q</code> exchange address — the inscription will be lost. Junk inscriptions are worthless so losing them is fine — that is the whole point of merging them.</td></tr>
+              <tr><td>❌</td><td>Do not skip Step 2 — the junk auto-selection is conservative but not perfect</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <hr class="faq-divider">
+
+      <div style="margin-bottom:22px;">
+        <div class="p-title" style="font-size:11px;margin-bottom:14px;">&#9317; Service fees</div>
+        <div class="faq-a">
+          <p>This tool charges a small service fee per transaction, deducted automatically from your UTXO inputs. Network (miner) fees are charged on top.</p>
+          <table class="faq-table">
+            <thead><tr><th>Action</th><th>UTXOs</th><th>Service fee</th></tr></thead>
+            <tbody>
+              <tr><td rowspan="4"><strong>Merge</strong></td><td>1–5</td><td>500 sats</td></tr>
+              <tr><td>6–20</td><td>1,000 sats</td></tr>
+              <tr><td>21–50</td><td>2,000 sats</td></tr>
+              <tr><td>51+</td><td>3,000 sats</td></tr>
+              <tr><td><strong>Send</strong></td><td>any</td><td>500 sats (flat)</td></tr>
+            </tbody>
+          </table>
+          <p>The exact fee breakdown — service fee, network fee, and amount you receive — is always shown in the confirmation screen before you sign anything.</p>
+        </div>
+      </div>
+
+      <hr class="faq-divider">
+
+      <div class="faq-a" style="text-align:center;padding:4px 0 8px;">
+        <p>Have more questions? Check the <button onclick="closeReadme();openFaq();"
+          style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;
+          font-weight:700;padding:0;text-decoration:underline;">&#10067; FAQ</button>
+          for detailed answers about Runes, Ordinals, exchange deposits, and more.</p>
+      </div>
+
+    </div>
+    <div class="faq-footer">
+      <button class="btn-cw-back" onclick="closeReadme()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- FAQ modal -->
+<div id="faq-modal" class="faq-overlay" style="display:none" onclick="if(event.target===this)closeFaq()">
+  <div class="faq-box">
+    <div class="faq-hdr">
+      <h3>&#10067; Frequently Asked Questions</h3>
+      <button class="panel-close" onclick="closeFaq()">&#10005;</button>
+    </div>
+    <div class="faq-scroll">
+
+      <div class="faq-item">
+        <div class="faq-q">Why does my Rune show up as two separate 546-sat UTXOs? Are they connected?</div>
+        <div class="faq-a">
+          <p>Runes (the Bitcoin token protocol by Casey Rodarmor) are stored inside UTXOs. When a Rune is transferred, the transaction typically produces <strong>two separate outputs</strong>:</p>
+          <table class="faq-table">
+            <thead><tr><th>UTXO</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td>546 sats (output 0)</td><td>Holds your actual Rune balance — the "token carrier"</td></tr>
+              <tr><td>546 sats (output 1)</td><td>Change output or a second Rune allocation</td></tr>
+            </tbody>
+          </table>
+          <p><strong>546 sats</strong> is Bitcoin's dust limit — the minimum a UTXO can hold without being rejected by the network. Rune wallets use this minimum to keep fees low.</p>
+          <p>The two UTXOs are linked by the transaction that created them, but on-chain they are independent. An <code>OP_RETURN</code> output in the same transaction (called a <em>runestone</em>) specifies exactly which output index receives which Rune amount.</p>
+          <p>⚠️ <strong>Do not merge or spend either UTXO carelessly</strong> — spending the wrong one will permanently destroy your Rune balance. Always use a Rune-aware wallet such as Xverse or UniSat.</p>
+        </div>
+      </div>
+
+      <hr class="faq-divider">
+
+      <div class="faq-item">
+        <div class="faq-q">Do Ordinal inscriptions also use two UTXOs?</div>
+        <div class="faq-a">
+          <p><strong>No</strong> — an Ordinal inscription lives in exactly <strong>one UTXO</strong>. Although creating an inscription requires a two-step commit/reveal process, once that is complete only a single output remains, and that is the UTXO you see in your wallet.</p>
+          <p>The inscription is permanently attached to the <strong>first sat</strong> in that UTXO (offset 0). Wherever that UTXO is spent, the inscription travels with it.</p>
+          <p>The UTXO may contain more than 546 sats — the extra sats are padding added by the wallet or sender. This inspector classifies them by size:</p>
+          <table class="faq-table">
+            <thead><tr><th>Label</th><th>Size</th><th>Risk</th></tr></thead>
+            <tbody>
+              <tr><td><span class="faq-tag" style="color:var(--text2);border-color:var(--border2)">Normal</span></td><td>&lt; 5,000 sats</td><td>Low</td></tr>
+              <tr><td><span class="faq-tag" style="color:var(--accent);border-color:rgba(247,147,26,.4);background:var(--accent-dim)">Fat</span></td><td>5,000 – 19,999 sats</td><td>Higher — more BTC locked</td></tr>
+              <tr><td><span class="faq-tag" style="color:var(--purple);border-color:rgba(168,85,247,.4);background:var(--purple-dim)">Whale</span></td><td>20,000+ sats</td><td>High — significant BTC locked</td></tr>
+            </tbody>
+          </table>
+          <p>The "extra" sats are locked alongside the inscription and cannot be spent separately. To recover them you must send the entire UTXO through an Ordinals-aware wallet that preserves the inscription sat at offset 0.</p>
+        </div>
+      </div>
+
+      <hr class="faq-divider">
+
+      <div class="faq-item">
+        <div class="faq-q">What happens if I merge my two Rune UTXOs? Can I combine the 2×546 sats (1,092 sats total), send them to a bc1q wallet, and spend or sell them as regular Bitcoin on an exchange?</div>
+        <div class="faq-a">
+          <p><strong>Merging Rune UTXOs without a Rune-aware wallet will permanently burn the Rune tokens.</strong> A standard merge transaction contains no runestone (the <code>OP_RETURN</code> instruction that tells the Rune protocol where to send the balance). Without it, the protocol considers the tokens destroyed — this cannot be undone.</p>
+          <table class="faq-table">
+            <thead><tr><th>Before merge</th><th>After merge (no runestone)</th></tr></thead>
+            <tbody>
+              <tr><td>546 sats + Rune balance</td><td rowspan="2" style="vertical-align:middle;">~900 sats plain BTC — Rune is gone forever ⚠️</td></tr>
+              <tr><td>546 sats (change output)</td></tr>
+            </tbody>
+          </table>
+          <p>Once the Rune is burned, what remains is ordinary Bitcoin. You can send it to any address including a <code>bc1q</code> exchange address, and sell it — but you will only recover a few hundred sats after network fees, worth less than $1.</p>
+          <p><strong>Before merging, check whether the Rune has value:</strong></p>
+          <table class="faq-table">
+            <thead><tr><th>Scenario</th><th>Best action</th></tr></thead>
+            <tbody>
+              <tr><td>Rune is worthless / spam</td><td>Safe to merge — recover the sats</td></tr>
+              <tr><td>Rune has real market value</td><td>List it on Satflow.com or OKX using Xverse or UniSat — you will earn far more than 1,092 sats</td></tr>
+            </tbody>
+          </table>
+          <p>⚠️ <strong>This tool does not include a runestone</strong> when building merge transactions, so using it on Rune UTXOs will burn the tokens. Always use a Rune-aware wallet to transfer or sell Runes.</p>
+        </div>
+      </div>
+
+      <hr class="faq-divider">
+
+      <div class="faq-item">
+        <div class="faq-q">What happens if I send a Fat Ordinal UTXO to an exchange Bitcoin address?</div>
+        <div class="faq-a">
+          <p><strong>The exchange receives the sats — the inscription is permanently lost.</strong> Exchanges are not Ordinals-aware. To them it is just a Bitcoin deposit, and they will sweep it into cold storage without preserving the inscription.</p>
+          <table class="faq-table">
+            <thead><tr><th></th><th>What you get</th></tr></thead>
+            <tbody>
+              <tr><td>Sats credited by exchange</td><td>5,000–19,999 sats (~$3–$12)</td></tr>
+              <tr><td>Inscription value (if rare)</td><td>Could be worth $100s or $1,000s — gone</td></tr>
+              <tr><td>Inscription after exchange sweep</td><td>Untraceable and unrecoverable ⚠️</td></tr>
+            </tbody>
+          </table>
+          <p><strong>Extra risks to be aware of:</strong></p>
+          <p>Many exchanges have a minimum deposit threshold (often 10,000+ sats) — below that the deposit may be silently ignored and you lose everything with no credit. Additionally, once the exchange sweeps the UTXO into their cold storage wallet, you cannot claim it back.</p>
+          <p><strong>What to do instead:</strong></p>
+          <table class="faq-table">
+            <thead><tr><th>Goal</th><th>Right approach</th></tr></thead>
+            <tbody>
+              <tr><td>Sell the inscription</td><td>List it on Satflow.com, Gamma, or Ordinals Wallet marketplace</td></tr>
+              <tr><td>Recover the locked sats</td><td>Sell the inscription first, then the buyer's payment arrives as clean BTC</td></tr>
+              <tr><td>Send BTC to an exchange</td><td>Use a <strong>clean UTXO</strong> (no inscription) — identifiable by the green "Clean UTXOs" count in this inspector</td></tr>
+            </tbody>
+          </table>
+          <p><strong>What "exchange sweep" means:</strong> the address an exchange gives you is a temporary deposit address. Within minutes an automated system moves your deposit into the exchange's main cold storage wallet — this is called a sweep. That sweep transaction has no Ordinals logic and simply moves the sats. Your inscription gets mixed in with millions of other UTXOs from other users and becomes permanently untraceable.</p>
+          <table class="faq-table">
+            <thead><tr><th>Stage</th><th>What happens to the inscription</th></tr></thead>
+            <tbody>
+              <tr><td>You send to exchange deposit address</td><td>Inscription arrives intact</td></tr>
+              <tr><td>Exchange sweep (within minutes)</td><td>Inscription mixed into cold storage — gone</td></tr>
+              <tr><td>After sweep</td><td>Impossible to identify or recover</td></tr>
+            </tbody>
+          </table>
+          <p>Think of it like dropping a rare coin into a cash register. The cashier only sees the face value. At the end of the day all coins are counted and bagged together — your rare coin is now in a bag with 10,000 others and impossible to find.</p>
+          <p>⚠️ <strong>Never send a valued inscribed UTXO directly to an exchange.</strong> For junk ordinals with no value the inscription loss does not matter — but always merge them first using this tool to recover the sats as clean BTC before sending anything to an exchange. Only send clean, inscription-free UTXOs to an exchange.</p>
+        </div>
+      </div>
+
+      <hr class="faq-divider">
+
+      <div class="faq-item">
+        <div class="faq-q">What happens if I use "Send Selected" to send UTXOs to my bc1q address?</div>
+        <div class="faq-a">
+          <p><strong>This tool only supports Taproot (<code>bc1p</code>) destination addresses.</strong> If you enter a <code>bc1q</code> address it will throw an error and no transaction will be built. You must use a <code>bc1p</code> address as the recipient.</p>
+          <table class="faq-table">
+            <thead><tr><th>Address type</th><th>Format</th><th>Ordinals-aware</th></tr></thead>
+            <tbody>
+              <tr><td>Taproot (P2TR)</td><td><code>bc1p…</code></td><td>✅ Yes — use this</td></tr>
+              <tr><td>SegWit (P2WPKH)</td><td><code>bc1q…</code></td><td>❌ No — standard BTC / exchanges</td></tr>
+            </tbody>
+          </table>
+          <p><strong>Even if you send to a valid <code>bc1p</code> address, the result depends on what you selected:</strong></p>
+          <table class="faq-table">
+            <thead><tr><th>Selected UTXO type</th><th>Result</th></tr></thead>
+            <tbody>
+              <tr><td>Clean UTXO (no inscription)</td><td>✅ Arrives as plain BTC — safe to spend normally</td></tr>
+              <tr><td>Inscribed UTXO</td><td>⚠️ Inscription travels with it — only safe if the recipient wallet is Ordinals-aware</td></tr>
+              <tr><td>Rune UTXO</td><td>❌ No runestone in transaction — Rune is permanently burned</td></tr>
+              <tr><td>Fat or Whale Ordinal</td><td>❌ Inscription lost if the receiving wallet spends it carelessly</td></tr>
+            </tbody>
+          </table>
+          <p>💡 <strong>Tip:</strong> Use the <strong>Select Clean</strong> button in the toolbar to automatically select only safe, inscription-free UTXOs before sending.</p>
+        </div>
+      </div>
+
+      <hr class="faq-divider">
+
+      <div class="faq-item">
+        <div class="faq-q">What is a runestone, and why does this tool not include one when building transactions?</div>
+        <div class="faq-a">
+          <p>A <strong>runestone</strong> is an instruction note embedded inside a Bitcoin transaction that tells the Rune protocol what to do with the tokens. It is written into a special field called <code>OP_RETURN</code>, which can carry data but holds no BTC.</p>
+          <table class="faq-table">
+            <thead><tr><th>Transaction</th><th>What happens to the Rune</th></tr></thead>
+            <tbody>
+              <tr><td>Has a runestone</td><td>✅ Tokens are delivered to the correct output address</td></tr>
+              <tr><td>No runestone</td><td>❌ Protocol sees no instructions — tokens are burned forever</td></tr>
+            </tbody>
+          </table>
+          <p>A simple way to think about it:</p>
+          <table class="faq-table">
+            <thead><tr><th>Analogy</th><th>Result</th></tr></thead>
+            <tbody>
+              <tr><td>Transaction <strong>with</strong> runestone</td><td>Parcel with a delivery label — arrives at the right address</td></tr>
+              <tr><td>Transaction <strong>without</strong> runestone</td><td>Parcel with no label — thrown away permanently</td></tr>
+            </tbody>
+          </table>
+          <p><strong>Why this tool does not include a runestone:</strong> building a valid runestone requires knowing which Rune is being moved, the exact token amount, and which output receives them. This tool only reads UTXO data from mempool.space and has no knowledge of Rune balances or token amounts — so it cannot write a correct runestone. It deliberately leaves it out rather than risk writing a wrong one and destroying your tokens.</p>
+          <p>⚠️ Always use a Rune-aware wallet such as <strong>Xverse</strong> or <strong>UniSat</strong> to transfer or sell Runes. These wallets read the Rune balance, write the correct runestone, and ensure the tokens arrive safely.</p>
+        </div>
+      </div>
+
+      <hr class="faq-divider">
+
+      <div class="faq-item">
+        <div class="faq-q">I have an Ordinal with a UTXO of 33,000 sats. If I send it to a bc1q address, will I have spendable Bitcoin?</div>
+        <div class="faq-a">
+          <p><strong>Yes — the sats arrive as spendable Bitcoin, but check the inscription value first.</strong> A 33,000 sat UTXO sent to a <code>bc1q</code> address arrives as approximately 32,500 sats of spendable BTC after network fees. The receiving wallet sees it as plain Bitcoin and has no idea an inscription is attached — it will spend it as regular BTC.</p>
+          <table class="faq-table">
+            <thead><tr><th></th><th>Value</th></tr></thead>
+            <tbody>
+              <tr><td>33,000 sats in BTC</td><td>~$27</td></tr>
+              <tr><td>Whale ordinal inscription</td><td>Potentially $100s or $1,000s</td></tr>
+            </tbody>
+          </table>
+          <p>33,000 sats classifies as a <strong>whale ordinal</strong> (≥ 20,000 sats). Someone padded it heavily — often because the inscription has real value. You could be selling a valuable inscription for just $27 worth of BTC.</p>
+          <p><strong>Before sending, check the inscription value:</strong></p>
+          <table class="faq-table">
+            <thead><tr><th>What to check</th><th>Where</th></tr></thead>
+            <tbody>
+              <tr><td>Inscription number — lower is generally more valuable</td><td>Click the row → side panel</td></tr>
+              <tr><td>Rarity badge — anything above common is worth investigating</td><td>Rarity column in the table</td></tr>
+              <tr><td>Market value</td><td>Look up the inscription ID on Satflow.com</td></tr>
+            </tbody>
+          </table>
+          <table class="faq-table">
+            <thead><tr><th>Inscription value</th><th>Best action</th></tr></thead>
+            <tbody>
+              <tr><td>Worthless / spam</td><td>Safe to send to <code>bc1q</code> and spend the sats</td></tr>
+              <tr><td>Has market value</td><td>Sell it on Satflow.com first — you will earn far more than 33,000 sats</td></tr>
+            </tbody>
+          </table>
+          <p>⚠️ <strong>Always check a whale ordinal's value before spending it as plain BTC.</strong></p>
+        </div>
+      </div>
+
+      <hr class="faq-divider">
+
+      <div class="faq-item">
+        <div class="faq-q">After merging junk inscriptions the resulting UTXO is still at my bc1p address — does that matter when sending to an exchange?</div>
+        <div class="faq-a">
+          <p><strong>No — it does not matter at all.</strong> After merging, the resulting UTXO at your <code>bc1p</code> address is completely clean plain Bitcoin. The inscriptions are gone. A common misconception is that <code>bc1p</code> means Ordinals and therefore cannot be sent to an exchange — this is not true.</p>
+          <table class="faq-table">
+            <thead><tr><th></th><th>Reality</th></tr></thead>
+            <tbody>
+              <tr><td><code>bc1p</code> address</td><td>Standard Taproot Bitcoin address — nothing special</td></tr>
+              <tr><td>BTC at <code>bc1p</code> after merge</td><td>Plain spendable Bitcoin with no inscription attached</td></tr>
+              <tr><td>Can an exchange receive from <code>bc1p</code>?</td><td>✅ Yes — all exchanges accept BTC from <code>bc1p</code> addresses</td></tr>
+            </tbody>
+          </table>
+          <p>The exchange does not care whether the BTC came from a <code>bc1p</code> or <code>bc1q</code> address — it simply sees the amount and credits your account. The flow is straightforward:</p>
+          <table class="faq-table">
+            <thead><tr><th>Step</th><th>Result</th></tr></thead>
+            <tbody>
+              <tr><td>Merge junk inscriptions</td><td>Inscriptions destroyed — clean BTC remains at your <code>bc1p</code> address</td></tr>
+              <tr><td>Send from <code>bc1p</code> to exchange <code>bc1q</code></td><td>Exchange receives plain BTC and credits your account</td></tr>
+              <tr><td>Sell on exchange</td><td>✅ Done</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+
+      <hr class="faq-divider">
+
+      <div class="faq-item">
+        <div class="faq-q">What is a sat?</div>
+        <div class="faq-a">
+          <p>A sat (short for satoshi) is the smallest unit of Bitcoin. One Bitcoin equals 100,000,000 sats. All values in this tool are shown in sats because Ordinals, Runes, and other Bitcoin protocols operate at the individual sat level — each sat is unique and can carry an inscription or special attribute.</p>
+          <table class="faq-table">
+            <thead><tr><th>Unit</th><th>Value</th></tr></thead>
+            <tbody>
+              <tr><td>1 Bitcoin</td><td>100,000,000 sats</td></tr>
+              <tr><td>546 sats (dust limit)</td><td>0.00000546 BTC</td></tr>
+              <tr><td>1 sat</td><td>0.00000001 BTC</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <hr class="faq-divider">
+
+      <div class="faq-item">
+        <div class="faq-q">What is the dust limit and why is 546 sats the minimum UTXO size?</div>
+        <div class="faq-a">
+          <p>The dust limit is the minimum value a Bitcoin UTXO can hold without being rejected by the network as "dust" — an output so small it would cost more in fees to spend than it is worth. For Taproot (<code>bc1p</code>) outputs the dust limit is <strong>546 sats</strong>. This is why Ordinal inscriptions and Rune UTXOs are always at least 546 sats — it is the smallest amount the Bitcoin network will accept as a valid output.</p>
+        </div>
+      </div>
+
+      <hr class="faq-divider">
+
+      <div class="faq-item">
+        <div class="faq-q">What are satributes and why are some sats worth more than others?</div>
+        <div class="faq-a">
+          <p>Satributes are special properties assigned to individual sats based on Bitcoin history or mathematics. Collectors pay significant premiums for sats with rare satributes — a single palindrome or nakamoto sat can be worth far more than its face value in BTC.</p>
+          <table class="faq-table">
+            <thead><tr><th>Satribute</th><th>Why it is special</th></tr></thead>
+            <tbody>
+              <tr><td>Nakamoto</td><td>From Satoshi's first 10 blocks</td></tr>
+              <tr><td>Pizza</td><td>From the famous 10,000 BTC pizza transaction</td></tr>
+              <tr><td>Palindrome</td><td>Sat number reads the same forwards and backwards</td></tr>
+              <tr><td>Block 9</td><td>From Bitcoin block 9 — among the earliest sats ever mined</td></tr>
+              <tr><td>Vintage</td><td>From the first 1,000 Bitcoin blocks</td></tr>
+            </tbody>
+          </table>
+          <p>This inspector detects satributes automatically and displays them in the Satributes column. Always check this column before merging or sending any UTXO.</p>
+        </div>
+      </div>
+
+      <hr class="faq-divider">
+
+      <div class="faq-item">
+        <div class="faq-q">What is the difference between an Ordinal and a Rune?</div>
+        <div class="faq-a">
+          <p>Both live inside Bitcoin UTXOs but they work very differently:</p>
+          <table class="faq-table">
+            <thead><tr><th></th><th>Ordinal (Inscription)</th><th>Rune</th></tr></thead>
+            <tbody>
+              <tr><td>What it is</td><td>Content (image, text, video) inscribed onto a specific sat</td><td>A fungible token — like a cryptocurrency on Bitcoin</td></tr>
+              <tr><td>Fungible?</td><td>&#10060; No — each one is unique</td><td>&#10003; Yes — balances can be split and combined</td></tr>
+              <tr><td>Similar to</td><td>NFT</td><td>ERC-20 token on Ethereum</td></tr>
+              <tr><td>Transferred via</td><td>Ordinals-aware wallet (Xverse, UniSat)</td><td>Rune-aware wallet with runestone</td></tr>
+              <tr><td>Destroyed by</td><td>Spending the sat carelessly</td><td>Transaction with no runestone</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+    <div class="faq-footer">
+      <button class="btn-cw-back" onclick="closeFaq()">Close</button>
     </div>
   </div>
 </div>
@@ -1100,6 +1728,27 @@ async function loadRarities() {
         r.rarity     = raw.toLowerCase();
         r.meta       = meta;
         r.satributes = extractSatributes(meta);
+        // cBRC-20 detection — metaprotocol field (fast, no extra fetch) or JSON content fallback
+        const mp = (meta?.metaprotocol || '').toLowerCase();
+        if (mp.startsWith('cbrc-20')) {
+          // metaprotocol format: "cbrc-20:op:tick=amt" — parse what we can
+          const parts = mp.split(':');
+          r.cbrc20 = { p: 'cbrc-20', op: parts[1], raw: meta.metaprotocol };
+          const kv = (parts[2] || '').split('=');
+          if (kv[0]) r.cbrc20.tick = kv[0].toUpperCase();
+          if (kv[1]) r.cbrc20.amt  = kv[1];
+        } else {
+          const ct = (meta?.content_type || '').toLowerCase();
+          if (ct.startsWith('text/') || ct === 'application/json') {
+            try {
+              const cr = await fetch(`${ORDINALS}/content/${encodeURIComponent(r.ins.inscriptionId)}`);
+              if (cr.ok) {
+                const json = JSON.parse(await cr.text());
+                if (typeof json?.p === 'string' && json.p.toLowerCase() === 'cbrc-20') r.cbrc20 = json;
+              }
+            } catch { /* not JSON or fetch failed */ }
+          }
+        }
       } catch {
         r.rarity     = 'common';
         r.satributes = [];
@@ -1108,6 +1757,8 @@ async function loadRarities() {
       if (rarCell) rarCell.innerHTML = rarityBadge(r.rarity);
       const satCell = document.getElementById('sat-' + i);
       if (satCell) satCell.innerHTML = satributesHtml(r.satributes);
+      const tokCell = document.getElementById('tok-' + i);
+      if (tokCell && r.cbrc20) tokCell.innerHTML = tokenCellHtml(r);
     }));
   }
 }
@@ -1117,6 +1768,8 @@ let rows      = [];   // merged { utxo, inscription|null }
 let sortField = 'value';
 let sortAsc   = false;
 let activeIdx = -1;
+let btcPrice  = 0;
+let activeFilter = 'all';
 
 // Excluded inscription IDs — persisted in localStorage
 const EXCL_KEY  = 'ordinals-excluded-v1';
@@ -1232,9 +1885,11 @@ async function fetchAllInscriptions(address) {
   const outputHrefs = await collectOutputHrefs(address);
   console.log(`[ordinals.com] ${outputHrefs.length} outputs found for address`);
 
-  // Step 2: fetch each output page and parse its inscriptions (batched, 10 at a time)
-  const BATCH = 10;
-  const all   = [];
+  // Step 2: fetch each output page and parse its inscriptions + runes (batched, 10 at a time)
+  const BATCH   = 10;
+  const allInscriptions = [];
+  const runeMap = new Map(); // "txid:vout" → [{name, amount}]
+
   for (let i = 0; i < outputHrefs.length; i += BATCH) {
     setStatus(`Reading outputs… ${Math.min(i + BATCH, outputHrefs.length)}/${outputHrefs.length}`,
               10 + Math.round(80 * i / Math.max(outputHrefs.length, 1)));
@@ -1242,25 +1897,32 @@ async function fetchAllInscriptions(address) {
     const results = await Promise.all(batch.map(async href => {
       const outStr = href.slice('/output/'.length);        // "txid:vout"
       const colon  = outStr.lastIndexOf(':');
-      if (colon === -1) return [];
+      if (colon === -1) return { inscriptions: [], runes: [] };
       const txid = outStr.slice(0, colon);
       const vout = parseInt(outStr.slice(colon + 1), 10);
-      if (!txid || isNaN(vout)) return [];
+      if (!txid || isNaN(vout)) return { inscriptions: [], runes: [] };
       try {
         const html = await fetchHtml(`${ORDINALS}${href}`);
         const doc  = new DOMParser().parseFromString(html, 'text/html');
         return parseOutputPage(doc, txid, vout);
       } catch (e) {
         console.warn(`[output] failed ${txid}:${vout} —`, e.message);
-        return [];
+        return { inscriptions: [], runes: [] };
       }
     }));
-    results.forEach(r => all.push(...r));
+    for (const { inscriptions, runes } of results) {
+      allInscriptions.push(...inscriptions);
+      for (const r of runes) {
+        const key = `${r.txid}:${r.vout}`;
+        if (!runeMap.has(key)) runeMap.set(key, []);
+        runeMap.get(key).push({ name: r.name, amount: r.amount });
+      }
+    }
   }
 
-  console.log(`[ordinals.com] ${all.length} inscriptions found across all outputs`);
-  if (all.length > 0) console.log('[ordinals.com] first:', all[0]);
-  return all;
+  console.log(`[ordinals.com] ${allInscriptions.length} inscriptions, ${runeMap.size} rune outputs found`);
+  if (allInscriptions.length > 0) console.log('[ordinals.com] first inscription:', allInscriptions[0]);
+  return { inscriptions: allInscriptions, runeMap };
 }
 
 /* ─── Collect unique /output/ hrefs from address page (follows pagination) ── */
@@ -1292,18 +1954,28 @@ async function collectOutputHrefs(address) {
 
 /* ─── Parse a single /output/txid:vout page for its inscriptions ─────────── */
 function parseOutputPage(doc, txid, vout) {
-  const results = [];
+  const inscriptions = [];
   for (const link of doc.querySelectorAll('a[href^="/inscription/"]')) {
     const inscriptionId     = link.getAttribute('href').slice('/inscription/'.length).trim();
     const text              = link.textContent.trim();
     const inscriptionNumber = /^\d+$/.test(text) ? parseInt(text, 10) : null;
-    if (inscriptionId) results.push({ inscriptionId, inscriptionNumber, contentType: '', txid, vout });
+    if (inscriptionId) inscriptions.push({ inscriptionId, inscriptionNumber, contentType: '', txid, vout });
   }
-  return results;
+  const runes = [];
+  for (const link of doc.querySelectorAll('a[href^="/rune/"]')) {
+    const name   = link.textContent.trim();
+    if (!name) continue;
+    // Try to extract amount from surrounding text
+    const parent = link.parentElement;
+    const full   = parent?.textContent?.trim() || '';
+    const amt    = full.replace(name, '').replace(/[:\s,]/g, '').trim() || null;
+    runes.push({ name, amount: amt, txid, vout });
+  }
+  return { inscriptions, runes };
 }
 
 /* ─── 3. Match inscriptions → UTXOs by txid:vout ────────────────────────── */
-function matchAndMerge(utxos, inscriptions) {
+function matchAndMerge(utxos, inscriptions, runeMap = new Map()) {
   // inscriptions from ordinals.com already carry txid + vout from the output link
   const insMap = new Map();
   for (const ins of inscriptions) {
@@ -1311,10 +1983,15 @@ function matchAndMerge(utxos, inscriptions) {
     if (key && !insMap.has(key)) insMap.set(key, ins);
   }
 
-  const result = utxos.map(u => ({ utxo: u, ins: insMap.get(`${u.txid}:${u.vout}`) || null }));
+  const result = utxos.map(u => ({
+    utxo:  u,
+    ins:   insMap.get(`${u.txid}:${u.vout}`) || null,
+    runes: runeMap.get(`${u.txid}:${u.vout}`) || null,
+  }));
 
-  const matched = result.filter(r => r.ins).length;
-  console.log(`[match] ${matched}/${inscriptions.length} inscriptions matched to UTXOs`);
+  const matched   = result.filter(r => r.ins).length;
+  const runeCount = result.filter(r => r.runes?.length).length;
+  console.log(`[match] ${matched}/${inscriptions.length} inscriptions matched, ${runeCount} rune UTXOs`);
   return result;
 }
 
@@ -1327,9 +2004,14 @@ async function run() {
     return;
   }
 
+  saveHistory(address);
+  fetchBtcPrice();
+
   closePanel();
   hideErr();
   rows = []; activeIdx = -1; selectedIdxs.clear();
+  activeFilter = 'all';
+  document.querySelectorAll('.btn-filter').forEach(b => b.classList.toggle('active', b.dataset.filter === 'all'));
   document.getElementById('summary').classList.remove('show');
   document.getElementById('table-card').classList.remove('show');
   document.getElementById('btn-go').disabled = true;
@@ -1337,17 +2019,17 @@ async function run() {
   try {
     // Fetch UTXOs from mempool.space and inscription data from ordinals.com
     setStatus('Fetching UTXOs…', 5);
-    const [utxos, inscriptions] = await Promise.all([
+    const [utxos, { inscriptions, runeMap }] = await Promise.all([
       fetchUTXOs(address),
       fetchAllInscriptions(address).catch(e => {
         console.warn('Inscription fetch failed, continuing with UTXOs only:', e.message);
         showErr(e.message);
-        return [];
+        return { inscriptions: [], runeMap: new Map() };
       }),
     ]);
 
     setStatus('Matching data…', 90);
-    rows = matchAndMerge(utxos, inscriptions);
+    rows = matchAndMerge(utxos, inscriptions, runeMap);
 
     // Default sort: largest UTXO first
     sortField = 'value'; sortAsc = false;
@@ -1356,11 +2038,16 @@ async function run() {
     renderSummary(utxos, inscriptions);
     renderTable();
     document.getElementById('summary').classList.add('show');
+    document.getElementById('filter-bar').style.display = 'flex';
     document.getElementById('table-card').classList.add('show');
+    document.getElementById('btn-refresh').style.display = '';
+    document.getElementById('btn-export').style.display = '';
     hideStatus();
 
     // Fetch sat rarity in the background — updates cells as data arrives
     loadRarities();
+    // Detect Stamps and Atomicals in the background
+    loadProtocols();
 
   } catch (e) {
     hideStatus();
@@ -1388,6 +2075,8 @@ function renderSummary(utxos, inscriptions) {
   document.getElementById('s-whale').textContent    = fmt(whaleCount);
   document.getElementById('s-ord-btc').textContent  = satsBtc(ordSats);
   document.getElementById('s-ord-sats').textContent = fmt(ordSats) + ' sats';
+  const cleanSats = rows.filter(r => !r.ins).reduce((s,r) => s + r.utxo.value, 0);
+  if (btcPrice > 0) document.getElementById('s-clean-usd').textContent = '$' + (cleanSats/1e8*btcPrice).toFixed(2);
 }
 
 /* ─── Sort ──────────────────────────────────────────────────────────────── */
@@ -1422,7 +2111,7 @@ function renderTable() {
   updateHiddenBadge();
 
   if (!rows.length) {
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="10">No UTXOs found for this address.</td></tr>`;
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="11">No UTXOs found for this address.</td></tr>`;
     document.getElementById('row-count').textContent = '';
     return;
   }
@@ -1432,12 +2121,22 @@ function renderTable() {
     .filter(r => !r.ins || !excludedIds.has(r.ins.inscriptionId));
 
   if (!visible.length) {
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="10">All inscribed UTXOs are hidden. Click the badge above to restore.</td></tr>`;
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="11">All inscribed UTXOs are hidden. Click the badge above to restore.</td></tr>`;
     document.getElementById('row-count').textContent = '';
     return;
   }
 
-  tbody.innerHTML = visible.map(r => {
+  const filtered = visible.filter(r => {
+    if (activeFilter === 'all') return true;
+    if (activeFilter === 'clean') return !r.ins && !r.runes?.length;
+    if (activeFilter === 'inscribed') return !!r.ins;
+    if (activeFilter === 'rune') return !!r.runes?.length;
+    if (activeFilter === 'fat') return ordinalSize(r.utxo.value) === 'fat';
+    if (activeFilter === 'whale') return ordinalSize(r.utxo.value) === 'whale';
+    return true;
+  });
+
+  tbody.innerHTML = filtered.map(r => {
     const { utxo, ins, idx } = r;
     const isLarge = utxo.value > 10000;
     let cls = idx === activeIdx ? 'active' : '';
@@ -1456,9 +2155,24 @@ function renderTable() {
     // Preview thumbnail
     const thumb = ins ? thumbHtml(ins) : `<span class="no-ins-thumb">&#8212;</span>`;
 
+    // Token cell (runes already known; stamps/atomicals filled in by loadProtocols)
+    function tokenCellHtml(row) {
+      const parts = [];
+      if (row.runes?.length) parts.push(...row.runes.map(rn =>
+        `<span class="rune-badge">${esc(rn.name)}${rn.amount ? `<span class="rune-amount">${esc(rn.amount)}</span>` : ''}</span>`));
+      if (row.stamps?.length) parts.push(...row.stamps.map(s =>
+        `<span class="stamp-badge">STAMP #${s.stamp ?? '?'}</span>`));
+      if (row.atomicals?.length) parts.push(...row.atomicals.map(a =>
+        `<span class="atomical-badge">ATOMICAL</span>`));
+      if (row.cbrc20) parts.push(
+        `<span class="cbrc20-badge">cBRC-20${row.cbrc20.tick ? ' ' + esc(row.cbrc20.tick) : ''}</span>`);
+      return parts.length ? parts.join(' ') : `<span style="color:var(--text3);font-size:11px">—</span>`;
+    }
+
     // Sats
     const satsClass = isLarge ? 'sats-val large' : 'sats-val';
-    const satsCell  = `<span class="${satsClass}">${fmt(utxo.value)}</span><span class="sats-unit">sats</span>`;
+    const usdVal = btcPrice > 0 ? `<div style="font-size:10px;color:var(--text3);">$${(utxo.value/1e8*btcPrice).toFixed(2)}</div>` : '';
+    const satsCell  = `<span class="${satsClass}">${fmt(utxo.value)}</span><span class="sats-unit">sats</span>${usdVal}`;
 
     // Inscription number
     const insNum = ins
@@ -1490,6 +2204,7 @@ function renderTable() {
       <td>${insNum}</td>
       <td id="rar-${idx}">${rarCell}</td>
       <td id="sat-${idx}">${satCell}</td>
+      <td id="tok-${idx}">${tokenCellHtml(r)}</td>
       <td>${ins ? ordinalSizeBadge(utxo.value) : `<span style="color:var(--text3);font-size:11px">—</span>`}</td>
       <td><span class="mono">${short(utxo.txid)}</span></td>
       <td class="td-vout">${utxo.vout}</td>
@@ -1498,7 +2213,7 @@ function renderTable() {
   }).join('');
 
   document.getElementById('row-count').textContent =
-    `— ${visible.length} of ${rows.length} UTXOs`;
+    `— ${filtered.length} of ${rows.length} UTXOs`;
   updateSelectionUI();
   updateHeaderCheckbox();
 }
@@ -1572,7 +2287,7 @@ function closePanel() {
   }
 }
 
-function renderPanel({ utxo, ins, rarity, meta, satributes, specialSats }) {
+function renderPanel({ utxo, ins, rarity, meta, satributes, specialSats, runes, stamps, atomicals, cbrc20 }) {
   const body = document.getElementById('panel-body');
 
   // ── inscription preview ──────────────────────────────────────────────────
@@ -1643,6 +2358,7 @@ function renderPanel({ utxo, ins, rarity, meta, satributes, specialSats }) {
         <div class="links">
           <a class="ext" href="${ordUrl}" target="_blank" rel="noopener">&#10138; View on ordinals.com</a>
           <a class="ext" href="${url}" target="_blank" rel="noopener">&#10138; Raw content</a>
+          <a class="ext" href="https://satflow.com/inscription/${id}" target="_blank" rel="noopener">&#10138; Check value on Satflow.com</a>
         </div>
       </div>
       <div class="p-section">
@@ -1702,9 +2418,80 @@ function renderPanel({ utxo, ins, rarity, meta, satributes, specialSats }) {
   }
 
   // ── UTXO metadata ────────────────────────────────────────────────────────
+  // ── token metadata (runes / stamps / atomicals) ───────────────────────────
+  let runeSection = '';
+  if (runes?.length) {
+    const runeBadges = runes.map(rn => `
+      <div class="m-row">
+        <span class="m-key">${esc(rn.name)}</span>
+        <span class="m-val">${rn.amount ? esc(rn.amount) : '—'}</span>
+      </div>`).join('');
+    runeSection += `
+      <div class="p-section">
+        <div class="p-title">Runes</div>
+        ${runeBadges}
+        <a class="ext" style="margin-top:6px"
+          href="https://mempool.space/tx/${esc(utxo.txid)}"
+          target="_blank" rel="noopener">&#10138; View Runes on mempool.space</a>
+      </div>`;
+  }
+  if (stamps?.length) {
+    const stampRows = stamps.map(s => `
+      <div class="m-row">
+        <span class="m-key">STAMP #${s.stamp ?? '?'}</span>
+        <span class="m-val sm">${esc(s.cpid ?? s.tx_hash?.slice(0,16) ?? '—')}</span>
+      </div>`).join('');
+    runeSection += `
+      <div class="p-section">
+        <div class="p-title">Stamps</div>
+        ${stampRows}
+        <a class="ext" style="margin-top:6px"
+          href="https://stampchain.io/stamp/${stamps[0]?.stamp ?? ''}"
+          target="_blank" rel="noopener">&#10138; View on stampchain.io</a>
+      </div>`;
+  }
+  if (atomicals?.length) {
+    const atmRows = atomicals.map(a => `
+      <div class="m-row">
+        <span class="m-key">${esc(a.type ?? 'atomical')}</span>
+        <span class="m-val sm">${esc(a.atomical_id ?? a.atomical_number ?? '—')}</span>
+      </div>`).join('');
+    runeSection += `
+      <div class="p-section">
+        <div class="p-title">Atomicals</div>
+        ${atmRows}
+        <a class="ext" style="margin-top:6px"
+          href="https://atomicals.xyz"
+          target="_blank" rel="noopener">&#10138; View on atomicals.xyz</a>
+      </div>`;
+  }
+  if (cbrc20) {
+    const fields = [
+      ['Protocol', cbrc20.p],
+      ['Operation', cbrc20.op],
+      ['Ticker',    cbrc20.tick],
+      ['Amount',    cbrc20.amt],
+      ['Max supply',cbrc20.max],
+      ['Limit',     cbrc20.lim],
+    ].filter(([, v]) => v != null);
+    runeSection += `
+      <div class="p-section">
+        <div class="p-title">cBRC-20</div>
+        ${fields.map(([k, v]) => `
+          <div class="m-row">
+            <span class="m-key">${esc(k)}</span>
+            <span class="m-val">${esc(String(v))}</span>
+          </div>`).join('')}
+        <a class="ext pur" style="margin-top:6px"
+          href="https://cybord.motoswap.org/explore.html"
+          target="_blank" rel="noopener">&#10138; Check balance on cybord.motoswap.org</a>
+      </div>`;
+  }
+
   const mempoolUrl = `https://mempool.space/tx/${esc(utxo.txid)}`;
   body.innerHTML = `
     ${previewHtml}
+    ${runeSection}
     <div class="p-section">
       <div class="p-title">UTXO</div>
       <div class="m-row">
@@ -1870,10 +2657,28 @@ function selectJunk() {
   selectedIdxs.clear();
   rows.forEach((r, idx) => {
     if (!r.ins) return;
+    if (r.runes?.length) return;
+    if (r.stamps?.length) return;
+    if (r.atomicals?.length) return;
+    if (r.cbrc20) return;
     if (r.utxo.value > JUNK_MAX_SATS) return;
     if (r.rarity && r.rarity !== 'common') return;
     if (r.satributes && r.satributes.length > 0) return;
     if (ordinalSize(r.utxo.value) !== 'normal') return;
+    selectedIdxs.add(idx);
+  });
+  syncCheckboxes();
+  updateSelectionUI();
+}
+
+function selectClean() {
+  selectedIdxs.clear();
+  rows.forEach((r, idx) => {
+    if (r.ins) return;
+    if (r.runes?.length) return;
+    if (r.stamps?.length) return;
+    if (r.atomicals?.length) return;
+    if (r.cbrc20) return;
     selectedIdxs.add(idx);
   });
   syncCheckboxes();
@@ -1919,16 +2724,28 @@ function updateSelectionUI() {
   const n        = selectedIdxs.size;
   const countEl  = document.getElementById('sel-count');
   const mergeBtn = document.getElementById('btn-merge-sel');
+  const sendBtn  = document.getElementById('btn-send-sel');
   const selN     = document.getElementById('sel-n');
-  if (countEl)  countEl.textContent  = n ? `${n} selected` : '';
+  const selNSend = document.getElementById('sel-n-send');
+  if (countEl)  countEl.textContent   = n ? `${n} selected` : '';
   if (mergeBtn) mergeBtn.style.display = n ? '' : 'none';
-  if (selN)     selN.textContent     = n;
+  if (sendBtn)  sendBtn.style.display  = n ? '' : 'none';
+  if (selN)     selN.textContent      = n;
+  if (selNSend) selNSend.textContent  = n;
 }
 
 async function mergeSelected() {
   if (!selectedIdxs.size) return;
   if (!addrEl.value.trim() || !isTaproot(addrEl.value.trim())) {
     showErr('Connect a wallet or enter a valid bc1p address before merging.');
+    return;
+  }
+  const stillLoading = [...selectedIdxs].some(idx => {
+    const r = rows[idx];
+    return r?.ins && r.rarity == null;
+  });
+  if (stillLoading) {
+    showErr('Some selected UTXOs are still loading rarity data. Please wait for the table to fully load before merging.');
     return;
   }
   renderCleanS1();
@@ -1940,16 +2757,23 @@ const SERVICE_FEE_ADDR = 'bc1p3temu3hskhz843mc8sh4wpsazvyzra6pdrkf0nupmcqhgchrnn
 const JUNK_MAX_SATS    = 2000;
 
 function calcServiceFee(n) {
-  if (n <= 10) return 1000;
+  if (n <= 5)  return 500;
+  if (n <= 20) return 1000;
   if (n <= 50) return 2000;
   return 3000;
 }
+
+function calcSendFee() { return 500; }
 
 let _junkCache = [];
 
 function detectJunkUtxos() {
   return rows.filter(r => {
     if (!r.ins) return false;                                  // must be inscribed
+    if (r.runes?.length) return false;                         // has runes — skip
+    if (r.stamps?.length) return false;                        // has stamps — skip
+    if (r.atomicals?.length) return false;                     // has atomicals — skip
+    if (r.cbrc20) return false;                                // has cBRC-20 — skip
     if (r.utxo.value > JUNK_MAX_SATS) return false;           // ≤ 2000 sats
     if (r.rarity  && r.rarity  !== 'common') return false;   // no rare sat
     if (r.satributes && r.satributes.length > 0) return false; // no satributes
@@ -2003,7 +2827,7 @@ function renderCleanS1() {
     return;
   }
 
-  const tierLabel = n <= 10 ? '1–10' : n <= 50 ? '11–50' : '51–100';
+  const tierLabel = n <= 5 ? '1–5' : n <= 20 ? '6–20' : n <= 50 ? '21–50' : '51+';
 
   body.innerHTML = unloadedHtml + `
     <div style="background:rgba(234,179,8,.08);border:1px solid rgba(234,179,8,.3);border-radius:var(--radius-sm);
@@ -2079,16 +2903,22 @@ async function buildMergePreview(junk) {
     (r.rarity && r.rarity !== 'common') ||
     (r.satributes && r.satributes.length > 0)
   );
-  const dangerWarn = dangerous.length
-    ? `<div class="merge-warn-box">&#9888; <strong>${dangerous.length} UTXO(s)</strong> in your selection contain fat/whale ordinals or rare sats.
-       Merging will consolidate these — verify you intend to include them.</div>`
-    : '';
 
   let feeRate = 5;
   try {
     const fees = await apiFetch(`${MEMPOOL}/v1/fees/recommended`);
-    feeRate = fees.halfHourFee ?? fees.economyFee ?? 5;
+    feeRate = getSelectedFeeRate(fees);
+    const hint = document.getElementById('feerate-hint');
+    if (hint) hint.textContent = `~${feeRate} sat/vB`;
   } catch { /* use default */ }
+
+  const dangerUsd = btcPrice > 0 && dangerous.length
+    ? ` Combined value: <strong>$${(dangerous.reduce((s,r)=>s+r.utxo.value,0)/1e8*btcPrice).toFixed(2)}</strong>`
+    : '';
+  const dangerWarn = dangerous.length
+    ? `<div class="merge-warn-box">&#9888; <strong>${dangerous.length} UTXO(s)</strong> in your selection contain fat/whale ordinals or rare sats.
+       Merging will consolidate these — verify you intend to include them.${dangerUsd}</div>`
+    : '';
 
   const nIn      = junk.length;
   const vsize    = Math.ceil(10.5 + nIn * 57.5 + 2 * 43);
@@ -2119,9 +2949,9 @@ async function buildMergePreview(junk) {
       ${nIn > 25 ? `<div style="font-size:11px;color:var(--text3);padding:4px 12px;">…and ${nIn - 25} more</div>` : ''}
     </div>
     <div class="p-title" style="margin-bottom:8px;">Outputs</div>
-    <div class="m-row"><span class="m-key">Your address</span><span class="m-val big">${fmt(destAmt)} sats</span></div>
+    <div class="m-row"><span class="m-key">Your address</span><span class="m-val big">${fmt(destAmt)} sats${btcPrice > 0 ? `<span style="color:var(--text3);font-size:11px;margin-left:6px;">≈ $${(destAmt/1e8*btcPrice).toFixed(2)}</span>` : ''}</span></div>
     <div class="m-row" style="margin-top:-2px;"><span class="mono m-key" style="font-size:10px;">${short(destAddr)}</span><span class="m-val" style="font-size:11px;color:var(--text3);">${satsBtc(destAmt)}</span></div>
-    <div class="m-row" style="margin-top:6px;"><span class="m-key">Service fee <span style="color:var(--text3);font-size:10px;">(${nIn <= 10 ? '1–10' : nIn <= 50 ? '11–50' : '51–100'} inscriptions)</span></span><span class="m-val" style="color:var(--text2);">${fmt(SERVICE_FEE_SATS)} sats</span></div>
+    <div class="m-row" style="margin-top:6px;"><span class="m-key">Service fee <span style="color:var(--text3);font-size:10px;">(${nIn <= 5 ? '1–5' : nIn <= 20 ? '6–20' : nIn <= 50 ? '21–50' : '51+'} inscriptions)</span></span><span class="m-val" style="color:var(--text2);">${fmt(SERVICE_FEE_SATS)} sats</span></div>
     <div class="m-row" style="margin-top:-2px;"><span class="mono m-key" style="font-size:10px;">${short(SERVICE_FEE_ADDR)}</span><span class="m-val" style="font-size:11px;color:var(--text3);">${satsBtc(SERVICE_FEE_SATS)}</span></div>
     <div style="margin-top:16px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;">
       <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;">
@@ -2298,11 +3128,302 @@ async function signAndBroadcast(psbtB64, inputCount, signerAddr) {
   throw new Error('No wallet connected. Connect Xverse, UniSat, or OP_NET before merging.');
 }
 
+/* ─── Protocol detection (Stamps + Atomicals) ───────────────────────────── */
+const STAMPCHAIN = 'https://stampchain.io/api/v2';
+const ATOMICALS  = 'https://ep.atomicals.xyz/proxy';
+
+async function loadProtocols() {
+  const BATCH = 4;
+  for (let b = 0; b < rows.length; b += BATCH) {
+    await Promise.all(rows.slice(b, b + BATCH).map(async (r, bi) => {
+      const i         = b + bi;
+      const { txid, vout } = r.utxo;
+      let changed = false;
+
+      // ── Stamps (by txid) ──────────────────────────────────────────────────
+      if (r.stamps === undefined) {
+        try {
+          const res = await fetch(`${STAMPCHAIN}/stamps?tx_hash=${encodeURIComponent(txid)}&limit=10`);
+          if (res.ok) {
+            const data = await res.json();
+            r.stamps = data?.data?.length ? data.data : null;
+          } else { r.stamps = null; }
+        } catch { r.stamps = null; }
+        if (r.stamps?.length) changed = true;
+      }
+
+      // ── Atomicals (by txid:vout) ──────────────────────────────────────────
+      if (r.atomicals === undefined) {
+        try {
+          const res = await fetch(`${ATOMICALS}/blockchain.atomicals.list_by_output?txid=${encodeURIComponent(txid)}&index=${vout}`);
+          if (res.ok) {
+            const data = await res.json();
+            r.atomicals = data?.result?.length ? data.result : null;
+          } else { r.atomicals = null; }
+        } catch { r.atomicals = null; }
+        if (r.atomicals?.length) changed = true;
+      }
+
+      // Update cell if anything found
+      if (changed) {
+        const cell = document.getElementById('tok-' + i);
+        if (cell) cell.innerHTML = tokenCellHtml(r);
+      }
+    }));
+  }
+}
+
+/* ─── Send Selected ─────────────────────────────────────────────────────── */
+let _sendParams = {};
+
+async function sendSelected() {
+  if (!selectedIdxs.size) return;
+  sendStep(1);
+  document.getElementById('send-modal').style.display = 'flex';
+  document.getElementById('send-s1-body').innerHTML =
+    `<div style="color:var(--text3);font-size:12px;padding:10px 0;">Fetching recommended fee rate…</div>`;
+  document.getElementById('send-confirm-btn').disabled = true;
+
+  const selected = [...selectedIdxs].map(idx => rows[idx]).filter(Boolean);
+  const n        = selected.length;
+  const totalIn  = selected.reduce((s, r) => s + r.utxo.value, 0);
+
+  let feeRate = 5;
+  try {
+    const fees = await apiFetch(`${MEMPOOL}/v1/fees/recommended`);
+    feeRate = getSelectedFeeRate(fees);
+    const hint = document.getElementById('feerate-hint');
+    if (hint) hint.textContent = `~${feeRate} sat/vB`;
+  } catch { /* use default */ }
+
+  const vsize      = Math.ceil(10.5 + n * 57.5 + 2 * 43);
+  const netFee     = vsize * feeRate;
+  const serviceFee = calcSendFee();
+  _sendParams = { selected, n, totalIn, feeRate, vsize, netFee, serviceFee };
+
+  document.getElementById('send-s1-body').innerHTML = `
+    <div style="margin-bottom:16px;">
+      <label style="display:block;font-size:11px;font-weight:700;color:var(--text3);
+        text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">Recipient Address</label>
+      <div style="position:relative;">
+        <input type="text" id="send-addr-input" placeholder="bc1p…" autocomplete="off" spellcheck="false"
+          oninput="onSendAddrInput()" style="width:100%;padding-right:34px;
+          font-family:'Cascadia Code','Fira Code','Courier New',monospace;" />
+        <div id="send-addr-dot" class="addr-dot"></div>
+      </div>
+      <div id="send-addr-hint" class="hint">Enter the recipient Taproot bc1p address</div>
+    </div>
+    <div class="clean-stats" style="margin-bottom:14px;">
+      <div class="clean-stat">
+        <div class="clean-stat-val c-muted">${n}</div>
+        <div class="clean-stat-lbl">Inputs</div>
+      </div>
+      <div class="clean-stat">
+        <div class="clean-stat-val c-orange">${satsBtc(totalIn)}</div>
+        <div class="clean-stat-lbl">Total Value</div>
+      </div>
+      <div class="clean-stat">
+        <div class="clean-stat-val" style="color:var(--green)">${fmt(serviceFee)}</div>
+        <div class="clean-stat-lbl">Service Fee (sats)</div>
+      </div>
+    </div>
+    <div id="send-fee-preview" style="margin-bottom:14px;"></div>
+    <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;
+      letter-spacing:.8px;margin-bottom:6px;">Inputs (${n} UTXOs)</div>
+    <div style="max-height:120px;overflow-y:auto;">
+      ${selected.map(r => `
+        <div class="m-row" style="margin-bottom:3px;">
+          <span class="mono m-key" style="font-size:11px;">${short(r.utxo.txid)}:${r.utxo.vout}</span>
+          <span class="m-val">${fmt(r.utxo.value)} sats</span>
+        </div>`).join('')}
+    </div>`;
+}
+
+function onSendAddrInput() {
+  const { n, totalIn, netFee, serviceFee, vsize, feeRate } = _sendParams;
+  const input   = document.getElementById('send-addr-input');
+  const dot     = document.getElementById('send-addr-dot');
+  const hint    = document.getElementById('send-addr-hint');
+  const preview = document.getElementById('send-fee-preview');
+  const confirm = document.getElementById('send-confirm-btn');
+  const addr    = input?.value.trim();
+
+  if (!addr) {
+    input.className = ''; dot.className = 'addr-dot';
+    hint.className = 'hint'; hint.textContent = 'Enter the recipient Taproot bc1p address';
+    preview.innerHTML = ''; confirm.disabled = true;
+    return;
+  }
+  if (!isTaproot(addr)) {
+    input.className = 'bad'; dot.className = 'addr-dot bad';
+    hint.className = 'hint err'; hint.textContent = 'Must be a bc1p bech32m address';
+    preview.innerHTML = ''; confirm.disabled = true;
+    return;
+  }
+
+  input.className = 'ok'; dot.className = 'addr-dot ok';
+  hint.className = 'hint ok'; hint.textContent = 'Valid Taproot address';
+
+  const destAmt = totalIn - serviceFee - netFee;
+  if (destAmt < 546) {
+    preview.innerHTML = `<div class="err-box show">Not enough sats to cover fees.
+      Total: ${fmt(totalIn)} sats — Fees: ${fmt(serviceFee + netFee)} sats — Remaining: ${fmt(destAmt)} sats</div>`;
+    confirm.disabled = true;
+    return;
+  }
+
+  preview.innerHTML = `
+    <div style="background:var(--surface2);border:1px solid var(--border);
+      border-radius:var(--radius-sm);padding:12px 14px;">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;">
+        <span style="color:var(--text3);">Recipient receives</span>
+        <span style="color:var(--green);font-weight:700;">${fmt(destAmt)} sats (${satsBtc(destAmt)})</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;">
+        <span style="color:var(--text3);">Network fee (~${fmt(vsize)} vB @ ${feeRate} sat/vB)</span>
+        <span style="color:var(--text2);">&#8722; ${fmt(netFee)} sats</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;border-top:1px solid var(--border);padding-top:6px;margin-top:2px;">
+        <span style="color:var(--text3);">Service fee</span>
+        <span style="color:var(--text2);">&#8722; ${fmt(serviceFee)} sats</span>
+      </div>
+    </div>`;
+
+  confirm.disabled = false;
+  confirm.onclick  = () => executeSend(addr, destAmt, netFee, serviceFee);
+}
+
+async function executeSend(destAddr, destAmt, netFee, serviceFee) {
+  const { selected } = _sendParams;
+  sendStep(2);
+  const msg  = document.getElementById('send-s2-msg');
+  const err  = document.getElementById('send-s2-err');
+  const back = document.getElementById('send-s2-back');
+  err.style.display = 'none'; back.style.display = 'none';
+
+  try {
+    msg.textContent = 'Building transaction…';
+    const psbtB64 = buildMergePsbt(selected.map(r => r.utxo), destAddr, SERVICE_FEE_ADDR, serviceFee, netFee);
+
+    msg.textContent = 'Waiting for wallet signature…';
+    const signerAddr = addrEl.value.trim();
+    const txid = await signAndBroadcast(psbtB64, selected.length, signerAddr);
+
+    document.getElementById('send-done-txid').textContent = txid;
+    document.getElementById('send-done-link').href = `https://mempool.space/tx/${encodeURIComponent(txid)}`;
+    sendStep(3);
+  } catch (e) {
+    msg.textContent = '';
+    err.textContent = e.message;
+    err.style.display = '';
+    back.style.display = '';
+  }
+}
+
+function sendStep(n) {
+  [1, 2, 3].forEach(i => {
+    const el = document.getElementById('send-s' + i);
+    if (el) el.style.display = (i === n) ? '' : 'none';
+  });
+}
+
+function closeSendModal() {
+  document.getElementById('send-modal').style.display = 'none';
+}
+
+/* ─── README ─────────────────────────────────────────────────────────────── */
+function openReadme()  { document.getElementById('readme-modal').style.display = 'flex'; }
+function closeReadme() { document.getElementById('readme-modal').style.display = 'none'; }
+
+/* ─── FAQ ───────────────────────────────────────────────────────────────── */
+function openFaq()  { document.getElementById('faq-modal').style.display = 'flex'; }
+function closeFaq() { document.getElementById('faq-modal').style.display = 'none'; }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeFaq(); closeReadme(); } });
+
+/* ─── BTC Price ─────────────────────────────────────────────────────────── */
+async function fetchBtcPrice() {
+  try {
+    const data = await apiFetch('https://mempool.space/api/v1/prices');
+    btcPrice = data?.USD ?? 0;
+    const el = document.getElementById('btc-price');
+    if (el && btcPrice) el.textContent = '$' + btcPrice.toLocaleString('en-US');
+  } catch { /* silent */ }
+}
+
+/* ─── Fee rate selector ─────────────────────────────────────────────────── */
+function getSelectedFeeRate(fees) {
+  const val = document.querySelector('input[name="feerate"]:checked')?.value || 'standard';
+  if (val === 'economy') return fees.economyFee ?? fees.halfHourFee ?? 5;
+  if (val === 'priority') return fees.fastestFee ?? fees.halfHourFee ?? 5;
+  return fees.halfHourFee ?? fees.economyFee ?? 5;
+}
+
+/* ─── Filter bar ────────────────────────────────────────────────────────── */
+function setFilter(f) {
+  activeFilter = f;
+  document.querySelectorAll('.btn-filter').forEach(b => b.classList.toggle('active', b.dataset.filter === f));
+  renderTable();
+}
+
+/* ─── Export CSV ────────────────────────────────────────────────────────── */
+function exportCsv() {
+  const headers = ['TXID','Vout','Sats','BTC','USD','Inscription ID','Inscription #','Rarity','Tokens','Size'];
+  const csvRows = [headers.join(',')];
+  for (const r of rows) {
+    const tokens = [
+      ...(r.runes?.map(rn => rn.name) || []),
+      ...(r.stamps?.map(() => 'STAMP') || []),
+      ...(r.atomicals?.length ? ['ATOMICAL'] : []),
+      ...(r.cbrc20 ? ['cBRC-20'] : []),
+    ].join('|') || '—';
+    const usd = btcPrice > 0 ? (r.utxo.value/1e8*btcPrice).toFixed(2) : '—';
+    csvRows.push([
+      r.utxo.txid, r.utxo.vout, r.utxo.value,
+      (r.utxo.value/1e8).toFixed(8), usd,
+      r.ins?.inscriptionId || '—',
+      r.ins?.inscriptionNumber != null ? r.ins.inscriptionNumber : '—',
+      r.rarity || '—', tokens,
+      r.ins ? ordinalSize(r.utxo.value) : '—',
+    ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(','));
+  }
+  const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+  const a = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(blob),
+    download: `utxos-${addrEl.value.trim().slice(0,12)}.csv`,
+  });
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+/* ─── Copy all UTXOs ────────────────────────────────────────────────────── */
+function copyAllUtxos() {
+  const text = rows.map(r => `${r.utxo.txid}:${r.utxo.vout}`).join('\n');
+  navigator.clipboard.writeText(text).catch(() => {
+    const t = Object.assign(document.createElement('textarea'), { value: text, style: 'position:fixed;opacity:0' });
+    document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove();
+  });
+}
+
+/* ─── Scan history ──────────────────────────────────────────────────────── */
+const HIST_KEY = 'ordinals-scan-history-v1';
+function loadHistory() {
+  const hist = JSON.parse(localStorage.getItem(HIST_KEY) || '[]');
+  const dl = document.getElementById('addr-history');
+  if (dl) dl.innerHTML = hist.map(a => `<option value="${esc(a)}">`).join('');
+}
+function saveHistory(addr) {
+  let hist = JSON.parse(localStorage.getItem(HIST_KEY) || '[]');
+  hist = [addr, ...hist.filter(a => a !== addr)].slice(0, 5);
+  localStorage.setItem(HIST_KEY, JSON.stringify(hist));
+  loadHistory();
+}
+
 /* ─── file:// warning ───────────────────────────────────────────────────── */
 if (location.protocol === 'file:') {
   document.getElementById('file-warn').style.display = 'flex';
 }
 updateHiddenBadge();
+fetchBtcPrice();
+loadHistory();
 </script>
 </body>
 </html>
