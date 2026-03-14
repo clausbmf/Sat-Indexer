@@ -613,6 +613,20 @@
       color: var(--red); font-size: 12px; line-height: 1.6; margin-bottom: 14px;
     }
 
+    /* ── selection summary bar ─────────────────────────────────────────────── */
+    .sel-summary {
+      display: none; border-bottom: 1px solid var(--border);
+      background: rgba(247,147,26,.05); flex-wrap: wrap;
+    }
+    .sel-summary.show { display: flex; }
+    .sel-sum-item {
+      padding: 8px 20px; border-right: 1px solid var(--border);
+      font-size: 12px; display: flex; flex-direction: column; gap: 2px;
+    }
+    .sel-sum-item:last-child { border-right: none; }
+    .sel-sum-val { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--accent); }
+    .sel-sum-lbl { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; }
+
     footer { text-align: center; padding: 20px; font-size: 11px; color: var(--text3); }
     footer a { color: var(--text3); text-decoration: none; }
     footer a:hover { color: var(--text2); }
@@ -867,6 +881,26 @@
         <button class="btn-send-sel" id="btn-send-sel" style="display:none;" onclick="sendSelected()">
           Send Selected (<span id="sel-n-send">0</span>)
         </button>
+      </div>
+    </div>
+
+    <!-- selection summary -->
+    <div class="sel-summary" id="sel-summary">
+      <div class="sel-sum-item">
+        <span class="sel-sum-val" id="ss-utxos">0</span>
+        <span class="sel-sum-lbl">Selected UTXOs</span>
+      </div>
+      <div class="sel-sum-item">
+        <span class="sel-sum-val" id="ss-sats">0</span>
+        <span class="sel-sum-lbl">Selected sats</span>
+      </div>
+      <div class="sel-sum-item">
+        <span class="sel-sum-val" id="ss-btc">0.00000000 BTC</span>
+        <span class="sel-sum-lbl">Selected BTC</span>
+      </div>
+      <div class="sel-sum-item">
+        <span class="sel-sum-val" id="ss-fee">0 sats</span>
+        <span class="sel-sum-lbl">Est. service fee</span>
       </div>
     </div>
 
@@ -2732,6 +2766,23 @@ function updateSelectionUI() {
   if (sendBtn)  sendBtn.style.display  = n ? '' : 'none';
   if (selN)     selN.textContent      = n;
   if (selNSend) selNSend.textContent  = n;
+
+  // selection summary bar
+  const sumEl   = document.getElementById('sel-summary');
+  if (sumEl) {
+    if (n) {
+      const totalSats = [...selectedIdxs].reduce((acc, idx) => acc + (rows[idx]?.utxo?.value || 0), 0);
+      const btc       = (totalSats / 1e8).toFixed(8);
+      const fee       = calcServiceFee(n);
+      document.getElementById('ss-utxos').textContent = n.toLocaleString();
+      document.getElementById('ss-sats').textContent  = totalSats.toLocaleString();
+      document.getElementById('ss-btc').textContent   = btc + ' BTC';
+      document.getElementById('ss-fee').textContent   = fee.toLocaleString() + ' sats';
+      sumEl.classList.add('show');
+    } else {
+      sumEl.classList.remove('show');
+    }
+  }
 }
 
 async function mergeSelected() {
