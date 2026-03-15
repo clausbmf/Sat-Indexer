@@ -575,13 +575,13 @@
     }
     .btn-merge-sel:hover { background: #e8851a; }
     .btn-send-sel {
-      background: var(--purple); color: #fff; border: none;
+      background: var(--green); color: #fff; border: none;
       border-radius: var(--radius-sm); padding: 6px 14px;
       font-size: 12px; font-weight: 700; cursor: pointer;
-      box-shadow: 0 2px 8px var(--purple-dim); transition: all var(--ease);
+      box-shadow: 0 2px 8px rgba(34,197,94,.3); transition: all var(--ease);
       white-space: nowrap;
     }
-    .btn-send-sel:hover { background: #9333ea; }
+    .btn-send-sel:hover { background: #16a34a; }
     /* checkbox column */
     .td-sel {
       width: 36px; padding: 0 4px 0 14px; text-align: center; vertical-align: middle;
@@ -639,6 +639,100 @@
     footer { text-align: center; padding: 20px; font-size: 11px; color: var(--text3); }
     footer a { color: var(--text3); text-decoration: none; }
     footer a:hover { color: var(--text2); }
+
+    /* ── Sat Hunter ───────────────────────────────────────────────────────── */
+    .sat-hunter-banner {
+      display: none; align-items: center; gap: 12px;
+      background: linear-gradient(135deg, rgba(168,85,247,.12), rgba(236,72,153,.08));
+      border: 1px solid rgba(168,85,247,.4); border-radius: var(--radius);
+      padding: 12px 18px; margin-bottom: 12px; cursor: pointer;
+      transition: all var(--ease);
+    }
+    .sat-hunter-banner:hover { border-color: rgba(168,85,247,.7); background: linear-gradient(135deg, rgba(168,85,247,.2), rgba(236,72,153,.12)); }
+    .sh-icon { font-size: 28px; flex-shrink: 0; }
+    .sh-text { flex: 1; }
+    .sh-title { font-size: 14px; font-weight: 800; color: var(--text); margin-bottom: 2px; }
+    .sh-sub   { font-size: 12px; color: var(--text2); }
+    .sh-btn   { background: rgba(168,85,247,.2); border: 1px solid rgba(168,85,247,.5); border-radius: 5px; color: var(--purple); font-size: 12px; font-weight: 700; padding: 6px 14px; cursor: pointer; white-space: nowrap; transition: all var(--ease); }
+    .sh-btn:hover { background: var(--purple); color: #fff; }
+
+    .sh-row {
+      display: flex; align-items: center; gap: 14px;
+      padding: 12px 14px; border-radius: var(--radius-sm);
+      background: var(--surface2); border: 1px solid var(--border);
+      margin-bottom: 8px; transition: border-color var(--ease);
+    }
+    .sh-row:hover { border-color: var(--border2); }
+    .sh-rar-badge { font-size: 13px; font-weight: 800; padding: 4px 12px; border-radius: 20px; white-space: nowrap; }
+    .sh-rar-mythic    { color: #ec4899; background: rgba(236,72,153,.12); border: 1px solid rgba(236,72,153,.4); }
+    .sh-rar-legendary { color: var(--red); background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.35); }
+    .sh-rar-epic      { color: var(--purple); background: var(--purple-dim); border: 1px solid rgba(168,85,247,.35); }
+    .sh-rar-rare      { color: var(--accent); background: var(--accent-dim); border: 1px solid rgba(247,147,26,.35); }
+    .sh-rar-uncommon  { color: #eab308; background: rgba(234,179,8,.1); border: 1px solid rgba(234,179,8,.35); }
+    .sh-info { flex: 1; min-width: 0; }
+    .sh-info-top { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+    .sh-info-sub { font-size: 11px; color: var(--text3); font-family: monospace; }
+    .sh-open { background: var(--accent-dim); border: 1px solid var(--accent); border-radius: 4px; color: var(--accent); font-size: 11px; font-weight: 700; padding: 4px 10px; cursor: pointer; white-space: nowrap; transition: all var(--ease); }
+    .sh-open:hover { background: var(--accent); color: #fff; }
+
+    /* ── Watchlist ────────────────────────────────────────────────────────── */
+    .btn-watchlist {
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: var(--radius-sm); padding: 6px 14px;
+      font-size: 12px; font-weight: 600; cursor: pointer;
+      color: var(--text2); transition: all var(--ease); white-space: nowrap;
+    }
+    .btn-watchlist:hover { border-color: var(--orange); color: var(--orange); background: rgba(251,146,60,.08); }
+
+    .wl-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto auto auto auto;
+      align-items: center; gap: 10px;
+      padding: 11px 14px; border-radius: var(--radius-sm);
+      background: var(--surface2); border: 1px solid var(--border);
+      margin-bottom: 8px; transition: border-color var(--ease);
+    }
+    .wl-row:hover { border-color: var(--border2); }
+    .wl-name  { font-size: 13px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .wl-sub   { font-size: 11px; color: var(--text3); font-family: monospace; }
+    .wl-stat  { text-align: right; }
+    .wl-stat-val  { font-size: 13px; font-weight: 700; color: var(--text); }
+    .wl-stat-lbl  { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .4px; }
+    .wl-open  { background: var(--accent-dim); border: 1px solid var(--accent); border-radius: 4px; color: var(--accent); font-size: 11px; font-weight: 700; padding: 4px 10px; cursor: pointer; white-space: nowrap; transition: all var(--ease); }
+    .wl-open:hover  { background: var(--accent); color: #fff; }
+    .wl-spin  { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .wl-empty { text-align: center; padding: 32px 0; color: var(--text3); font-size: 13px; }
+
+    /* ── Address Book button ──────────────────────────────────────────────── */
+    .btn-addrbook {
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: var(--radius-sm); padding: 6px 14px;
+      font-size: 12px; font-weight: 600; cursor: pointer;
+      color: var(--text2); transition: all var(--ease); white-space: nowrap;
+    }
+    .btn-addrbook:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+    /* ── Address Book modal ───────────────────────────────────────────────── */
+    .ab-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: var(--radius-sm);
+      background: var(--surface2); border: 1px solid var(--border);
+      margin-bottom: 8px; transition: border-color var(--ease);
+    }
+    .ab-row:hover { border-color: var(--border2); }
+    .ab-label { font-size: 13px; font-weight: 700; color: var(--text); flex: 1; min-width: 0; }
+    .ab-addr  { font-size: 11px; color: var(--text3); font-family: monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+    .ab-load  { background: var(--accent-dim); border: 1px solid var(--accent); border-radius: 4px; color: var(--accent); font-size: 11px; font-weight: 700; padding: 3px 10px; cursor: pointer; white-space: nowrap; transition: all var(--ease); }
+    .ab-load:hover { background: var(--accent); color: #fff; }
+    .ab-del   { background: none; border: 1px solid var(--border2); border-radius: 4px; color: var(--text3); font-size: 11px; padding: 3px 8px; cursor: pointer; transition: all var(--ease); }
+    .ab-del:hover { border-color: var(--red); color: var(--red); }
+    .ab-empty { text-align: center; padding: 32px 0; color: var(--text3); font-size: 13px; }
+    .ab-add-row { display: flex; gap: 8px; margin-bottom: 16px; }
+    .ab-add-row input { flex: 1; background: var(--surface2); border: 1px solid var(--border2); border-radius: 5px; color: var(--text); font-size: 12px; padding: 6px 10px; outline: none; }
+    .ab-add-row input:focus { border-color: var(--accent); }
+    .ab-add-row button { background: var(--accent); border: none; border-radius: 5px; color: #fff; font-size: 12px; font-weight: 700; padding: 6px 14px; cursor: pointer; white-space: nowrap; }
+    .ab-add-row button:hover { opacity: .85; }
 
     /* ── README / FAQ buttons ─────────────────────────────────────────────── */
     .btn-readme {
@@ -760,6 +854,8 @@
     <h1>Ordinals Wallet Inspector</h1>
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
+    <button class="btn-watchlist" onclick="openWatchlist()">&#128065; Watchlist</button>
+    <button class="btn-addrbook" onclick="openAddressBook()">&#128220; Address Book</button>
     <button class="btn-readme" onclick="openReadme()">&#128214; README</button>
     <button class="btn-faq" onclick="openFaq()">&#10067; FAQ</button>
     <button class="btn-story" onclick="openStory()">&#9997; Story</button>
@@ -784,7 +880,7 @@
     <button class="btn-wallet" id="btn-xverse" onclick="connectXverse()">Xverse</button>
     <button class="btn-wallet" id="btn-unisat" onclick="connectUniSat()">UniSat</button>
     <button class="btn-wallet" id="btn-opnet"  onclick="connectOpNet()">OP_NET</button>
-    <span class="wallet-status" id="wallet-status">Wallet connection only required for Merge &amp; Send — to scan, just paste your address below</span>
+    <span class="wallet-status" id="wallet-status">Wallet connection only required for Merge, Send &amp; Split — to scan, just paste your address below</span>
   </div>
 
   <!-- search -->
@@ -798,6 +894,8 @@
       </div>
       <button class="btn-primary" id="btn-go" onclick="run()">Analyze</button>
       <button class="btn-primary" id="btn-refresh" style="display:none;background:var(--surface2);border:1px solid var(--border2);color:var(--text2);box-shadow:none;" onclick="run()" title="Re-scan address">&#8635;</button>
+      <button id="btn-ab-save" style="display:none;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text2);font-size:12px;font-weight:600;padding:7px 12px;cursor:pointer;white-space:nowrap;transition:all var(--ease);" onclick="abSaveCurrent()" title="Save to Address Book" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">&#128220; Save</button>
+      <button id="btn-share" style="display:none;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text2);font-size:12px;font-weight:600;padding:7px 12px;cursor:pointer;white-space:nowrap;transition:all var(--ease);" onclick="shareAddress()" title="Copy share link" onmouseover="this.style.borderColor='var(--purple)';this.style.color='var(--purple)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">&#128279; Share</button>
     </div>
     <div style="display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap;">
       <span style="font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.6px;">Fee rate:</span>
@@ -936,6 +1034,16 @@
     </div>
   </div>
 
+  <!-- sat hunter banner -->
+  <div class="sat-hunter-banner" id="sat-hunter-banner" onclick="openSatHunter()">
+    <div class="sh-icon">&#128302;</div>
+    <div class="sh-text">
+      <div class="sh-title" id="sh-banner-title">Rare sats detected in your wallet</div>
+      <div class="sh-sub" id="sh-banner-sub"></div>
+    </div>
+    <button class="sh-btn">View Finds &#8594;</button>
+  </div>
+
   <!-- filter bar -->
   <div id="filter-bar" style="display:none;margin-bottom:10px;gap:6px;flex-wrap:wrap;">
     <button class="btn-filter active" data-filter="all" onclick="setFilter('all')">All</button>
@@ -976,6 +1084,12 @@
         </button>
         <button class="btn-send-sel" id="btn-send-sel" style="display:none;" onclick="sendSelected()">
           Send Selected (<span id="sel-n-send">0</span>)
+        </button>
+        <button class="btn-split" id="btn-split-sel" style="display:none;margin-top:0;" onclick="openSplitFromToolbar()">
+          &#9986; Split
+        </button>
+        <button class="btn-split" id="btn-split-all-sel" style="display:none;margin-top:0;background:rgba(168,85,247,.18);" onclick="openSplitAllFromToolbar()">
+          &#9986; Split All (<span id="sel-split-all-n">0</span>)
         </button>
       </div>
     </div>
@@ -1158,6 +1272,50 @@
   </div>
 </div>
 
+<!-- split all modal -->
+<div id="split-all-modal" class="clean-overlay" style="display:none" onclick="if(event.target===this)closeSplitAllModal()">
+  <div class="clean-box">
+    <div class="clean-hdr">
+      <h3>&#9986; Split All Inscriptions</h3>
+      <button class="panel-close" onclick="closeSplitAllModal()">&#10005;</button>
+    </div>
+    <div id="sa-s1">
+      <div class="clean-scroll" id="sa-s1-body"></div>
+      <div class="clean-footer">
+        <button class="btn-cw-back" onclick="closeSplitAllModal()">Cancel</button>
+        <button class="btn-cw-primary" id="sa-confirm-btn" disabled>Sign &amp; Split All</button>
+      </div>
+    </div>
+    <div id="sa-s2" style="display:none">
+      <div class="clean-scroll">
+        <div style="text-align:center;padding:32px 20px;">
+          <div class="spinner" style="margin:0 auto 18px;width:32px;height:32px;border-width:3px;"></div>
+          <div id="sa-s2-msg" style="font-size:13px;color:var(--text2);margin-bottom:10px;"></div>
+          <div id="sa-s2-err" style="color:var(--red);font-size:12px;line-height:1.5;display:none;"></div>
+          <button id="sa-s2-back" class="btn-cw-back" style="display:none;margin-top:16px;" onclick="saStep(1)">&#8592; Back</button>
+        </div>
+      </div>
+    </div>
+    <div id="sa-s3" style="display:none">
+      <div class="clean-scroll">
+        <div style="text-align:center;padding:32px 20px;">
+          <div style="font-size:44px;color:var(--green);margin-bottom:12px;">&#10003;</div>
+          <div style="font-size:15px;font-weight:700;margin-bottom:6px;color:var(--green);">All Inscriptions Split!</div>
+          <div style="font-size:12px;color:var(--text3);margin-bottom:20px;">Every inscription is now on its own 546 sat UTXO.</div>
+          <div class="m-row m-col" style="text-align:left;margin-bottom:10px;">
+            <span class="m-key">TXID</span>
+            <span class="m-val sm" id="sa-done-txid" style="word-break:break-all"></span>
+          </div>
+          <a id="sa-done-link" class="ext" href="#" target="_blank" rel="noopener">&#10138; View on mempool.space</a>
+        </div>
+      </div>
+      <div class="clean-footer">
+        <button class="btn-cw-primary" onclick="closeSplitAllModal()">Done</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- split modal -->
 <div id="split-modal" class="clean-overlay" style="display:none" onclick="if(event.target===this)closeSplitModal()">
   <div class="clean-box">
@@ -1208,6 +1366,72 @@
   </div>
 </div>
 
+<!-- sat hunter modal -->
+<div id="sh-modal" class="faq-overlay" style="display:none" onclick="if(event.target===this)closeSatHunter()">
+  <div class="faq-box" style="max-width:600px;">
+    <div class="faq-hdr">
+      <h3>&#128302; Sat Hunter — Rare Finds</h3>
+      <button class="panel-close" onclick="closeSatHunter()">&#10005;</button>
+    </div>
+    <div class="faq-scroll" style="padding-top:16px;">
+      <div id="sh-summary" style="margin-bottom:16px;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;color:var(--text2);line-height:1.7;"></div>
+      <div id="sh-list"></div>
+    </div>
+    <div class="faq-footer">
+      <button class="btn-cw-back" onclick="closeSatHunter()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- watchlist modal -->
+<div id="wl-modal" class="faq-overlay" style="display:none" onclick="if(event.target===this)closeWatchlist()">
+  <div class="faq-box" style="max-width:680px;">
+    <div class="faq-hdr">
+      <h3>&#128065; Watchlist</h3>
+      <button class="panel-close" onclick="closeWatchlist()">&#10005;</button>
+    </div>
+    <div class="faq-scroll" style="padding-top:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <span style="font-size:11px;color:var(--text3);">Live data from mempool.space</span>
+        <button id="wl-refresh-all-btn" onclick="wlRefreshAll()"
+          style="background:var(--accent);border:none;border-radius:5px;color:#fff;font-size:12px;font-weight:700;padding:6px 16px;cursor:pointer;transition:opacity var(--ease);">
+          &#8635; Refresh All
+        </button>
+      </div>
+      <div id="wl-list"></div>
+    </div>
+    <div class="faq-footer">
+      <span style="font-size:11px;color:var(--text3);">Addresses are managed in &#128220; Address Book</span>
+      <button class="btn-cw-back" onclick="closeWatchlist()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- address book modal -->
+<div id="ab-modal" class="faq-overlay" style="display:none" onclick="if(event.target===this)closeAddressBook()">
+  <div class="faq-box" style="max-width:560px;">
+    <div class="faq-hdr">
+      <h3>&#128220; Address Book</h3>
+      <button class="panel-close" onclick="closeAddressBook()">&#10005;</button>
+    </div>
+    <div class="faq-scroll" style="padding-top:16px;">
+      <div id="ab-add-wrap" style="display:none">
+        <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;">Save current address</div>
+        <div class="ab-add-row">
+          <input type="text" id="ab-label-input" placeholder='Nickname, e.g. "Grandma&apos;s wallet"' maxlength="40" />
+          <button onclick="abConfirmSave()">Save</button>
+        </div>
+        <hr class="faq-divider" style="margin-bottom:16px;">
+      </div>
+      <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;">Saved addresses</div>
+      <div id="ab-list"></div>
+    </div>
+    <div class="faq-footer">
+      <button class="btn-cw-back" onclick="closeAddressBook()">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- story modal -->
 <div id="story-modal" class="faq-overlay" style="display:none" onclick="if(event.target===this)closeStory()">
   <div class="faq-box" style="max-width:640px;">
@@ -1219,16 +1443,22 @@
 
       <div style="font-size:13px;color:var(--text2);line-height:1.8;margin-bottom:24px;">
         <p style="font-size:22px;font-weight:800;color:var(--text);line-height:1.3;margin-bottom:16px;">
-          It started with a mistake.
+          It started with my grandma.
         </p>
         <p style="margin-bottom:14px;">
-          I accidentally sent <strong style="color:var(--accent);">200,000 sats</strong> directly from a Taproot address to another one without checking what was inside it. The transaction went through, everything got merged into a single UTXO, and suddenly I had no idea what had happened to my Ordinals. Were they lost? Were they still there? Which sats were which?
+          She called me one afternoon. Not to say hello — to tell me she had "pressed a button" and now her coins were gone. I asked her which wallet. She said the blue one. I asked her what address she sent from. She said it had letters and numbers in it. Very helpful.
         </p>
         <p style="margin-bottom:14px;">
-          I went looking for a tool that could tell me. Something that would show me exactly what was in my UTXOs — inscriptions, rarity, sat attributes, tokens — all in one place. Something that made it obvious what was safe to spend and what wasn't.
+          After some detective work I found it: she had sent <strong style="color:var(--accent);">200,000 sats</strong> directly from a Taproot address to another one without checking what was inside. Everything got merged into a single UTXO. Her Ordinals — inscription numbers, rare sats, the whole lot — had vanished into a blob of sats with no label.
         </p>
         <p style="margin-bottom:14px;">
-          The tools that existed were either too basic, too slow, or just bad at showing the full picture. So I built my own.
+          I went looking for a tool that could tell me what was actually in there. Something that would show inscriptions, rarity, sat attributes, tokens — all in one place. Something that made it obvious what was safe to spend and what wasn't.
+        </p>
+        <p style="margin-bottom:14px;">
+          Nothing good existed. So I built my own.
+        </p>
+        <p style="margin-bottom:14px;font-size:11px;color:var(--text3);">
+          Her Ordinals were fine, by the way. She has since made the same mistake two more times. She also knits. She is much better at that.
         </p>
       </div>
 
@@ -1871,6 +2101,62 @@
         </div>
       </div>
 
+      <div class="faq-item">
+        <div class="faq-q">Why do I need to be careful with 546-sat UTXOs after a Split?</div>
+        <div class="faq-a">
+          <p>After a Split or Split All, each inscription lands on its own 546-sat UTXO. That is the minimum amount Bitcoin allows as a valid output — just enough to hold the inscription without locking up more BTC than necessary.</p>
+          <p>The problem is that Bitcoin itself does not know or care about inscriptions. A regular wallet sees a 546-sat UTXO and treats it as small, cheap change — and may automatically include it in the next transaction you send. The moment those 546 sats are spent, whoever receives them becomes the new owner of the inscription. Not you.</p>
+          <p><strong>The inscription itself is never destroyed.</strong> It stays on the blockchain forever. But ownership transfers the instant the sats move. So treat every 546-sat UTXO like a collectible — not like spending money.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">Why 546 sats specifically — why not 1 sat?</div>
+        <div class="faq-a">
+          <p>546 sats is the <strong>dust limit</strong> for P2WPKH outputs. Bitcoin nodes reject transactions that create outputs below this threshold — they consider them unspendable "dust" that would clog the UTXO set.</p>
+          <p>The exact limit depends on the output type: 546 sats for P2WPKH (bc1q), 294 sats for P2TR (bc1p). In practice, 546 sats has become the standard inscription output size because it works across all wallet types and is universally recognised by Ordinals wallets and marketplaces.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">What can go wrong if I accidentally spend an inscription UTXO?</div>
+        <div class="faq-a">
+          <table class="faq-table">
+            <thead><tr><th>Action</th><th>Result</th></tr></thead>
+            <tbody>
+              <tr><td>Include inscription UTXO in a normal send</td><td>Recipient becomes the new owner of the inscription</td></tr>
+              <tr><td>Deposit from that address to an exchange</td><td>Exchange keeps the sats, inscription is gone from your wallet</td></tr>
+              <tr><td>Wallet auto coin-selection picks it up</td><td>Inscription spent without you noticing</td></tr>
+              <tr><td>Merge without checking contents first</td><td>Inscription locked inside a larger UTXO, hard to recover</td></tr>
+            </tbody>
+          </table>
+          <p>This tool shows a red <strong>⚠ Safe to Spend: No</strong> on any UTXO that contains an inscription, so you always know before you act.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">How are transaction fees paid when I use the Send button?</div>
+        <div class="faq-a">
+          <p>The fee comes directly out of the UTXO you are sending — the recipient simply receives a little less than the full amount. You do not need a separate UTXO to cover costs.</p>
+          <p><strong>Example</strong> — sending a 196,000-sat clean UTXO to a bc1q address at a medium fee rate:</p>
+          <table class="faq-table">
+            <thead><tr><th></th><th>Sats</th></tr></thead>
+            <tbody>
+              <tr><td>Input</td><td>196,000</td></tr>
+              <tr><td>Recipient receives</td><td>~188,000</td></tr>
+              <tr><td>Network fee (miners)</td><td>~7,000</td></tr>
+              <tr><td>Service fee</td><td>500</td></tr>
+            </tbody>
+          </table>
+          <p><strong>Sending a 546-sat inscription UTXO is different.</strong> There is not enough value in the UTXO to also cover fees. In that case you have two options:</p>
+          <ul style="margin:8px 0 8px 18px;line-height:1.8;">
+            <li><strong>Select a clean UTXO alongside the inscription</strong> — the tool uses the extra sats to pay the fee and returns change to your address.</li>
+            <li><strong>The recipient pays</strong> — on marketplaces the buyer typically covers the fee via a PSBT where they add their own input.</li>
+          </ul>
+          <p>In practice, when sending an inscription to another wallet or a marketplace, always select the inscription UTXO together with a small clean UTXO so the tool has sats available to pay the network fee.</p>
+        </div>
+      </div>
+
     </div>
     <div class="faq-footer">
       <button class="btn-cw-back" onclick="closeFaq()">Close</button>
@@ -2200,6 +2486,7 @@ async function loadRarities() {
       if (rarCell) rarCell.innerHTML = rarityBadge(r.rarity);
       const satCell = document.getElementById('sat-' + i);
       if (satCell) satCell.innerHTML = satributesHtml(r.satributes);
+      if (SH_RANKS.includes(r.rarity)) updateSatHunter();
       const tokCell = document.getElementById('tok-' + i);
       if (tokCell && r.cbrc20) tokCell.innerHTML = tokenCellHtml(r);
     }));
@@ -2469,6 +2756,7 @@ async function run() {
   closePanel();
   hideErr();
   rows = []; activeIdx = -1; selectedIdxs.clear();
+  const _shb = document.getElementById('sat-hunter-banner'); if (_shb) _shb.style.display = 'none';
   activeFilter = 'all';
   document.querySelectorAll('.btn-filter').forEach(b => b.classList.toggle('active', b.dataset.filter === 'all'));
   document.getElementById('summary').classList.remove('show');
@@ -2502,6 +2790,13 @@ async function run() {
     document.getElementById('btn-refresh').style.display = '';
     document.getElementById('btn-export').style.display = '';
     document.getElementById('btn-tax-export').style.display = '';
+    // Show "+ Save" only if this address isn't already in the address book
+    const _abSaveBtn = document.getElementById('btn-ab-save');
+    if (_abSaveBtn) {
+      const _abAlready = abLoad().some(e => e.addr === addr);
+      _abSaveBtn.style.display = _abAlready ? 'none' : '';
+    }
+    document.getElementById('btn-share').style.display = '';
     hideStatus();
 
     // Fetch current fee rate for dust calculations
@@ -2918,15 +3213,25 @@ function renderPanel({ utxo, ins, allIns, rarity, meta, satributes, specialSats,
           }
         })()}
         <div style="display:flex;gap:6px;">
-          <button id="panel-sel-btn"
-            class="${selectedIdxs.has(activeIdx) ? 'btn-panel-desel' : 'btn-panel-sel'}"
-            onclick="togglePanelSelect()" style="flex:1;">
-            ${selectedIdxs.has(activeIdx) ? '&#10003; In merge — click to remove' : '+ Add to merge'}
+          <button class="btn-panel-sel" onclick="panelQuickMerge(${activeIdx})" style="flex:1;">
+            &#9851; Merge
+          </button>
+          <button class="btn-panel-sel" onclick="panelQuickSend(${activeIdx})"
+            style="flex:1;background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.3);color:var(--green);">
+            &#10148; Send
           </button>
           ${utxo.value > 1800 ? `<button class="btn-split" onclick="openSplitModal(${activeIdx})" style="flex:1;margin-top:0;">
             &#9986; Split
           </button>` : ''}
+          ${(allIns && allIns.length > 1 && utxo.value > allIns.length * 546 + 1000) ? `<button class="btn-split" onclick="openSplitAllModal(${activeIdx})" style="flex:1;margin-top:0;background:rgba(168,85,247,.18);">
+            &#9986; Split All (${allIns.length})
+          </button>` : ''}
         </div>
+        <button id="panel-sel-btn"
+          class="${selectedIdxs.has(activeIdx) ? 'btn-panel-desel' : 'btn-panel-sel'}"
+          onclick="togglePanelSelect()" style="margin-top:6px;font-size:11px;opacity:.7;">
+          ${selectedIdxs.has(activeIdx) ? '&#10003; In merge selection — click to remove' : '+ Add to merge selection'}
+        </button>
         <button class="btn-exclude" onclick="excludeInscription('${id}')" style="margin-top:6px;">
           Hide this UTXO from results
         </button>
@@ -3083,10 +3388,19 @@ function renderPanel({ utxo, ins, allIns, rarity, meta, satributes, specialSats,
           <div style="font-size:11px;color:var(--text3);">No inscription or token detected on this UTXO.</div>
         </div>
       </div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn-panel-sel" onclick="panelQuickMerge(${activeIdx})" style="flex:1;">
+          &#9851; Merge
+        </button>
+        <button class="btn-panel-sel" onclick="panelQuickSend(${activeIdx})"
+          style="flex:1;background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.3);color:var(--green);">
+          &#10148; Send
+        </button>
+      </div>
       <button id="panel-sel-btn"
         class="${selectedIdxs.has(activeIdx) ? 'btn-panel-desel' : 'btn-panel-sel'}"
-        onclick="togglePanelSelect()">
-        ${selectedIdxs.has(activeIdx) ? '&#10003; Selected for merge — click to remove' : '+ Add to merge selection'}
+        onclick="togglePanelSelect()" style="margin-top:6px;font-size:11px;opacity:.7;">
+        ${selectedIdxs.has(activeIdx) ? '&#10003; In merge selection — click to remove' : '+ Add to merge selection'}
       </button>
     </div>`;
   }
@@ -3233,6 +3547,36 @@ function toggleSelect(idx, e) {
   updateHeaderCheckbox();
 }
 
+function openSplitFromToolbar() {
+  const idx = [...selectedIdxs][0];
+  if (idx == null) return;
+  openSplitModal(idx);
+}
+
+function openSplitAllFromToolbar() {
+  const idx = [...selectedIdxs][0];
+  if (idx == null) return;
+  openSplitAllModal(idx);
+}
+
+function panelQuickMerge(idx) {
+  // Select only this UTXO and open the merge modal
+  selectedIdxs.clear();
+  selectedIdxs.add(idx);
+  syncCheckboxes();
+  updateSelectionUI();
+  mergeSelected();
+}
+
+function panelQuickSend(idx) {
+  // Select only this UTXO and open the send modal
+  selectedIdxs.clear();
+  selectedIdxs.add(idx);
+  syncCheckboxes();
+  updateSelectionUI();
+  sendSelected();
+}
+
 function togglePanelSelect() {
   if (activeIdx < 0) return;
   toggleSelect(activeIdx);
@@ -3336,6 +3680,34 @@ function updateSelectionUI() {
   if (sendBtn)  sendBtn.style.display  = n ? '' : 'none';
   if (selN)     selN.textContent      = n;
   if (selNSend) selNSend.textContent  = n;
+
+  // Split button: only show when exactly 1 inscribed UTXO with > 1800 sats is selected
+  const splitBtn = document.getElementById('btn-split-sel');
+  if (splitBtn) {
+    const canSplit = n === 1 && (() => {
+      const idx = [...selectedIdxs][0];
+      const r = rows[idx];
+      return r?.ins && r.utxo.value > 1800;
+    })();
+    splitBtn.style.display = canSplit ? '' : 'none';
+  }
+
+  // Split All button: only show when exactly 1 UTXO with multiple inscriptions is selected
+  const splitAllBtn = document.getElementById('btn-split-all-sel');
+  if (splitAllBtn) {
+    const canSplitAll = n === 1 && (() => {
+      const idx = [...selectedIdxs][0];
+      const r = rows[idx];
+      const insCount = r?.allIns?.length ?? (r?.ins ? 1 : 0);
+      return insCount > 1 && r.utxo.value > insCount * 546 + 1000;
+    })();
+    splitAllBtn.style.display = canSplitAll ? '' : 'none';
+    if (canSplitAll) {
+      const idx = [...selectedIdxs][0];
+      const r = rows[idx];
+      document.getElementById('sel-split-all-n').textContent = r.allIns.length;
+    }
+  }
 
   // selection summary bar
   const sumEl   = document.getElementById('sel-summary');
@@ -4293,19 +4665,34 @@ function onSplitAddrInput() {
     return;
   }
 
-  const usdChange = btcPrice > 0 ? ` <span style="color:var(--text3);font-size:11px;">≈ $${(changeAmt/1e8*btcPrice).toFixed(2)}</span>` : '';
+  const { ins, allIns } = row;
+  const insCount   = allIns ? allIns.length : 1;
+  const insNumStr  = ins?.inscriptionNumber != null ? `#${fmt(ins.inscriptionNumber)}` : 'inscription';
+  const usdChange  = btcPrice > 0 ? ` ≈ $${(changeAmt/1e8*btcPrice).toFixed(2)}` : '';
+  const usdInsc    = btcPrice > 0 ? ` ≈ $${(SPLIT_INSC_SATS/1e8*btcPrice).toFixed(4)}` : '';
+  const btcChange  = (changeAmt/1e8).toFixed(8);
+  const remainNote = insCount > 1
+    ? `<div style="font-size:11px;color:#eab308;margin-top:4px;">&#9888; ${insCount - 1} more inscription(s) stay in the change output</div>`
+    : '';
+
   preview.innerHTML = `
     <div style="background:var(--surface2);border:1px solid var(--border);
       border-radius:var(--radius-sm);padding:12px 14px;">
       <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;
         letter-spacing:.6px;margin-bottom:8px;">Transaction preview</div>
-      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;">
         <span style="color:var(--text3);">Inscription output</span>
         <span style="color:var(--purple);font-weight:700;">${fmt(SPLIT_INSC_SATS)} sats → ${short(inscAddr)}</span>
       </div>
-      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:5px;padding-left:2px;">
+        ${insNumStr} · ${SPLIT_INSC_SATS} sats (${usdInsc || '—'})${remainNote}
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;">
         <span style="color:var(--text3);">Change (you receive)</span>
-        <span style="color:var(--green);font-weight:700;">${fmt(changeAmt)} sats${usdChange}</span>
+        <span style="color:var(--green);font-weight:700;">${fmt(changeAmt)} sats</span>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:5px;padding-left:2px;">
+        ${btcChange} BTC${usdChange ? ' · ' + usdChange : ''}
       </div>
       <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;">
         <span style="color:var(--text3);">Network fee (~${fmt(vsize)} vB @ ${feeRate} sat/vB)</span>
@@ -4384,6 +4771,224 @@ async function executeSplit(inscAddr, changeAddr, changeAmt, netFee) {
   }
 }
 
+/* ─── Split All ─────────────────────────────────────────────────────────── */
+let _splitAllParams = {};
+
+function saStep(n) {
+  [1,2,3].forEach(i => {
+    const el = document.getElementById('sa-s'+i);
+    if (el) el.style.display = i===n ? '' : 'none';
+  });
+}
+function openSplitAllModal(idx) {
+  const row = rows[idx];
+  if (!row?.ins || !row.allIns || row.allIns.length < 2) return;
+  _splitAllParams = { idx, row };
+  saStep(1);
+  document.getElementById('split-all-modal').style.display = 'flex';
+  renderSplitAllS1();
+}
+function closeSplitAllModal() {
+  document.getElementById('split-all-modal').style.display = 'none';
+}
+
+async function renderSplitAllS1() {
+  const { row } = _splitAllParams;
+  const { utxo, allIns } = row;
+  const body    = document.getElementById('sa-s1-body');
+  const confirm = document.getElementById('sa-confirm-btn');
+  confirm.disabled = true;
+  body.innerHTML = `<div style="color:var(--text3);font-size:12px;padding:10px 0;">Fetching fee rate…</div>`;
+
+  let feeRate = 5;
+  try {
+    const fees = await apiFetch(`${MEMPOOL}/v1/fees/recommended`);
+    feeRate = getSelectedFeeRate(fees);
+  } catch {}
+  _splitAllParams.feeRate = feeRate;
+
+  const srcAddr = addrEl.value.trim();
+  const n = allIns.length;
+
+  body.innerHTML = `
+    <div style="padding:0 0 4px;">
+      <div style="background:var(--surface2);border:1px solid var(--border);
+        border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:14px;">
+        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;
+          letter-spacing:.6px;margin-bottom:8px;">Inscriptions to separate (${n})</div>
+        ${allIns.map((ins, i) => `
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+            <span style="color:var(--purple);font-weight:600;">
+              ${ins.inscriptionNumber != null ? '#'+fmt(ins.inscriptionNumber) : ins.inscriptionId.slice(0,12)+'…'}
+            </span>
+            <span style="color:var(--text3);font-size:11px;">→ output ${i} · 546 sats</span>
+          </div>`).join('')}
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:11px;font-weight:700;color:var(--text3);
+          text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Inscription Destination</label>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">All ${n} inscriptions go here (each on its own 546 sat UTXO). Use your Ordinals wallet.</div>
+        <div style="position:relative;">
+          <input type="text" id="sa-insc-addr" value="${esc(srcAddr)}" placeholder="bc1p… / bc1q… / 3…"
+            autocomplete="off" spellcheck="false" oninput="onSplitAllAddrInput()"
+            style="width:100%;padding-right:34px;font-family:'Cascadia Code','Fira Code','Courier New',monospace;" />
+          <div id="sa-insc-dot" class="addr-dot ${isValidAddr(srcAddr)?'ok':''}"></div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:11px;font-weight:700;color:var(--text3);
+          text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Change Address</label>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">Remaining sats after separating all inscriptions.</div>
+        <div style="position:relative;">
+          <input type="text" id="sa-change-addr" value="${esc(srcAddr)}" placeholder="bc1p… / bc1q… / 3…"
+            autocomplete="off" spellcheck="false" oninput="onSplitAllAddrInput()"
+            style="width:100%;padding-right:34px;font-family:'Cascadia Code','Fira Code','Courier New',monospace;" />
+          <div id="sa-change-dot" class="addr-dot ${isValidAddr(srcAddr)?'ok':''}"></div>
+        </div>
+      </div>
+      <div id="sa-fee-preview"></div>
+    </div>`;
+
+  confirm.onclick = executeSplitAll;
+  onSplitAllAddrInput();
+}
+
+function onSplitAllAddrInput() {
+  const { row, feeRate } = _splitAllParams;
+  const { utxo, allIns } = row;
+  const n = allIns.length;
+  const inscInput  = document.getElementById('sa-insc-addr');
+  const changeInput= document.getElementById('sa-change-addr');
+  const inscDot    = document.getElementById('sa-insc-dot');
+  const changeDot  = document.getElementById('sa-change-dot');
+  const preview    = document.getElementById('sa-fee-preview');
+  const confirm    = document.getElementById('sa-confirm-btn');
+  const inscAddr   = inscInput?.value.trim();
+  const changeAddr = changeInput?.value.trim();
+  const inscOk     = isValidAddr(inscAddr);
+  const changeOk   = isValidAddr(changeAddr);
+
+  if (inscInput)   inscInput.className   = inscAddr   ? (inscOk   ? 'ok' : 'bad') : '';
+  if (changeInput) changeInput.className = changeAddr ? (changeOk ? 'ok' : 'bad') : '';
+  if (inscDot)   inscDot.className   = 'addr-dot' + (inscAddr   ? (inscOk   ? ' ok' : ' bad') : '');
+  if (changeDot) changeDot.className = 'addr-dot' + (changeAddr ? (changeOk ? ' ok' : ' bad') : '');
+  if (!inscOk || !changeOk) { preview.innerHTML = ''; confirm.disabled = true; return; }
+
+  const srcAddr  = addrEl.value.trim();
+  // vsize: 1 input + N inscription outputs + 1 change + 1 fee
+  const vsize    = Math.ceil(10.5 + _inVb(_addrType(srcAddr))
+    + n * _outVb(_addrType(inscAddr))
+    + _outVb(_addrType(changeAddr))
+    + _outVb(_addrType(SERVICE_FEE_ADDR)));
+  const netFee   = vsize * (feeRate || 5);
+  const totalInscSats = n * SPLIT_INSC_SATS;
+  const changeAmt = utxo.value - totalInscSats - SPLIT_SERVICE_FEE - netFee;
+
+  if (changeAmt < 546) {
+    preview.innerHTML = `<div class="err-box show">Not enough sats. Need ${fmt(totalInscSats + SPLIT_SERVICE_FEE + netFee)} sats, UTXO has ${fmt(utxo.value)}.</div>`;
+    confirm.disabled = true;
+    return;
+  }
+
+  _splitAllParams.inscAddr  = inscAddr;
+  _splitAllParams.changeAddr= changeAddr;
+  _splitAllParams.changeAmt = changeAmt;
+  _splitAllParams.netFee    = netFee;
+  _splitAllParams.vsize     = vsize;
+
+  const btcChange = (changeAmt/1e8).toFixed(8);
+  const usdChange = btcPrice > 0 ? ` · ≈ $${(changeAmt/1e8*btcPrice).toFixed(2)}` : '';
+
+  preview.innerHTML = `
+    <div style="background:var(--surface2);border:1px solid var(--border);
+      border-radius:var(--radius-sm);padding:12px 14px;">
+      <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;
+        letter-spacing:.6px;margin-bottom:8px;">Transaction preview</div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;">
+        <span style="color:var(--text3);">${n} inscription outputs</span>
+        <span style="color:var(--purple);font-weight:700;">${n} × 546 = ${fmt(totalInscSats)} sats</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;">
+        <span style="color:var(--text3);">Change (you receive)</span>
+        <span style="color:var(--green);font-weight:700;">${fmt(changeAmt)} sats</span>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:5px;padding-left:2px;">${btcChange} BTC${usdChange}</div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;">
+        <span style="color:var(--text3);">Network fee (~${fmt(vsize)} vB @ ${feeRate} sat/vB)</span>
+        <span style="color:var(--text2);">&#8722; ${fmt(netFee)} sats</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;
+        border-top:1px solid var(--border);padding-top:6px;margin-top:2px;">
+        <span style="color:var(--text3);">Service fee</span>
+        <span style="color:var(--text2);">&#8722; ${fmt(SPLIT_SERVICE_FEE)} sats</span>
+      </div>
+    </div>`;
+  confirm.disabled = false;
+}
+
+function buildSplitAllPsbt(utxo, inscAddr, n, changeAddr, changeAmt, serviceFee, sourceAddr) {
+  const srcSc    = addrScript(sourceAddr);
+  const inscSc   = addrScript(inscAddr);
+  const changeSc = addrScript(changeAddr);
+  const feeSc    = addrScript(SERVICE_FEE_ADDR);
+  if (!srcSc)    throw new Error('Cannot derive scriptPubKey from source address.');
+  if (!inscSc)   throw new Error('Cannot derive scriptPubKey from inscription address.');
+  if (!changeSc) throw new Error('Cannot derive scriptPubKey from change address.');
+
+  const txIn = _cat(_fromHex(utxo.txid).reverse(), _numLE(utxo.vout,4), new Uint8Array([0x00]), _numLE(0xffffffff,4));
+
+  // N outputs of 546 sats each (one per inscription, FIFO sat order)
+  const inscOutputs = Array.from({length: n}, () =>
+    _cat(_numLE(SPLIT_INSC_SATS,8), _vi(inscSc.length), inscSc)
+  );
+  const txOuts = [
+    ...inscOutputs,
+    _cat(_numLE(changeAmt,8),  _vi(changeSc.length), changeSc),
+    _cat(_numLE(serviceFee,8), _vi(feeSc.length),    feeSc),
+  ];
+  const rawTx = _cat(_numLE(2,4), _vi(1), txIn, _vi(txOuts.length), ...txOuts, _numLE(0,4));
+
+  const parts = [
+    new Uint8Array([0x70,0x73,0x62,0x74,0xff]),
+    _psbtKV(new Uint8Array([0x00]), rawTx),
+    new Uint8Array([0x00]),
+  ];
+  const wu = _cat(_numLE(utxo.value,8), _vi(srcSc.length), srcSc);
+  parts.push(_psbtKV(new Uint8Array([0x01]), wu));
+  parts.push(new Uint8Array([0x00])); // input sep
+  txOuts.forEach(() => parts.push(new Uint8Array([0x00]))); // output seps
+
+  return btoa(String.fromCharCode(..._cat(...parts)));
+}
+
+async function executeSplitAll() {
+  const { row, inscAddr, changeAddr, changeAmt, netFee } = _splitAllParams;
+  saStep(2);
+  const msg  = document.getElementById('sa-s2-msg');
+  const err  = document.getElementById('sa-s2-err');
+  const back = document.getElementById('sa-s2-back');
+  err.style.display = 'none'; back.style.display = 'none';
+  try {
+    msg.textContent = 'Building transaction…';
+    const srcAddr = addrEl.value.trim();
+    const n = row.allIns.length;
+    const psbtB64 = buildSplitAllPsbt(row.utxo, inscAddr, n, changeAddr, changeAmt, SPLIT_SERVICE_FEE, srcAddr);
+    msg.textContent = 'Waiting for wallet signature…';
+    const txid = await signAndBroadcast(psbtB64, 1, srcAddr);
+    document.getElementById('sa-done-txid').textContent = txid;
+    document.getElementById('sa-done-link').href = `https://mempool.space/tx/${encodeURIComponent(txid)}`;
+    mempoolMonitor(txid);
+    saStep(3);
+  } catch(e) {
+    msg.textContent = '';
+    err.textContent = e.message;
+    err.style.display = '';
+    back.style.display = '';
+  }
+}
+
 /* ─── Story ──────────────────────────────────────────────────────────────── */
 function openStory()  { document.getElementById('story-modal').style.display = 'flex'; }
 function closeStory() { document.getElementById('story-modal').style.display = 'none'; }
@@ -4395,7 +5000,286 @@ function closeReadme() { document.getElementById('readme-modal').style.display =
 /* ─── FAQ ───────────────────────────────────────────────────────────────── */
 function openFaq()  { document.getElementById('faq-modal').style.display = 'flex'; }
 function closeFaq() { document.getElementById('faq-modal').style.display = 'none'; }
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeFaq(); closeReadme(); } });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeFaq(); closeReadme(); closeAddressBook(); closeWatchlist(); closeSatHunter(); } });
+
+/* ─── Address Book ───────────────────────────────────────────────────────── */
+const AB_KEY = 'wmm_address_book';
+
+function abLoad() {
+  try { return JSON.parse(localStorage.getItem(AB_KEY) || '[]'); } catch { return []; }
+}
+function abStore(entries) {
+  localStorage.setItem(AB_KEY, JSON.stringify(entries));
+}
+
+function openAddressBook() {
+  const addr = (document.getElementById('addr')?.value || '').trim();
+  const addWrap = document.getElementById('ab-add-wrap');
+  // Show "save current" section only if there's a valid scanned address not already saved
+  if (addr && rows.length > 0) {
+    const entries = abLoad();
+    const alreadySaved = entries.some(e => e.addr === addr);
+    addWrap.style.display = alreadySaved ? 'none' : '';
+    if (!alreadySaved) document.getElementById('ab-label-input').value = '';
+  } else {
+    addWrap.style.display = 'none';
+  }
+  abRender();
+  document.getElementById('ab-modal').style.display = 'flex';
+}
+function closeAddressBook() { document.getElementById('ab-modal').style.display = 'none'; }
+
+function abRender() {
+  const entries = abLoad();
+  const list = document.getElementById('ab-list');
+  if (!entries.length) {
+    list.innerHTML = '<div class="ab-empty">No saved addresses yet.<br>Scan an address and click <strong>&#128220; Save</strong> to add it here.</div>';
+    return;
+  }
+  list.innerHTML = entries.map(e => `
+    <div class="ab-row">
+      <div style="flex:1;min-width:0;">
+        <div class="ab-label">${e.label}</div>
+        <div class="ab-addr" title="${e.addr}">${e.addr}</div>
+      </div>
+      <button class="ab-load" onclick="abSelectAddr('${e.addr}')">&#9654; Load</button>
+      <button class="ab-del"  onclick="abDelete('${e.addr}')">&#10005;</button>
+    </div>`).join('');
+}
+
+function abSaveCurrent() {
+  // Called from the "+ Save" button next to the input — opens book with save form visible
+  const addWrap = document.getElementById('ab-add-wrap');
+  addWrap.style.display = '';
+  document.getElementById('ab-label-input').value = '';
+  abRender();
+  document.getElementById('ab-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('ab-label-input').focus(), 80);
+}
+
+function abConfirmSave() {
+  const addr = (document.getElementById('addr')?.value || '').trim();
+  const label = document.getElementById('ab-label-input').value.trim();
+  if (!addr || !label) { document.getElementById('ab-label-input').focus(); return; }
+  const entries = abLoad();
+  if (!entries.some(e => e.addr === addr)) {
+    entries.unshift({ addr, label, added: Date.now() });
+    abStore(entries);
+  }
+  document.getElementById('ab-add-wrap').style.display = 'none';
+  document.getElementById('btn-ab-save').style.display = 'none';
+  abRender();
+}
+
+function abDelete(addr) {
+  const entries = abLoad().filter(e => e.addr !== addr);
+  abStore(entries);
+  abRender();
+  // If current addr was deleted, show save button again
+  const cur = (document.getElementById('addr')?.value || '').trim();
+  if (cur === addr && rows.length > 0) document.getElementById('btn-ab-save').style.display = '';
+}
+
+function abSelectAddr(addr) {
+  closeAddressBook();
+  document.getElementById('addr').value = addr;
+  run();
+}
+
+/* ─── Watchlist ──────────────────────────────────────────────────────────── */
+let _wlCache = {}; // addr → { sats, utxos, inscriptions, loading, error }
+
+function openWatchlist() {
+  const entries = abLoad();
+  const list = document.getElementById('wl-list');
+  if (!entries.length) {
+    list.innerHTML = '<div class="wl-empty">No addresses saved yet.<br>Add addresses via &#128220; Address Book first.</div>';
+    document.getElementById('wl-modal').style.display = 'flex';
+    return;
+  }
+  wlRender(entries);
+  document.getElementById('wl-modal').style.display = 'flex';
+  // Auto-load any not yet cached
+  entries.forEach(e => { if (!_wlCache[e.addr]) wlFetch(e.addr); });
+}
+function closeWatchlist() { document.getElementById('wl-modal').style.display = 'none'; }
+
+function wlRender(entries) {
+  if (!entries) entries = abLoad();
+  const list = document.getElementById('wl-list');
+  if (!entries.length) {
+    list.innerHTML = '<div class="wl-empty">No addresses saved yet.</div>';
+    return;
+  }
+  list.innerHTML = entries.map(e => {
+    const c = _wlCache[e.addr];
+    const shortAddr = e.addr.slice(0, 10) + '…' + e.addr.slice(-6);
+    let statsBtc = '', statsUtxo = '', statsIns = '';
+    if (!c || c.loading) {
+      statsBtc = statsUtxo = statsIns = '<span class="wl-spin"></span>';
+    } else if (c.error) {
+      statsBtc = '<span style="color:var(--red);font-size:11px;">error</span>';
+      statsUtxo = statsIns = '—';
+    } else {
+      const btc = (c.sats / 1e8).toFixed(4);
+      const usd = btcPrice > 0 ? '$' + (c.sats / 1e8 * btcPrice).toLocaleString('en-US', {maximumFractionDigits: 0}) : '';
+      statsBtc = `<div class="wl-stat-val">${btc} <span style="font-size:10px;color:var(--text3);">BTC</span></div>${usd ? `<div class="wl-stat-lbl">${usd}</div>` : ''}`;
+      statsUtxo = `<div class="wl-stat-val">${c.utxos}</div><div class="wl-stat-lbl">UTXOs</div>`;
+      statsIns = `<div class="wl-stat-val" style="color:${c.inscriptions > 0 ? 'var(--orange)' : 'var(--text3)'}">${c.inscriptions}</div><div class="wl-stat-lbl">inscribed</div>`;
+    }
+    return `
+      <div class="wl-row" id="wl-row-${e.addr.slice(-8)}">
+        <div>
+          <div class="wl-name">${e.label}</div>
+          <div class="wl-sub">${shortAddr}</div>
+        </div>
+        <div class="wl-stat">${statsBtc}</div>
+        <div class="wl-stat">${statsUtxo}</div>
+        <div class="wl-stat">${statsIns}</div>
+        <button class="wl-open" onclick="wlOpen('${e.addr}')">&#9654; Open</button>
+      </div>`;
+  }).join('');
+}
+
+async function wlFetch(addr) {
+  _wlCache[addr] = { loading: true };
+  wlRender();
+  try {
+    const utxos = await apiFetch(`${MEMPOOL}/address/${encodeURIComponent(addr)}/utxo`);
+    const sats = utxos.reduce((s, u) => s + u.value, 0);
+    // Quick inscription count: fetch address info from ordinals.com
+    let inscriptions = 0;
+    try {
+      const info = await apiFetch(`${ORDINALS}/api/address/${encodeURIComponent(addr)}`);
+      inscriptions = info?.inscription_count ?? 0;
+    } catch {}
+    _wlCache[addr] = { sats, utxos: utxos.length, inscriptions, loading: false };
+  } catch {
+    _wlCache[addr] = { error: true, loading: false };
+  }
+  wlRender();
+}
+
+function wlRefreshAll() {
+  const entries = abLoad();
+  _wlCache = {};
+  wlRender(entries);
+  entries.forEach(e => wlFetch(e.addr));
+}
+
+function wlOpen(addr) {
+  closeWatchlist();
+  document.getElementById('addr').value = addr;
+  run();
+}
+
+/* ─── Sat Hunter ─────────────────────────────────────────────────────────── */
+const SH_RANKS = ['mythic','legendary','epic','rare','uncommon'];
+const SH_LABELS = { mythic: '✦ Mythic', legendary: '★ Legendary', epic: '◆ Epic', rare: '◈ Rare', uncommon: '◉ Uncommon' };
+
+function updateSatHunter() {
+  const banner = document.getElementById('sat-hunter-banner');
+  if (!banner) return;
+  const hits = shGetHits();
+  if (!hits.length) { banner.style.display = 'none'; return; }
+
+  // Build summary: count per rarity
+  const counts = {};
+  hits.forEach(r => { counts[r.rarity] = (counts[r.rarity] || 0) + 1; });
+  const parts = SH_RANKS.filter(k => counts[k]).map(k => `${counts[k]}× ${k}`);
+  const topRarity = SH_RANKS.find(k => counts[k]);
+
+  document.getElementById('sh-banner-title').textContent =
+    hits.length === 1 ? `${SH_LABELS[topRarity]} sat found in your wallet!`
+                      : `${hits.length} rare sats found in your wallet!`;
+  document.getElementById('sh-banner-sub').textContent = parts.join('  ·  ');
+  banner.style.display = 'flex';
+}
+
+function shGetHits() {
+  return rows.filter(r => r.rarity && SH_RANKS.includes(r.rarity))
+             .sort((a, b) => SH_RANKS.indexOf(a.rarity) - SH_RANKS.indexOf(b.rarity));
+}
+
+function openSatHunter() {
+  const hits = shGetHits();
+  const list = document.getElementById('sh-list');
+  const summary = document.getElementById('sh-summary');
+
+  if (!hits.length) {
+    list.innerHTML = '<div style="text-align:center;padding:32px 0;color:var(--text3);font-size:13px;">No rare sats found — only common sats in this wallet.</div>';
+    summary.style.display = 'none';
+  } else {
+    const counts = {};
+    hits.forEach(r => { counts[r.rarity] = (counts[r.rarity] || 0) + 1; });
+    const totalSats = hits.reduce((s, r) => s + r.utxo.value, 0);
+    const usdStr = btcPrice > 0 ? ' ($' + (totalSats / 1e8 * btcPrice).toLocaleString('en-US', {maximumFractionDigits: 0}) + ')' : '';
+    summary.style.display = '';
+    summary.innerHTML = `
+      <strong style="color:var(--text)">${hits.length} UTXO${hits.length > 1 ? 's' : ''} with rare sats</strong> —
+      ${SH_RANKS.filter(k => counts[k]).map(k => `<strong style="color:var(--text)">${counts[k]}</strong> ${k}`).join(', ')}<br>
+      Total locked value: <strong style="color:var(--accent)">${totalSats.toLocaleString()} sats${usdStr}</strong> — do not merge or spend these UTXOs without moving the sats first.`;
+
+    list.innerHTML = hits.map((r, i) => {
+      const idx = rows.indexOf(r);
+      const shortTxid = r.utxo.txid.slice(0, 8) + '…' + r.utxo.txid.slice(-6) + ':' + r.utxo.vout;
+      const insLabel = r.ins ? `Inscription #${r.ins.inscriptionNumber != null ? r.ins.inscriptionNumber.toLocaleString() : '?'}` : 'No inscription';
+      const attribs = r.satributes?.length ? r.satributes.map(s => `<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--surface);border:1px solid var(--border2);color:var(--text2);">${s}</span>`).join(' ') : '';
+      return `
+        <div class="sh-row">
+          <span class="sh-rar-badge sh-rar-${r.rarity}">${SH_LABELS[r.rarity]}</span>
+          <div class="sh-info">
+            <div class="sh-info-top">${r.utxo.value.toLocaleString()} sats &nbsp;·&nbsp; ${insLabel}</div>
+            <div class="sh-info-sub">${shortTxid} ${attribs ? '&nbsp;' + attribs : ''}</div>
+          </div>
+          <button class="sh-open" onclick="shOpenUtxo(${idx})">&#9654; Inspect</button>
+        </div>`;
+    }).join('');
+  }
+  document.getElementById('sh-modal').style.display = 'flex';
+}
+
+function closeSatHunter() { document.getElementById('sh-modal').style.display = 'none'; }
+
+function shOpenUtxo(idx) {
+  closeSatHunter();
+  openPanel(idx);
+}
+
+/* ─── Share Link ─────────────────────────────────────────────────────────── */
+function shareAddress() {
+  const addr = (document.getElementById('addr')?.value || '').trim();
+  if (!addr) return;
+  const base = window.location.href.split('?')[0];
+  const url = `${base}?address=${encodeURIComponent(addr)}`;
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.getElementById('btn-share');
+    const orig = btn.innerHTML;
+    btn.innerHTML = '&#10003; Copied!';
+    btn.style.borderColor = 'var(--green)';
+    btn.style.color = 'var(--green)';
+    setTimeout(() => {
+      btn.innerHTML = orig;
+      btn.style.borderColor = '';
+      btn.style.color = '';
+    }, 2000);
+  }).catch(() => {
+    // Fallback for file:// where clipboard may be blocked
+    prompt('Copy this link:', url);
+  });
+}
+
+// Auto-scan if ?address= is in the URL
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  const addr = params.get('address');
+  if (addr) {
+    window.addEventListener('DOMContentLoaded', () => {
+      const input = document.getElementById('addr');
+      if (input) { input.value = addr; run(); }
+    });
+  }
+})();
 
 /* ─── BTC Price ─────────────────────────────────────────────────────────── */
 async function fetchBtcPrice() {
