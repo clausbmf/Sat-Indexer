@@ -649,6 +649,15 @@
     }
     .btn-readme:hover { border-color: var(--purple); color: var(--purple); background: var(--purple-dim); }
 
+    /* ── Story button ─────────────────────────────────────────────────────── */
+    .btn-story {
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: var(--radius-sm); padding: 6px 14px;
+      font-size: 12px; font-weight: 600; cursor: pointer;
+      color: var(--text2); transition: all var(--ease); white-space: nowrap;
+    }
+    .btn-story:hover { border-color: var(--green); color: var(--green); background: var(--green-dim); }
+
     /* ── FAQ button ───────────────────────────────────────────────────────── */
     .btn-faq {
       background: var(--surface2); border: 1px solid var(--border2);
@@ -753,6 +762,7 @@
   <div style="display:flex;align-items:center;gap:10px;">
     <button class="btn-readme" onclick="openReadme()">&#128214; README</button>
     <button class="btn-faq" onclick="openFaq()">&#10067; FAQ</button>
+    <button class="btn-story" onclick="openStory()">&#9997; Story</button>
     <span class="net-tag">MAINNET</span>
     <span id="btc-price" style="font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.3px;">—</span>
   </div>
@@ -795,8 +805,46 @@
       <label style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="feerate" value="standard" checked style="accent-color:var(--accent)"> Standard</label>
       <label style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="feerate" value="priority" style="accent-color:var(--accent)"> Priority</label>
       <span id="feerate-hint" style="font-size:11px;color:var(--text3);margin-left:4px;"></span>
+      <button onclick="toggleFeeChart()" id="btn-fee-chart"
+        style="margin-left:auto;background:none;border:1px solid var(--border2);border-radius:5px;
+        color:var(--text3);font-size:11px;padding:3px 10px;cursor:pointer;transition:all var(--ease);"
+        onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+        onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text3)'">
+        &#128200; Fee Chart
+      </button>
     </div>
     <div class="hint" id="hint">Paste a <code>bc1p</code> Taproot, <code>bc1q</code> Native SegWit, or <code>3…</code> Nested SegWit address</div>
+  </div>
+
+  <!-- fee chart -->
+  <div id="fee-chart-wrap" style="display:none;background:var(--surface);border:1px solid var(--border);
+    border-radius:var(--radius);padding:18px 20px;margin-bottom:20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+      <div>
+        <span style="font-size:13px;font-weight:700;">&#128200; Historical Fee Rates</span>
+        <span style="font-size:11px;color:var(--text3);margin-left:8px;">sat/vB — best time to merge</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <button id="fc-btn-24h" onclick="loadFeeChart('24h')"
+          style="font-size:11px;padding:3px 10px;border-radius:5px;cursor:pointer;border:1px solid var(--accent);
+          background:var(--accent-dim);color:var(--accent);font-weight:700;">24h</button>
+        <button id="fc-btn-1w" onclick="loadFeeChart('1w')"
+          style="font-size:11px;padding:3px 10px;border-radius:5px;cursor:pointer;border:1px solid var(--border2);
+          background:none;color:var(--text3);">1w</button>
+        <div id="fc-spinner" class="spinner" style="display:none;width:14px;height:14px;border-width:2px;"></div>
+      </div>
+    </div>
+    <!-- legend -->
+    <div id="fc-legend" style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px;font-size:11px;"></div>
+    <!-- svg chart -->
+    <div style="width:100%;overflow-x:auto;">
+      <svg id="fc-svg" width="100%" height="160" style="display:block;min-width:300px;"></svg>
+    </div>
+    <div id="fc-err" style="color:var(--red);font-size:12px;display:none;"></div>
+    <div style="margin-top:10px;font-size:11px;color:var(--text3);">
+      Dashed lines = current recommended fees. Hover over the chart to see exact values.
+      Low fee periods = best time to merge or split.
+    </div>
   </div>
 
   <!-- error -->
@@ -849,6 +897,43 @@
       <div class="sum-lbl">Est. Clean Value</div>
       <div class="sum-sub">USD (clean UTXOs)</div>
     </div>
+    <div class="sum-cell" id="s-cell-total-usd" style="display:none">
+      <div class="sum-val c-orange" id="s-total-usd">—</div>
+      <div class="sum-lbl">Total Portfolio</div>
+      <div class="sum-sub" id="s-total-btc-sub">—</div>
+    </div>
+    <div class="sum-cell" id="s-cell-locked-usd" style="display:none">
+      <div class="sum-val" style="color:var(--red)" id="s-locked-usd">—</div>
+      <div class="sum-lbl">Locked in Ordinals</div>
+      <div class="sum-sub" id="s-locked-btc-sub">USD in inscribed UTXOs</div>
+    </div>
+  </div>
+  <!-- lost value meter -->
+  <div id="lost-meter" style="display:none;background:var(--surface);border:1px solid var(--border);
+    border-radius:var(--radius-sm);padding:12px 18px;margin-bottom:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
+      <span style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;">
+        &#128274; Lost Value Meter — sats trapped in Fat &amp; Whale Ordinals
+      </span>
+      <span id="lost-meter-pct" style="font-size:12px;font-weight:700;color:var(--red);"></span>
+    </div>
+    <div style="height:8px;background:var(--surface3);border-radius:99px;overflow:hidden;margin-bottom:8px;">
+      <div id="lost-meter-bar" style="height:100%;border-radius:99px;
+        background:linear-gradient(90deg,var(--accent),var(--red));width:0%;transition:width .6s ease;"></div>
+    </div>
+    <div style="display:flex;gap:20px;flex-wrap:wrap;">
+      <span style="font-size:12px;color:var(--text3);">
+        Trapped: <strong id="lost-meter-sats" style="color:var(--red);">—</strong>
+        <span id="lost-meter-usd" style="color:var(--text3);margin-left:4px;"></span>
+      </span>
+      <span style="font-size:12px;color:var(--text3);">
+        Free: <strong id="lost-meter-free" style="color:var(--green);">—</strong>
+        <span id="lost-meter-free-usd" style="color:var(--text3);margin-left:4px;"></span>
+      </span>
+      <span style="font-size:12px;color:var(--text3);">
+        Recoverable via <strong style="color:var(--purple);">Split</strong>
+      </span>
+    </div>
   </div>
 
   <!-- filter bar -->
@@ -859,6 +944,7 @@
     <button class="btn-filter" data-filter="rune" onclick="setFilter('rune')">Runes</button>
     <button class="btn-filter" data-filter="fat" onclick="setFilter('fat')">Fat</button>
     <button class="btn-filter" data-filter="whale" onclick="setFilter('whale')">Whale</button>
+    <button class="btn-filter" data-filter="dust" onclick="setFilter('dust')">Dust Risk</button>
   </div>
 
   <!-- table -->
@@ -870,6 +956,7 @@
           <span id="hidden-count">0</span> hidden &times;
         </span>
         <button class="btn-sel" id="btn-export" style="display:none;" onclick="exportCsv()" title="Export all UTXOs to CSV">&#11015; Export CSV</button>
+        <button class="btn-sel" id="btn-tax-export" style="display:none;" onclick="exportTaxCsv()" title="Export with dates and USD values for tax reporting">&#128203; Tax Export</button>
         <span class="tbl-hint">Click any row to inspect</span>
       </div>
     </div>
@@ -915,6 +1002,14 @@
         <span class="sel-sum-val" id="ss-fee">0 sats</span>
         <span class="sel-sum-lbl">Est. service fee</span>
       </div>
+      <div class="sel-sum-item" id="ss-calc-wrap" style="display:none">
+        <span class="sel-sum-val" id="ss-savings" style="color:var(--green);">—</span>
+        <span class="sel-sum-lbl">vB saved/tx after merge</span>
+      </div>
+      <div class="sel-sum-item" id="ss-breakeven-wrap" style="display:none">
+        <span class="sel-sum-val" id="ss-breakeven" style="color:var(--text2);">—</span>
+        <span class="sel-sum-lbl">txs to break even</span>
+      </div>
     </div>
 
     <div class="scroll">
@@ -935,6 +1030,7 @@
             <th class="sortable" id="th-vout" onclick="sortBy('vout')">
               Vout <span class="sort-icon" id="si-vout">&#9660;</span>
             </th>
+            <th>Age</th>
             <th></th>
           </tr>
         </thead>
@@ -950,6 +1046,9 @@
   </footer>
 </div>
 </div>
+
+<!-- mempool monitor toasts -->
+<div id="mm-toasts" style="position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;"></div>
 
 <!-- clean wallet modal -->
 <div id="clean-modal" class="clean-overlay" style="display:none" onclick="if(event.target===this)closeCleanModal()">
@@ -1105,6 +1204,119 @@
       <div class="clean-footer">
         <button class="btn-cw-primary" onclick="closeSplitModal()">Done</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- story modal -->
+<div id="story-modal" class="faq-overlay" style="display:none" onclick="if(event.target===this)closeStory()">
+  <div class="faq-box" style="max-width:640px;">
+    <div class="faq-hdr">
+      <h3>&#9997; The Story Behind This Tool</h3>
+      <button class="panel-close" onclick="closeStory()">&#10005;</button>
+    </div>
+    <div class="faq-scroll">
+
+      <div style="font-size:13px;color:var(--text2);line-height:1.8;margin-bottom:24px;">
+        <p style="font-size:22px;font-weight:800;color:var(--text);line-height:1.3;margin-bottom:16px;">
+          It started with a mistake.
+        </p>
+        <p style="margin-bottom:14px;">
+          I accidentally sent <strong style="color:var(--accent);">200,000 sats</strong> directly from a Taproot address to another one without checking what was inside it. The transaction went through, everything got merged into a single UTXO, and suddenly I had no idea what had happened to my Ordinals. Were they lost? Were they still there? Which sats were which?
+        </p>
+        <p style="margin-bottom:14px;">
+          I went looking for a tool that could tell me. Something that would show me exactly what was in my UTXOs — inscriptions, rarity, sat attributes, tokens — all in one place. Something that made it obvious what was safe to spend and what wasn't.
+        </p>
+        <p style="margin-bottom:14px;">
+          The tools that existed were either too basic, too slow, or just bad at showing the full picture. So I built my own.
+        </p>
+      </div>
+
+      <hr class="faq-divider">
+
+      <div style="margin-bottom:22px;">
+        <div class="p-title" style="font-size:11px;margin-bottom:14px;">How it grew</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+
+          <div style="display:flex;gap:12px;align-items:flex-start;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;">
+            <span style="font-size:18px;flex-shrink:0;margin-top:1px;">&#128269;</span>
+            <div>
+              <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:3px;">UTXO Scanner</div>
+              <div style="font-size:12px;color:var(--text2);line-height:1.6;">Started as a simple bc1p address scanner — fetch UTXOs from mempool.space, match inscriptions from ordinals.com.</div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:12px;align-items:flex-start;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;">
+            <span style="font-size:18px;flex-shrink:0;margin-top:1px;">&#127808;</span>
+            <div>
+              <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:3px;">Rarity &amp; Satributes</div>
+              <div style="font-size:12px;color:var(--text2);line-height:1.6;">Added sat rarity detection, satribute badges, and token support (Runes, Stamps, Atomicals, cBRC-20) so nothing valuable gets missed.</div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:12px;align-items:flex-start;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;">
+            <span style="font-size:18px;flex-shrink:0;margin-top:1px;">&#9851;</span>
+            <div>
+              <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:3px;">Merge</div>
+              <div style="font-size:12px;color:var(--text2);line-height:1.6;">Added the ability to merge junk inscription UTXOs into one clean output — recovering sats that were locked in worthless Ordinals.</div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:12px;align-items:flex-start;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;">
+            <span style="font-size:18px;flex-shrink:0;margin-top:1px;">&#10148;</span>
+            <div>
+              <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:3px;">Send</div>
+              <div style="font-size:12px;color:var(--text2);line-height:1.6;">Extended to send any selection of UTXOs to any address type — bc1p, bc1q, or 3… — with correct per-type fee calculation.</div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:12px;align-items:flex-start;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;">
+            <span style="font-size:18px;flex-shrink:0;margin-top:1px;">&#9986;</span>
+            <div>
+              <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:3px;">Split</div>
+              <div style="font-size:12px;color:var(--text2);line-height:1.6;">Added a Split feature: separate a single inscription onto a 546 sat output and return the excess sats as change. One click to free a fat ordinal.</div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:12px;align-items:flex-start;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;">
+            <span style="font-size:18px;flex-shrink:0;margin-top:1px;">&#128275;</span>
+            <div>
+              <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:3px;">Multi-address Support</div>
+              <div style="font-size:12px;color:var(--text2);line-height:1.6;">Expanded from Taproot-only to full support for Native SegWit (bc1q) and Nested SegWit (3…) — merge, send, and split all work across all address types.</div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:12px;align-items:flex-start;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;">
+            <span style="font-size:18px;flex-shrink:0;margin-top:1px;">&#128218;</span>
+            <div>
+              <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:3px;">FAQ &amp; Docs</div>
+              <div style="font-size:12px;color:var(--text2);line-height:1.6;">Built a growing FAQ from real questions — many of them coming from the exact confusion that caused the original mistake.</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <hr class="faq-divider">
+
+      <div style="margin-bottom:22px;">
+        <div class="p-title" style="font-size:11px;margin-bottom:12px;">Built by vibecoding</div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.8;">
+          <p>The FAQ grew from real questions. The bugs were found by real use. The features were added because they were actually needed — not because they were on a roadmap.</p>
+        </div>
+      </div>
+
+      <hr class="faq-divider">
+
+      <div style="text-align:center;padding:8px 0 4px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px;">Where's My Money?</div>
+        <div style="font-size:12px;color:var(--text3);">A non-custodial Bitcoin UTXO inspector for the Ordinals ecosystem.</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:6px;">Real mainnet &nbsp;·&nbsp; Real wallets &nbsp;·&nbsp; Zero custody</div>
+      </div>
+
+    </div>
+    <div class="faq-footer">
+      <button class="btn-cw-back" onclick="closeStory()">Close</button>
     </div>
   </div>
 </div>
@@ -1639,6 +1851,26 @@
         </div>
       </div>
 
+      <hr class="faq-divider">
+
+      <div class="faq-item">
+        <div class="faq-q">What are Bitcoin Stamps and what is stampchain.io?</div>
+        <div class="faq-a">
+          <p><strong>Bitcoin Stamps</strong> are NFTs on Bitcoin — similar to Ordinals, but stored differently. Where Ordinals embed data in witness data (which nodes can theoretically prune), Stamps embed data directly in transaction outputs. Those outputs are part of the UTXO set, which every full node must keep forever. Stamps claim to be truly permanent in a way Ordinals are not.</p>
+          <table class="faq-table">
+            <thead><tr><th></th><th>Ordinals</th><th>Stamps</th></tr></thead>
+            <tbody>
+              <tr><td>Storage location</td><td>Witness data (taproot)</td><td>OP_RETURN / multisig outputs</td></tr>
+              <tr><td>Can nodes prune it?</td><td>Theoretically yes</td><td>No — lives in UTXO set permanently</td></tr>
+              <tr><td>Typical format</td><td>Any file type</td><td>Small images, 24×24 pixel art</td></tr>
+              <tr><td>Token standard</td><td>BRC-20</td><td>SRC-20</td></tr>
+            </tbody>
+          </table>
+          <p><strong>stampchain.io</strong> is the official Stamps explorer and indexer. It lets you look up collections, check ownership, and track SRC-20 token balances.</p>
+          <p><strong>Why does this tool check for Stamps?</strong> A single UTXO can contain both an Ordinal and a Stamp at the same time. If you spend it as plain BTC without checking, you lose both. This tool queries stampchain.io during scanning so you know exactly what is inside each UTXO before you do anything with it.</p>
+        </div>
+      </div>
+
     </div>
     <div class="faq-footer">
       <button class="btn-cw-back" onclick="closeFaq()">Close</button>
@@ -1981,6 +2213,7 @@ let sortAsc   = false;
 let activeIdx = -1;
 let btcPrice  = 0;
 let activeFilter = 'all';
+let _currentFeeRate = 5;
 
 // Excluded inscription IDs — persisted in localStorage
 const EXCL_KEY  = 'ordinals-excluded-v1';
@@ -2268,12 +2501,21 @@ async function run() {
     document.getElementById('table-card').classList.add('show');
     document.getElementById('btn-refresh').style.display = '';
     document.getElementById('btn-export').style.display = '';
+    document.getElementById('btn-tax-export').style.display = '';
     hideStatus();
+
+    // Fetch current fee rate for dust calculations
+    try {
+      const fees = await apiFetch(`${MEMPOOL}/v1/fees/recommended`);
+      _currentFeeRate = fees.halfHourFee ?? 5;
+    } catch { /* keep default */ }
 
     // Fetch sat rarity in the background — updates cells as data arrives
     loadRarities();
     // Detect Stamps and Atomicals in the background
     loadProtocols();
+    // Fetch UTXO ages in the background
+    loadUtxoAges();
 
   } catch (e) {
     hideStatus();
@@ -2301,8 +2543,38 @@ function renderSummary(utxos, inscriptions) {
   document.getElementById('s-whale').textContent    = fmt(whaleCount);
   document.getElementById('s-ord-btc').textContent  = satsBtc(ordSats);
   document.getElementById('s-ord-sats').textContent = fmt(ordSats) + ' sats';
-  const cleanSats = rows.filter(r => !r.ins).reduce((s,r) => s + r.utxo.value, 0);
-  if (btcPrice > 0) document.getElementById('s-clean-usd').textContent = '$' + (cleanSats/1e8*btcPrice).toFixed(2);
+  const cleanSats   = rows.filter(r => !r.ins).reduce((s,r) => s + r.utxo.value, 0);
+  const fatWhaleSats= inscribed.filter(r => ordinalSize(r.utxo.value) !== 'normal').reduce((s,r) => s + r.utxo.value, 0);
+
+  if (btcPrice > 0) {
+    document.getElementById('s-clean-usd').textContent  = '$' + (cleanSats/1e8*btcPrice).toFixed(2);
+
+    // Total portfolio USD
+    document.getElementById('s-cell-total-usd').style.display = '';
+    document.getElementById('s-total-usd').textContent   = '$' + (totalSats/1e8*btcPrice).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+    document.getElementById('s-total-btc-sub').textContent = satsBtc(totalSats);
+
+    // Locked in ordinals USD
+    document.getElementById('s-cell-locked-usd').style.display = '';
+    document.getElementById('s-locked-usd').textContent  = '$' + (ordSats/1e8*btcPrice).toFixed(2);
+    document.getElementById('s-locked-btc-sub').textContent = satsBtc(ordSats) + ' locked';
+  }
+
+  // Lost value meter (always shown if fat/whale ordinals exist)
+  if (fatWhaleSats > 0 && totalSats > 0) {
+    const pct = Math.min(100, (fatWhaleSats / totalSats * 100));
+    document.getElementById('lost-meter').style.display = '';
+    document.getElementById('lost-meter-bar').style.width = pct.toFixed(1) + '%';
+    document.getElementById('lost-meter-pct').textContent = pct.toFixed(1) + '% of total value trapped';
+    document.getElementById('lost-meter-sats').textContent = fmt(fatWhaleSats) + ' sats';
+    document.getElementById('lost-meter-free').textContent = fmt(totalSats - fatWhaleSats) + ' sats';
+    if (btcPrice > 0) {
+      document.getElementById('lost-meter-usd').textContent = '($' + (fatWhaleSats/1e8*btcPrice).toFixed(2) + ')';
+      document.getElementById('lost-meter-free-usd').textContent = '($' + ((totalSats-fatWhaleSats)/1e8*btcPrice).toFixed(2) + ')';
+    }
+  } else {
+    document.getElementById('lost-meter').style.display = 'none';
+  }
 }
 
 /* ─── Sort ──────────────────────────────────────────────────────────────── */
@@ -2337,7 +2609,7 @@ function renderTable() {
   updateHiddenBadge();
 
   if (!rows.length) {
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="11">No UTXOs found for this address.</td></tr>`;
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="12">No UTXOs found for this address.</td></tr>`;
     document.getElementById('row-count').textContent = '';
     return;
   }
@@ -2347,7 +2619,7 @@ function renderTable() {
     .filter(r => !r.ins || !excludedIds.has(r.ins.inscriptionId));
 
   if (!visible.length) {
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="11">All inscribed UTXOs are hidden. Click the badge above to restore.</td></tr>`;
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="12">All inscribed UTXOs are hidden. Click the badge above to restore.</td></tr>`;
     document.getElementById('row-count').textContent = '';
     return;
   }
@@ -2359,6 +2631,7 @@ function renderTable() {
     if (activeFilter === 'rune') return !!r.runes?.length;
     if (activeFilter === 'fat') return ordinalSize(r.utxo.value) === 'fat';
     if (activeFilter === 'whale') return ordinalSize(r.utxo.value) === 'whale';
+    if (activeFilter === 'dust') return r.utxo.value <= Math.ceil(57.5 * _currentFeeRate);
     return true;
   });
 
@@ -2398,7 +2671,10 @@ function renderTable() {
     // Sats
     const satsClass = isLarge ? 'sats-val large' : 'sats-val';
     const usdVal = btcPrice > 0 ? `<div style="font-size:10px;color:var(--text3);">$${(utxo.value/1e8*btcPrice).toFixed(2)}</div>` : '';
-    const satsCell  = `<span class="${satsClass}">${fmt(utxo.value)}</span><span class="sats-unit">sats</span>${usdVal}`;
+    const spendCost = Math.ceil(57.5 * _currentFeeRate);
+    const isDust = utxo.value <= spendCost;
+    const dustBadge = isDust ? `<div style="font-size:9px;font-weight:700;color:var(--red);background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:99px;padding:1px 6px;display:inline-block;margin-top:2px;">DUST RISK</div>` : '';
+    const satsCell  = `<span class="${satsClass}">${fmt(utxo.value)}</span><span class="sats-unit">sats</span>${usdVal}${dustBadge}`;
 
     // Inscription number (+ count badge when UTXO holds multiple inscriptions)
     const insCount = r.allIns ? r.allIns.length : (ins ? 1 : 0);
@@ -2436,6 +2712,7 @@ function renderTable() {
       <td>${ins ? ordinalSizeBadge(utxo.value) : `<span style="color:var(--text3);font-size:11px">—</span>`}</td>
       <td><span class="mono">${short(utxo.txid)}</span></td>
       <td class="td-vout">${utxo.vout}</td>
+      <td id="age-${idx}">${r.blockTime !== undefined ? fmtAge(r.blockTime) : '<span style="color:var(--text3);font-size:11px">—</span>'}</td>
       <td class="td-arr">&#8250;</td>
     </tr>`;
   }).join('');
@@ -2608,9 +2885,38 @@ function renderPanel({ utxo, ins, allIns, rarity, meta, satributes, specialSats,
           <a class="ext" href="${url}" target="_blank" rel="noopener">&#10138; Raw content</a>
           <a class="ext" href="https://satflow.com/inscription/${id}" target="_blank" rel="noopener">&#10138; Check value on Satflow.com</a>
         </div>
+        <div id="panel-floor-price"></div>
       </div>
       <div class="p-section">
         <div class="p-title">Actions</div>
+        ${(() => {
+          const hasAnyToken = (runes?.length || stamps?.length || atomicals?.length || cbrc20);
+          if (!ins && !hasAnyToken) {
+            return `<div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.35);
+              border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px;">
+              <span style="font-size:20px;">&#10003;</span>
+              <div>
+                <div style="font-size:12px;font-weight:700;color:var(--green);">Safe to spend as BTC</div>
+                <div style="font-size:11px;color:var(--text3);">No inscription or token detected on this UTXO.</div>
+              </div>
+            </div>`;
+          } else {
+            const warnings = [];
+            if (ins) warnings.push(`inscription${(allIns?.length||1) > 1 ? 's (' + (allIns?.length||1) + ')' : ''}`);
+            if (runes?.length) warnings.push('Rune');
+            if (stamps?.length) warnings.push('Stamp');
+            if (atomicals?.length) warnings.push('Atomical');
+            if (cbrc20) warnings.push('cBRC-20');
+            return `<div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.35);
+              border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px;">
+              <span style="font-size:20px;">&#9888;</span>
+              <div>
+                <div style="font-size:12px;font-weight:700;color:var(--red);">Do NOT spend as plain BTC</div>
+                <div style="font-size:11px;color:var(--text3);">Contains: ${warnings.join(', ')} — spending destroys it.</div>
+              </div>
+            </div>`;
+          }
+        })()}
         <button id="panel-sel-btn"
           class="${selectedIdxs.has(activeIdx) ? 'btn-panel-desel' : 'btn-panel-sel'}"
           onclick="togglePanelSelect()">
@@ -2666,6 +2972,21 @@ function renderPanel({ utxo, ins, allIns, rarity, meta, satributes, specialSats,
       ).join('');
       el.outerHTML = metaRows;
     });
+
+    // Fetch floor price in background
+    if (ins) {
+      metaPromise.then(async meta => {
+        const slug = meta?.collection_slug ?? meta?.parent ?? null;
+        const el = document.getElementById('panel-floor-price');
+        if (!el || !slug) return;
+        const floor = await fetchFloorPrice(ins.inscriptionId, slug);
+        if (floor != null) {
+          const sats = Math.round(floor);
+          const usd = btcPrice > 0 ? ` ≈ $${(sats/1e8*btcPrice).toFixed(2)}` : '';
+          el.innerHTML = `<div class="m-row"><span class="m-key">Collection floor</span><span class="m-val" style="color:var(--green);font-weight:700;">${fmt(sats)} sats${usd}</span></div>`;
+        }
+      });
+    }
   }
 
   // ── UTXO metadata ────────────────────────────────────────────────────────
@@ -2740,6 +3061,34 @@ function renderPanel({ utxo, ins, allIns, rarity, meta, satributes, specialSats,
   }
 
   const mempoolUrl = `https://mempool.space/tx/${esc(utxo.txid)}`;
+  // Find the row for this UTXO to get blockTime
+  const thisRow = rows.find(r => r.utxo.txid === utxo.txid && r.utxo.vout === utxo.vout);
+  const ageHtml = thisRow?.blockTime !== undefined
+    ? `<div class="m-row"><span class="m-key">Age</span><span class="m-val">${fmtAge(thisRow.blockTime)}</span></div>`
+    : '';
+
+  // Safe to spend box for non-inscribed UTXOs (when no inscription section present)
+  const hasAnyTokenUtxo = (runes?.length || stamps?.length || atomicals?.length || cbrc20);
+  let cleanSafeHtml = '';
+  if (!ins && !hasAnyTokenUtxo) {
+    cleanSafeHtml = `<div class="p-section">
+      <div class="p-title">Actions</div>
+      <div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.35);
+        border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px;">
+        <span style="font-size:20px;">&#10003;</span>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--green);">Safe to spend as BTC</div>
+          <div style="font-size:11px;color:var(--text3);">No inscription or token detected on this UTXO.</div>
+        </div>
+      </div>
+      <button id="panel-sel-btn"
+        class="${selectedIdxs.has(activeIdx) ? 'btn-panel-desel' : 'btn-panel-sel'}"
+        onclick="togglePanelSelect()">
+        ${selectedIdxs.has(activeIdx) ? '&#10003; Selected for merge — click to remove' : '+ Add to merge selection'}
+      </button>
+    </div>`;
+  }
+
   body.innerHTML = `
     ${previewHtml}
     ${runeSection}
@@ -2753,6 +3102,7 @@ function renderPanel({ utxo, ins, allIns, rarity, meta, satributes, specialSats,
         </span>
       </div>
       <div class="m-row"><span class="m-key">Vout</span><span class="m-val">${utxo.vout}</span></div>
+      ${ageHtml}
       <div class="m-row m-col">
         <span class="m-key">TXID</span>
         <span class="m-val sm">${esc(utxo.txid)}</span>
@@ -2764,6 +3114,7 @@ function renderPanel({ utxo, ins, allIns, rarity, meta, satributes, specialSats,
         &#10138; View on mempool.space
       </a>
     </div>
+    ${cleanSafeHtml}
     ${insMeta}`;
 }
 
@@ -2998,6 +3349,23 @@ function updateSelectionUI() {
       document.getElementById('ss-usd').textContent   = usd;
       document.getElementById('ss-fee').textContent   = fee.toLocaleString() + ' sats';
       sumEl.classList.add('show');
+
+      // Merge calculator
+      const calcWrap = document.getElementById('ss-calc-wrap');
+      const bkWrap = document.getElementById('ss-breakeven-wrap');
+      if (calcWrap && n >= 2) {
+        const savedVb = (n - 1) * 57.5; // each merged input saves ~57.5 vB per future tx
+        const mergeCostSats = Math.ceil(savedVb * _currentFeeRate); // rough cost to merge
+        const savingsPerTx = Math.ceil(savedVb * _currentFeeRate);
+        const breakEven = savingsPerTx > 0 ? Math.ceil(mergeCostSats / savingsPerTx) : '∞';
+        document.getElementById('ss-savings').textContent = Math.round(savedVb) + ' vB';
+        document.getElementById('ss-breakeven').textContent = breakEven;
+        calcWrap.style.display = '';
+        bkWrap.style.display = '';
+      } else if (calcWrap) {
+        calcWrap.style.display = 'none';
+        bkWrap.style.display = 'none';
+      }
     } else {
       sumEl.classList.remove('show');
     }
@@ -3262,6 +3630,7 @@ async function executeCleanMerge(junk, destAddr, netFee, serviceFee) {
     document.getElementById('clean-done-txid').textContent = txid;
     document.getElementById('clean-done-link').href = `https://mempool.space/tx/${encodeURIComponent(txid)}`;
     cleanStep(4);
+    mempoolMonitor(txid);
   } catch (e) {
     msg.textContent = '';
     err.textContent = e.message;
@@ -3495,6 +3864,136 @@ async function loadProtocols() {
   }
 }
 
+/* ─── UTXO Age loader ───────────────────────────────────────────────────── */
+async function loadUtxoAges() {
+  const BATCH = 4;
+  // Group UTXOs by txid (many UTXOs can share same txid)
+  const txidSet = [...new Set(rows.map(r => r.utxo.txid))];
+  const txCache = {};
+  for (let b = 0; b < txidSet.length; b += BATCH) {
+    await Promise.all(txidSet.slice(b, b + BATCH).map(async txid => {
+      try {
+        const data = await apiFetch(`${MEMPOOL}/tx/${encodeURIComponent(txid)}`);
+        txCache[txid] = data?.status?.block_time ?? null;
+      } catch { txCache[txid] = null; }
+    }));
+    // Update all rows with this txid
+    rows.forEach((r, idx) => {
+      if (txCache[r.utxo.txid] !== undefined) {
+        r.blockTime = txCache[r.utxo.txid];
+        const cell = document.getElementById('age-' + idx);
+        if (cell) cell.innerHTML = fmtAge(r.blockTime);
+      }
+    });
+  }
+}
+
+function fmtAge(ts) {
+  if (!ts) return '<span style="color:var(--text3);font-size:11px">—</span>';
+  const days = Math.floor((Date.now()/1000 - ts) / 86400);
+  const date = new Date(ts*1000).toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'});
+  const color = days > 365 ? 'var(--purple)' : days > 90 ? 'var(--accent)' : 'var(--text2)';
+  return `<span style="font-size:11px;color:${color};font-weight:600;">${days}d ago</span><div style="font-size:10px;color:var(--text3);">${date}</div>`;
+}
+
+/* ─── Floor Price via Satflow ───────────────────────────────────────────── */
+async function fetchFloorPrice(inscriptionId, collectionSlug) {
+  // Try Satflow collection floor
+  if (!collectionSlug) return null;
+  try {
+    const res = await fetch(`https://api.satflow.com/v1/collections/${encodeURIComponent(collectionSlug)}/stats`);
+    if (res.ok) {
+      const data = await res.json();
+      return data?.floor_price ?? data?.floorPrice ?? null;
+    }
+  } catch {}
+  return null;
+}
+
+/* ─── Mempool Monitor ───────────────────────────────────────────────────── */
+function mempoolMonitor(txid) {
+  const id = 'mm-' + txid.slice(0,8);
+  const container = document.getElementById('mm-toasts');
+  if (!container) return;
+
+  // Create toast
+  const toast = document.createElement('div');
+  toast.id = id;
+  toast.style.cssText = `background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-sm);
+    padding:10px 14px;font-size:12px;color:var(--text2);min-width:220px;max-width:300px;
+    box-shadow:0 4px 20px rgba(0,0,0,.4);pointer-events:all;
+    display:flex;align-items:center;gap:10px;`;
+  toast.innerHTML = `
+    <div class="spinner" style="width:14px;height:14px;border-width:2px;flex-shrink:0;"></div>
+    <div style="flex:1;">
+      <div style="font-weight:700;color:var(--text);margin-bottom:2px;">Monitoring TX</div>
+      <div style="font-size:11px;color:var(--text3);">${txid.slice(0,12)}… — waiting for confirmation</div>
+    </div>
+    <button onclick="this.closest('[id]').remove()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:0 0 0 4px;">&#10005;</button>`;
+  container.appendChild(toast);
+
+  let attempts = 0;
+  const poll = async () => {
+    attempts++;
+    if (attempts > 60) { // stop after ~30 min
+      toast.remove();
+      return;
+    }
+    try {
+      const data = await apiFetch(`${MEMPOOL}/tx/${encodeURIComponent(txid)}`);
+      if (data?.status?.confirmed) {
+        const block = data.status.block_height ?? '';
+        toast.style.borderColor = 'rgba(34,197,94,.5)';
+        toast.innerHTML = `
+          <span style="font-size:20px;flex-shrink:0;">&#10003;</span>
+          <div style="flex:1;">
+            <div style="font-weight:700;color:var(--green);margin-bottom:2px;">Confirmed!</div>
+            <div style="font-size:11px;color:var(--text3);">${txid.slice(0,12)}… in block ${block}</div>
+            <a href="https://mempool.space/tx/${encodeURIComponent(txid)}" target="_blank" rel="noopener"
+              style="font-size:11px;color:var(--accent);">View on mempool.space &#8599;</a>
+          </div>
+          <button onclick="this.closest('[id]').remove()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:0 0 0 4px;">&#10005;</button>`;
+        setTimeout(() => toast.remove(), 30000); // auto-dismiss after 30s
+        return;
+      }
+    } catch {}
+    setTimeout(poll, 30000); // poll every 30 seconds
+  };
+  setTimeout(poll, 15000); // first check after 15s
+}
+
+/* ─── Tax Export CSV ────────────────────────────────────────────────────── */
+function exportTaxCsv() {
+  const addr = addrEl.value.trim();
+  const headers = ['Address','TXID','Vout','Sats','BTC','USD (current)','Date Acquired','Days Held','Inscription ID','Inscription #','Type','Rarity','Tokens'];
+  const csvRows = [headers.join(',')];
+  for (const r of rows) {
+    const usd = btcPrice > 0 ? (r.utxo.value/1e8*btcPrice).toFixed(2) : '';
+    const date = r.blockTime ? new Date(r.blockTime*1000).toISOString().slice(0,10) : '';
+    const days = r.blockTime ? Math.floor((Date.now()/1000 - r.blockTime) / 86400) : '';
+    const type = r.ins ? 'Inscribed' : (r.runes?.length ? 'Rune' : (r.stamps?.length ? 'Stamp' : (r.atomicals?.length ? 'Atomical' : 'Clean BTC')));
+    const tokens = [
+      ...(r.runes?.map(rn => rn.name) || []),
+      ...(r.stamps?.map(() => 'STAMP') || []),
+      ...(r.atomicals?.length ? ['ATOMICAL'] : []),
+      ...(r.cbrc20 ? ['cBRC-20'] : []),
+    ].join('|') || '—';
+    csvRows.push([
+      addr, r.utxo.txid, r.utxo.vout, r.utxo.value,
+      (r.utxo.value/1e8).toFixed(8), usd, date, days,
+      r.ins?.inscriptionId || '—',
+      r.ins?.inscriptionNumber != null ? r.ins.inscriptionNumber : '—',
+      type, r.rarity || '—', tokens,
+    ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(','));
+  }
+  const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+  const a = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(blob),
+    download: `tax-export-${addr.slice(0,12)}-${new Date().toISOString().slice(0,10)}.csv`,
+  });
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
 /* ─── Send Selected ─────────────────────────────────────────────────────── */
 let _sendParams = {};
 
@@ -3638,6 +4137,7 @@ async function executeSend(destAddr, destAmt, netFee, serviceFee) {
     document.getElementById('send-done-txid').textContent = txid;
     document.getElementById('send-done-link').href = `https://mempool.space/tx/${encodeURIComponent(txid)}`;
     sendStep(3);
+    mempoolMonitor(txid);
   } catch (e) {
     msg.textContent = '';
     err.textContent = e.message;
@@ -3873,6 +4373,7 @@ async function executeSplit(inscAddr, changeAddr, changeAmt, netFee) {
     document.getElementById('split-done-txid').textContent = txid;
     document.getElementById('split-done-link').href = `https://mempool.space/tx/${encodeURIComponent(txid)}`;
     splitStep(3);
+    mempoolMonitor(txid);
   } catch (e) {
     msg.textContent = '';
     err.textContent = e.message;
@@ -3880,6 +4381,10 @@ async function executeSplit(inscAddr, changeAddr, changeAmt, netFee) {
     back.style.display = '';
   }
 }
+
+/* ─── Story ──────────────────────────────────────────────────────────────── */
+function openStory()  { document.getElementById('story-modal').style.display = 'flex'; }
+function closeStory() { document.getElementById('story-modal').style.display = 'none'; }
 
 /* ─── README ─────────────────────────────────────────────────────────────── */
 function openReadme()  { document.getElementById('readme-modal').style.display = 'flex'; }
@@ -3898,6 +4403,162 @@ async function fetchBtcPrice() {
     const el = document.getElementById('btc-price');
     if (el && btcPrice) el.textContent = '$' + btcPrice.toLocaleString('en-US');
   } catch { /* silent */ }
+}
+
+/* ─── Historical Fee Chart ──────────────────────────────────────────────── */
+let _feeChartOpen   = false;
+let _feeChartRange  = '24h';
+let _feeChartCache  = {};
+let _currentFees    = null; // { economyFee, halfHourFee, fastestFee }
+
+function toggleFeeChart() {
+  _feeChartOpen = !_feeChartOpen;
+  const wrap = document.getElementById('fee-chart-wrap');
+  wrap.style.display = _feeChartOpen ? '' : 'none';
+  if (_feeChartOpen && !_feeChartCache[_feeChartRange]) loadFeeChart(_feeChartRange);
+}
+
+async function loadFeeChart(range) {
+  _feeChartRange = range;
+  // update tab buttons
+  ['24h','1w'].forEach(r => {
+    const btn = document.getElementById('fc-btn-' + r);
+    if (!btn) return;
+    const active = r === range;
+    btn.style.borderColor  = active ? 'var(--accent)' : 'var(--border2)';
+    btn.style.background   = active ? 'var(--accent-dim)' : 'none';
+    btn.style.color        = active ? 'var(--accent)' : 'var(--text3)';
+    btn.style.fontWeight   = active ? '700' : '400';
+  });
+
+  const errEl = document.getElementById('fc-err');
+  const spin  = document.getElementById('fc-spinner');
+  errEl.style.display = 'none';
+
+  // use cache if available
+  if (_feeChartCache[range]) { renderFeeChart(_feeChartCache[range]); return; }
+
+  spin.style.display = '';
+  try {
+    const [blocks, fees] = await Promise.all([
+      apiFetch(`${MEMPOOL}/v1/mining/blocks/fees/${range}`),
+      apiFetch(`${MEMPOOL}/v1/fees/recommended`),
+    ]);
+    _currentFees = fees;
+    _feeChartCache[range] = blocks;
+    renderFeeChart(blocks);
+  } catch(e) {
+    errEl.textContent = 'Could not load fee history: ' + e.message;
+    errEl.style.display = '';
+  } finally {
+    spin.style.display = 'none';
+  }
+}
+
+function renderFeeChart(blocks) {
+  const svg    = document.getElementById('fc-svg');
+  const legend = document.getElementById('fc-legend');
+  if (!svg || !blocks?.length) return;
+
+  const W = svg.getBoundingClientRect().width || 600;
+  const H = 160;
+  const PAD = { top: 10, right: 16, bottom: 28, left: 38 };
+  const cW = W - PAD.left - PAD.right;
+  const cH = H - PAD.top  - PAD.bottom;
+
+  // extract fee rate values
+  const rates = blocks.map(b => b.avgFeeRate ?? b.avgFee ?? 0).filter(v => v > 0);
+  if (!rates.length) return;
+
+  const minR = Math.max(0, Math.min(...rates) * 0.9);
+  const maxR = Math.max(...rates) * 1.1;
+  const minT = blocks[0].timestamp;
+  const maxT = blocks[blocks.length - 1].timestamp;
+
+  function xPos(ts)   { return PAD.left + ((ts - minT) / (maxT - minT || 1)) * cW; }
+  function yPos(rate) { return PAD.top  + (1 - (rate - minR) / (maxR - minR || 1)) * cH; }
+
+  // build polyline points
+  const pts = blocks
+    .filter(b => (b.avgFeeRate ?? b.avgFee) > 0)
+    .map(b => `${xPos(b.timestamp).toFixed(1)},${yPos(b.avgFeeRate ?? b.avgFee).toFixed(1)}`)
+    .join(' ');
+
+  // fill path (area under line)
+  const firstB = blocks.find(b => (b.avgFeeRate ?? b.avgFee) > 0);
+  const lastB  = [...blocks].reverse().find(b => (b.avgFeeRate ?? b.avgFee) > 0);
+  const fillPts = `${xPos(firstB.timestamp).toFixed(1)},${(PAD.top + cH).toFixed(1)} ${pts} ${xPos(lastB.timestamp).toFixed(1)},${(PAD.top + cH).toFixed(1)}`;
+
+  // current fee markers
+  const feeLines = _currentFees ? [
+    { rate: _currentFees.economyFee,  label: `Economy ${_currentFees.economyFee}`, color: 'var(--green)' },
+    { rate: _currentFees.halfHourFee, label: `Standard ${_currentFees.halfHourFee}`, color: 'var(--accent)' },
+    { rate: _currentFees.fastestFee,  label: `Priority ${_currentFees.fastestFee}`, color: 'var(--red)' },
+  ] : [];
+
+  // x-axis labels
+  const step   = Math.ceil(blocks.length / 6);
+  const xLabels = blocks.filter((_, i) => i % step === 0 || i === blocks.length - 1);
+
+  // y-axis labels (3 ticks)
+  const yTicks = [minR, (minR+maxR)/2, maxR].map(v => ({ v, y: yPos(v) }));
+
+  const svgContent = `
+    <defs>
+      <linearGradient id="fcGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.25"/>
+        <stop offset="100%" stop-color="var(--accent)" stop-opacity="0.02"/>
+      </linearGradient>
+    </defs>
+    <!-- grid lines -->
+    ${yTicks.map(t =>
+      `<line x1="${PAD.left}" y1="${t.y.toFixed(1)}" x2="${PAD.left+cW}" y2="${t.y.toFixed(1)}"
+        stroke="var(--border)" stroke-width="1" stroke-dasharray="3,3"/>`
+    ).join('')}
+    <!-- y axis labels -->
+    ${yTicks.map(t =>
+      `<text x="${PAD.left - 5}" y="${(t.y+4).toFixed(1)}" text-anchor="end"
+        font-size="9" fill="var(--text3)">${Math.round(t.v)}</text>`
+    ).join('')}
+    <!-- x axis labels -->
+    ${xLabels.map(b => {
+      const d = new Date(b.timestamp * 1000);
+      const lbl = _feeChartRange === '24h'
+        ? d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})
+        : d.toLocaleDateString([],{month:'short',day:'numeric'});
+      return `<text x="${xPos(b.timestamp).toFixed(1)}" y="${H - 6}" text-anchor="middle"
+        font-size="9" fill="var(--text3)">${lbl}</text>`;
+    }).join('')}
+    <!-- area fill -->
+    <polygon points="${fillPts}" fill="url(#fcGrad)"/>
+    <!-- line -->
+    <polyline points="${pts}" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <!-- fee marker lines -->
+    ${feeLines.filter(f => f.rate >= minR && f.rate <= maxR).map(f =>
+      `<line x1="${PAD.left}" y1="${yPos(f.rate).toFixed(1)}" x2="${PAD.left+cW}" y2="${yPos(f.rate).toFixed(1)}"
+        stroke="${f.color}" stroke-width="1" stroke-dasharray="5,4" opacity="0.8"/>
+       <text x="${PAD.left+cW+2}" y="${(yPos(f.rate)+3).toFixed(1)}"
+        font-size="8" fill="${f.color}">${f.rate}</text>`
+    ).join('')}
+    <!-- axes -->
+    <line x1="${PAD.left}" y1="${PAD.top}" x2="${PAD.left}" y2="${PAD.top+cH}" stroke="var(--border2)" stroke-width="1"/>
+    <line x1="${PAD.left}" y1="${PAD.top+cH}" x2="${PAD.left+cW}" y2="${PAD.top+cH}" stroke="var(--border2)" stroke-width="1"/>
+  `;
+
+  svg.setAttribute('height', H);
+  svg.innerHTML = svgContent;
+
+  // legend
+  legend.innerHTML = (_currentFees ? [
+    { label: `Economy: ${_currentFees.economyFee} sat/vB`,  color: 'var(--green)' },
+    { label: `Standard: ${_currentFees.halfHourFee} sat/vB`, color: 'var(--accent)' },
+    { label: `Priority: ${_currentFees.fastestFee} sat/vB`,  color: 'var(--red)' },
+  ] : []).map(f =>
+    `<span style="display:flex;align-items:center;gap:4px;">
+      <span style="display:inline-block;width:20px;height:2px;background:${f.color};border-top:2px dashed ${f.color};"></span>
+      <span style="color:var(--text2);">${f.label}</span>
+    </span>`
+  ).join('');
 }
 
 /* ─── Fee rate selector ─────────────────────────────────────────────────── */
