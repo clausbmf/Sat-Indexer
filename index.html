@@ -1466,6 +1466,21 @@
         </div>
       </div>
 
+      <hr class="faq-divider">
+
+      <div class="faq-item">
+        <div class="faq-q">I accidentally sent 200,000 sats from a bc1p address to another bc1p address without realising it contained 7 Ordinals. Now ordinals.com shows a single UTXO of 200,000 sats with all 7 inscriptions inside it. The inscriptions were spread across multiple UTXOs worth around 30,000 sats in total — why has everything merged into one?</div>
+        <div class="faq-a">
+          <p>This is a <strong>UTXO consolidation</strong> — nothing has been lost, everything has just been merged into one output.</p>
+          <p>When your wallet sent that transaction, it used all of your UTXOs as inputs and produced a single output of 200,000 sats. The 7 inscriptions, which were previously spread across multiple UTXOs (totalling ~30,000 sats), plus your clean sats, were all swept into that one UTXO together.</p>
+          <p>Ordinal theory tracks individual satoshis by their position within a UTXO. When multiple inputs are merged into one output, all their satoshis land inside that single UTXO at different <strong>sat offsets</strong>. The 7 inscriptions are still there — each one sits at its respective offset within the 200,000 sat UTXO.</p>
+          <p>The tool shows it as a <strong>Whale Ordinal</strong> simply because the UTXO is ≥ 20,000 sats. The badge reflects the UTXO size, not the value of the inscriptions. The tool also previously showed only one inscription per UTXO — this has since been fixed and all inscriptions inside a merged UTXO are now shown, matching what ordinals.com displays.</p>
+          <p><strong>What this means for you:</strong></p>
+          <p>The 7 inscriptions are not lost. However, you can no longer spend the clean sats independently — they are all tangled together inside one UTXO. To separate them you would need to send each inscription individually to its own output using an ordinals-aware wallet such as Xverse or UniSat, which understands sat offsets and will not accidentally destroy them.</p>
+          <p>If the projects behind those 7 inscriptions are dead and worthless, you can simply use this tool to merge or send that entire UTXO and reclaim the 200,000 sats (minus fees), accepting that the inscriptions will be burned in the process.</p>
+        </div>
+      </div>
+
     </div>
     <div class="faq-footer">
       <button class="btn-cw-back" onclick="closeFaq()">Close</button>
@@ -2027,14 +2042,20 @@ function matchAndMerge(utxos, inscriptions, runeMap = new Map()) {
   const insMap = new Map();
   for (const ins of inscriptions) {
     const key = ins.txid != null && ins.vout != null ? `${ins.txid}:${ins.vout}` : '';
-    if (key && !insMap.has(key)) insMap.set(key, ins);
+    if (!key) continue;
+    if (!insMap.has(key)) insMap.set(key, []);
+    insMap.get(key).push(ins);
   }
 
-  const result = utxos.map(u => ({
-    utxo:  u,
-    ins:   insMap.get(`${u.txid}:${u.vout}`) || null,
-    runes: runeMap.get(`${u.txid}:${u.vout}`) || null,
-  }));
+  const result = utxos.map(u => {
+    const allIns = insMap.get(`${u.txid}:${u.vout}`) || [];
+    return {
+      utxo:   u,
+      allIns: allIns,
+      ins:    allIns[0] || null,   // primary inscription (backward compat)
+      runes:  runeMap.get(`${u.txid}:${u.vout}`) || null,
+    };
+  });
 
   const matched   = result.filter(r => r.ins).length;
   const runeCount = result.filter(r => r.runes?.length).length;
@@ -2221,9 +2242,11 @@ function renderTable() {
     const usdVal = btcPrice > 0 ? `<div style="font-size:10px;color:var(--text3);">$${(utxo.value/1e8*btcPrice).toFixed(2)}</div>` : '';
     const satsCell  = `<span class="${satsClass}">${fmt(utxo.value)}</span><span class="sats-unit">sats</span>${usdVal}`;
 
-    // Inscription number
+    // Inscription number (+ count badge when UTXO holds multiple inscriptions)
+    const insCount = r.allIns ? r.allIns.length : (ins ? 1 : 0);
     const insNum = ins
       ? `<span class="ins-num">${ins.inscriptionNumber != null ? '#' + fmt(ins.inscriptionNumber) : 'inscribed'}</span>`
+        + (insCount > 1 ? `<span style="margin-left:4px;font-size:10px;font-weight:700;color:var(--text2);background:var(--surface3);border:1px solid var(--border2);border-radius:99px;padding:1px 6px;">+${insCount - 1}</span>` : '')
       : `<span class="no-ins-label">—</span>`;
 
     // Rarity cell — shows cached value or loading indicator
@@ -2334,7 +2357,7 @@ function closePanel() {
   }
 }
 
-function renderPanel({ utxo, ins, rarity, meta, satributes, specialSats, runes, stamps, atomicals, cbrc20 }) {
+function renderPanel({ utxo, ins, allIns, rarity, meta, satributes, specialSats, runes, stamps, atomicals, cbrc20 }) {
   const body = document.getElementById('panel-body');
 
   // ── inscription preview ──────────────────────────────────────────────────
@@ -2388,9 +2411,28 @@ function renderPanel({ utxo, ins, rarity, meta, satributes, specialSats, runes, 
            <span class="no-satributes">loading…</span>
          </div>`;
 
+    // Extra inscriptions in the same UTXO (beyond the primary)
+    const extraIns = (allIns && allIns.length > 1) ? allIns.slice(1) : [];
+    const extraInsHtml = extraIns.length ? `
+      <div class="p-section">
+        <div class="p-title">All inscriptions in this UTXO (${allIns.length} total)</div>
+        ${allIns.map((ins2, i) => {
+          const id2  = esc(ins2.inscriptionId);
+          const num2 = ins2.inscriptionNumber != null ? '#' + fmt(ins2.inscriptionNumber) : 'inscribed';
+          const isPrimary = i === 0;
+          return `<div class="m-row" style="margin-bottom:4px;">
+            <span class="m-key" style="font-size:10px;">${isPrimary ? '&#9654; ' : ''}${num2}</span>
+            <a class="m-val sm" href="${ORDINALS}/inscription/${id2}" target="_blank" rel="noopener"
+              style="color:var(--purple);text-decoration:none;font-size:10px;word-break:break-all;" title="${id2}">
+              ${id2.slice(0,16)}…&#10138;
+            </a>
+          </div>`;
+        }).join('')}
+      </div>` : '';
+
     insMeta = `
       <div class="p-section">
-        <div class="p-title">Inscription</div>
+        <div class="p-title">Inscription${allIns && allIns.length > 1 ? ` (1 of ${allIns.length})` : ''}</div>
         ${rarBadgeHtml}
         ${satBlockHtml}
         <div class="m-row m-col">
@@ -2400,6 +2442,7 @@ function renderPanel({ utxo, ins, rarity, meta, satributes, specialSats, runes, 
         ${numRow}
         <div id="ins-meta-detail" class="meta-loading">Loading metadata…</div>
       </div>
+      ${extraInsHtml}
       <div class="p-section">
         <div class="p-title">Links</div>
         <div class="links">
