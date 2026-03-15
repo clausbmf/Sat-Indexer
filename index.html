@@ -879,7 +879,7 @@
     <span class="wallet-connect-label">Connect Wallet</span>
     <button class="btn-wallet" id="btn-xverse" onclick="connectXverse()">Xverse</button>
     <button class="btn-wallet" id="btn-unisat" onclick="connectUniSat()">UniSat</button>
-    <button class="btn-wallet" id="btn-opnet"  onclick="connectOpNet()">OP_NET</button>
+    <button class="btn-wallet" id="btn-opnet"  onclick="connectOpNet()" title="OP_NET: scan only — use Xverse or UniSat for transactions">OP_NET <span style="font-size:9px;opacity:.6;">(scan)</span></button>
     <span class="wallet-status" id="wallet-status">Wallet connection only required for Merge, Send &amp; Split — to scan, just paste your address below</span>
   </div>
 
@@ -1362,6 +1362,39 @@
       <div class="clean-footer">
         <button class="btn-cw-primary" onclick="closeSplitModal()">Done</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- signing wallet picker modal -->
+<div id="sign-picker-modal" class="clean-overlay" style="display:none">
+  <div class="clean-box" style="max-width:380px;text-align:center;">
+    <div class="clean-hdr">
+      <h3>&#9994; Choose Signing Wallet</h3>
+    </div>
+    <div style="padding:18px 20px 8px;">
+      <p style="font-size:13px;color:var(--text2);margin-bottom:18px;line-height:1.6;">
+        OP_NET can't sign PSBTs.<br>
+        Pick a wallet to sign this transaction.<br>
+        <span style="font-size:11px;color:var(--text3);">Your scanned address stays the same.</span>
+      </p>
+      <div style="display:flex;gap:10px;justify-content:center;margin-bottom:16px;">
+        <button onclick="pickSigningWallet('Xverse')"
+          style="flex:1;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);
+          color:var(--text);font-size:13px;font-weight:700;padding:12px 0;cursor:pointer;transition:all var(--ease);"
+          onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+          onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text)'">
+          Xverse
+        </button>
+        <button onclick="pickSigningWallet('UniSat')"
+          style="flex:1;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);
+          color:var(--text);font-size:13px;font-weight:700;padding:12px 0;cursor:pointer;transition:all var(--ease);"
+          onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+          onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text)'">
+          UniSat
+        </button>
+      </div>
+      <button onclick="cancelSignPicker()" style="background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;">Cancel</button>
     </div>
   </div>
 </div>
@@ -3461,7 +3494,9 @@ function setWalletAddress(address, walletName) {
   addrEl.value = address;
   addrEl.dispatchEvent(new Event('input'));
   const statusEl = document.getElementById('wallet-status');
-  if (statusEl) statusEl.textContent = walletName + ' connected';
+  if (statusEl) statusEl.textContent = walletName === 'OP_NET'
+    ? 'OP_NET connected (scan only — use Xverse or UniSat for Merge, Send & Split)'
+    : walletName + ' connected';
 }
 
 async function connectXverse() {
@@ -4188,21 +4223,63 @@ async function signAndBroadcast(psbtB64, inputCount, signerAddr) {
     return txid;
   }
 
-  // OP_NET — uses window.unisat which OP_NET injects, or window.opnet.signPsbt if available
+  // OP_NET — no PSBT support, show wallet picker and retry
   if (wallet === 'OP_NET') {
-    const signer = window.opnet?.signPsbt ? window.opnet : window.unisat;
-    if (!signer?.signPsbt) throw new Error('OP_NET signing not available. Is the extension active?');
-    const psbtHex   = _b64toHex(psbtB64);
-    const signedHex = await signer.signPsbt(psbtHex, {
-      autoFinalized: true,
-      toSignInputs:  indices.map(i => ({ index: i, address: signerAddr })),
-    });
-    const res = await fetch(`${MEMPOOL}/tx`, { method:'POST', headers:{'Content-Type':'text/plain'}, body: signedHex });
-    if (!res.ok) throw new Error('Broadcast failed: ' + (await res.text()).slice(0,200));
-    return await res.text();
+    return await showSignPickerAndRetry(psbtB64, inputCount, signerAddr);
   }
 
   throw new Error('No wallet connected. Connect Xverse, UniSat, or OP_NET before signing.');
+}
+
+/* ─── Signing wallet picker (for OP_NET users) ───────────────────────────── */
+let _signPickerResolve = null;
+let _signPickerReject  = null;
+
+function showSignPickerAndRetry(psbtB64, inputCount, signerAddr) {
+  return new Promise((resolve, reject) => {
+    _signPickerResolve = async (chosenWallet) => {
+      document.getElementById('sign-picker-modal').style.display = 'none';
+      // Temporarily set connectedWallet to chosen wallet, sign, then restore OP_NET
+      connectedWallet = chosenWallet;
+      try {
+        const txid = await signAndBroadcast(psbtB64, inputCount, signerAddr);
+        resolve(txid);
+      } catch(e) {
+        reject(e);
+      } finally {
+        connectedWallet = 'OP_NET';
+      }
+    };
+    _signPickerReject = () => {
+      document.getElementById('sign-picker-modal').style.display = 'none';
+      reject(new Error('Signing cancelled.'));
+    };
+    document.getElementById('sign-picker-modal').style.display = 'flex';
+  });
+}
+
+async function pickSigningWallet(type) {
+  if (!_signPickerResolve) return;
+  // Connect the chosen wallet silently (no address change)
+  try {
+    if (type === 'Xverse') {
+      const xverse = window.XverseProviders?.BitcoinProvider ?? window.BitcoinProvider;
+      if (!xverse) throw new Error('Xverse not detected.');
+      // Just verify it's accessible — address stays from OP_NET
+    } else if (type === 'UniSat') {
+      if (!window.unisat) throw new Error('UniSat not detected.');
+      await window.unisat.requestAccounts();
+    }
+    await _signPickerResolve(type);
+  } catch(e) {
+    showErr(e.message);
+    document.getElementById('sign-picker-modal').style.display = 'none';
+    connectedWallet = 'OP_NET';
+  }
+}
+
+function cancelSignPicker() {
+  if (_signPickerReject) _signPickerReject();
 }
 
 /* ─── Protocol detection (Stamps + Atomicals) ───────────────────────────── */
