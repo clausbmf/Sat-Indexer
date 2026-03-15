@@ -2802,8 +2802,8 @@ function updateSelectionUI() {
 
 async function mergeSelected() {
   if (!selectedIdxs.size) return;
-  if (!addrEl.value.trim() || !isTaproot(addrEl.value.trim())) {
-    showErr('Connect a wallet or enter a valid bc1p address before merging.');
+  if (!addrEl.value.trim() || !isValidAddr(addrEl.value.trim())) {
+    showErr('Connect a wallet or enter a valid bc1p / bc1q / 3… address before merging.');
     return;
   }
   const stillLoading = [...selectedIdxs].some(idx => {
@@ -2987,7 +2987,7 @@ async function buildMergePreview(junk) {
     : '';
 
   const nIn      = junk.length;
-  const vsize    = Math.ceil(10.5 + nIn * 57.5 + 2 * 43);
+  const vsize    = calcVsize(nIn, destAddr, destAddr); // merge: inputs and output are same address type
   const netFee   = vsize * feeRate;
   const totalIn  = junk.reduce((s, r) => s + r.utxo.value, 0);
   const SERVICE_FEE_SATS = calcServiceFee(nIn);
@@ -3052,7 +3052,7 @@ async function executeCleanMerge(junk, destAddr, netFee, serviceFee) {
 
   try {
     msg.textContent = 'Building transaction…';
-    const psbtB64 = buildMergePsbt(junk.map(r => r.utxo), destAddr, SERVICE_FEE_ADDR, resolvedFee, netFee);
+    const psbtB64 = buildMergePsbt(junk.map(r => r.utxo), destAddr, SERVICE_FEE_ADDR, resolvedFee, netFee, addrEl.value.trim());
 
     msg.textContent = 'Waiting for wallet signature…';
     const txid = await signAndBroadcast(psbtB64, junk.length, destAddr);
@@ -3066,6 +3066,57 @@ async function executeCleanMerge(junk, destAddr, netFee, serviceFee) {
     err.style.display = '';
     back.style.display = '';
   }
+}
+
+/* ─── bech32 (v0) → P2WPKH scriptPubKey ────────────────────────────────── */
+function _b32DecV0(addr) {
+  const s = addr.toLowerCase(), p = s.lastIndexOf('1');
+  if (p < 1) return null;
+  const hrp = s.slice(0, p), data = [];
+  for (let i = p+1; i < s.length; i++) { const d = _B32A.indexOf(s[i]); if (d < 0) return null; data.push(d); }
+  if (_b32Poly([..._b32Exp(hrp), ...data]) !== 1) return null; // bech32 constant (not bech32m)
+  return { hrp, words: data.slice(0, -6) };
+}
+function p2wpkhScript(addr) {
+  const d = _b32DecV0(addr);
+  if (!d || d.words[0] !== 0) return null;
+  const prog = _cvt58(d.words.slice(1));
+  if (prog.length !== 20) return null;
+  return new Uint8Array([0x00, 0x14, ...prog]);
+}
+
+/* ─── base58check → P2SH scriptPubKey ──────────────────────────────────── */
+function _b58Dec(addr) {
+  const A = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+  let n = 0n;
+  for (const c of addr) { const d = A.indexOf(c); if (d < 0) return null; n = n * 58n + BigInt(d); }
+  const out = new Uint8Array(25);
+  for (let i = 24; i >= 0; i--) { out[i] = Number(n & 0xffn); n >>= 8n; }
+  return out; // [version(1), hash160(20), checksum(4)]
+}
+function p2shScript(addr) {
+  const d = _b58Dec(addr);
+  if (!d || d[0] !== 0x05) return null;
+  return new Uint8Array([0xa9, 0x14, ...d.slice(1, 21), 0x87]);
+}
+
+/* ─── unified address → scriptPubKey & vsize helpers ───────────────────── */
+function addrScript(addr) {
+  if (isTaproot(addr))      return p2trScript(addr);
+  if (isSegwit(addr))       return p2wpkhScript(addr);
+  if (isNestedSegwit(addr)) return p2shScript(addr);
+  return null;
+}
+function _addrType(addr) {
+  if (isSegwit(addr))       return 'segwit';   // bc1q  P2WPKH
+  if (isNestedSegwit(addr)) return 'nested';   // 3…    P2SH-P2WPKH
+  return 'taproot';                             // bc1p  P2TR
+}
+function _inVb(t)  { return t === 'segwit' ? 68 : t === 'nested' ? 91 : 57.5; }
+function _outVb(t) { return t === 'segwit' ? 31 : t === 'nested' ? 32 : 43; }
+// nIn inputs from srcAddr, one output to dstAddr, one output to P2TR fee addr
+function calcVsize(nIn, srcAddr, dstAddr) {
+  return Math.ceil(10.5 + nIn * _inVb(_addrType(srcAddr)) + _outVb(_addrType(dstAddr)) + 43);
 }
 
 /* ─── bech32m → P2TR scriptPubKey ───────────────────────────────────────── */
@@ -3109,13 +3160,16 @@ function _cat(...a) { const out=new Uint8Array(a.reduce((s,x)=>s+x.length,0)); l
 function _fromHex(h) { const b=new Uint8Array(h.length/2); for(let i=0;i<h.length;i+=2)b[i/2]=parseInt(h.slice(i,i+2),16); return b; }
 function _psbtKV(k,v) { return _cat(_vi(k.length),k,_vi(v.length),v); }
 
-function buildMergePsbt(utxos, destAddr, feeAddr, feeSats, netFee) {
+function buildMergePsbt(utxos, destAddr, feeAddr, feeSats, netFee, sourceAddr) {
   const totalIn = utxos.reduce((s,u)=>s+u.value,0);
   const destAmt = totalIn - feeSats - netFee;
   if (destAmt < 546) throw new Error(`Insufficient funds: only ${destAmt} sats remain after fees.`);
 
-  const destSc = p2trScript(destAddr);
-  const feeSc  = p2trScript(feeAddr);
+  const srcAddr = sourceAddr || destAddr;
+  const srcSc  = addrScript(srcAddr);
+  const destSc = addrScript(destAddr);
+  const feeSc  = p2trScript(feeAddr);  // service fee address is always P2TR
+  if (!srcSc)  throw new Error('Cannot derive scriptPubKey from source address.');
   if (!destSc) throw new Error('Cannot derive scriptPubKey from destination address.');
   if (!feeSc)  throw new Error('Cannot derive scriptPubKey from service fee address.');
 
@@ -3136,8 +3190,8 @@ function buildMergePsbt(utxos, destAddr, feeAddr, feeSats, netFee) {
     new Uint8Array([0x00]),                            // global separator
   ];
   for (const u of utxos) {
-    const sc = p2trScript(destAddr);
-    const wu = _cat(_numLE(u.value,8), _vi(sc.length), sc);
+    // PSBT_IN_WITNESS_UTXO: value + scriptPubKey of the UTXO being spent (source address)
+    const wu = _cat(_numLE(u.value,8), _vi(srcSc.length), srcSc);
     parts.push(_psbtKV(new Uint8Array([0x01]), wu));   // PSBT_IN_WITNESS_UTXO
     parts.push(new Uint8Array([0x00]));                // input separator
   }
@@ -3262,22 +3316,21 @@ async function sendSelected() {
     if (hint) hint.textContent = `~${feeRate} sat/vB`;
   } catch { /* use default */ }
 
-  const vsize      = Math.ceil(10.5 + n * 57.5 + 2 * 43);
-  const netFee     = vsize * feeRate;
   const serviceFee = calcSendFee();
-  _sendParams = { selected, n, totalIn, feeRate, vsize, netFee, serviceFee };
+  // vsize and netFee are computed in onSendAddrInput() once the dest address type is known
+  _sendParams = { selected, n, totalIn, feeRate, serviceFee };
 
   document.getElementById('send-s1-body').innerHTML = `
     <div style="margin-bottom:16px;">
       <label style="display:block;font-size:11px;font-weight:700;color:var(--text3);
         text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">Recipient Address</label>
       <div style="position:relative;">
-        <input type="text" id="send-addr-input" placeholder="bc1p…" autocomplete="off" spellcheck="false"
+        <input type="text" id="send-addr-input" placeholder="bc1p… / bc1q… / 3…" autocomplete="off" spellcheck="false"
           oninput="onSendAddrInput()" style="width:100%;padding-right:34px;
           font-family:'Cascadia Code','Fira Code','Courier New',monospace;" />
         <div id="send-addr-dot" class="addr-dot"></div>
       </div>
-      <div id="send-addr-hint" class="hint">Enter the recipient Taproot bc1p address</div>
+      <div id="send-addr-hint" class="hint">Enter recipient address (bc1p, bc1q, or 3…)</div>
     </div>
     <div class="clean-stats" style="margin-bottom:14px;">
       <div class="clean-stat">
@@ -3306,7 +3359,7 @@ async function sendSelected() {
 }
 
 function onSendAddrInput() {
-  const { n, totalIn, netFee, serviceFee, vsize, feeRate } = _sendParams;
+  const { n, totalIn, serviceFee, feeRate } = _sendParams;
   const input   = document.getElementById('send-addr-input');
   const dot     = document.getElementById('send-addr-dot');
   const hint    = document.getElementById('send-addr-hint');
@@ -3316,19 +3369,24 @@ function onSendAddrInput() {
 
   if (!addr) {
     input.className = ''; dot.className = 'addr-dot';
-    hint.className = 'hint'; hint.textContent = 'Enter the recipient Taproot bc1p address';
+    hint.className = 'hint'; hint.textContent = 'Enter recipient address (bc1p, bc1q, or 3…)';
     preview.innerHTML = ''; confirm.disabled = true;
     return;
   }
-  if (!isTaproot(addr)) {
+  if (!isValidAddr(addr)) {
     input.className = 'bad'; dot.className = 'addr-dot bad';
-    hint.className = 'hint err'; hint.textContent = 'Must be a bc1p bech32m address';
+    hint.className = 'hint err'; hint.textContent = 'Must be a valid bc1p, bc1q, or 3… address';
     preview.innerHTML = ''; confirm.disabled = true;
     return;
   }
 
+  const typeLabel = isTaproot(addr) ? 'Taproot (bc1p)' : isSegwit(addr) ? 'Native SegWit (bc1q)' : 'Nested SegWit (3…)';
   input.className = 'ok'; dot.className = 'addr-dot ok';
-  hint.className = 'hint ok'; hint.textContent = 'Valid Taproot address';
+  hint.className = 'hint ok'; hint.textContent = `Valid ${typeLabel} address`;
+
+  // Compute vsize based on actual input (source) and output (dest) address types
+  const vsize  = calcVsize(n, addrEl.value.trim(), addr);
+  const netFee = vsize * feeRate;
 
   const destAmt = totalIn - serviceFee - netFee;
   if (destAmt < 546) {
@@ -3369,7 +3427,7 @@ async function executeSend(destAddr, destAmt, netFee, serviceFee) {
 
   try {
     msg.textContent = 'Building transaction…';
-    const psbtB64 = buildMergePsbt(selected.map(r => r.utxo), destAddr, SERVICE_FEE_ADDR, serviceFee, netFee);
+    const psbtB64 = buildMergePsbt(selected.map(r => r.utxo), destAddr, SERVICE_FEE_ADDR, serviceFee, netFee, addrEl.value.trim());
 
     msg.textContent = 'Waiting for wallet signature…';
     const signerAddr = addrEl.value.trim();
