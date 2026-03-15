@@ -4957,14 +4957,35 @@ async function renderSplitAllS1() {
   const body    = document.getElementById('sa-s1-body');
   const confirm = document.getElementById('sa-confirm-btn');
   confirm.disabled = true;
-  body.innerHTML = `<div style="color:var(--text3);font-size:12px;padding:10px 0;">Fetching fee rate…</div>`;
+  body.innerHTML = `<div style="color:var(--text3);font-size:12px;padding:10px 0;">Fetching sat positions &amp; fee rate…</div>`;
 
+  // Fetch fee rate + satpoint offsets in parallel
   let feeRate = 5;
   try {
     const fees = await apiFetch(`${MEMPOOL}/v1/fees/recommended`);
     feeRate = getSelectedFeeRate(fees);
   } catch {}
   _splitAllParams.feeRate = feeRate;
+
+  // Fetch satpoint offset for each inscription
+  const offsets = await Promise.all(allIns.map(async ins => {
+    try {
+      const meta = ins.meta || await fetchInscriptionMeta(ins.inscriptionId);
+      if (meta?.satpoint) {
+        const parts = meta.satpoint.split(':');
+        return parseInt(parts[2], 10) || 0;
+      }
+    } catch {}
+    return 0;
+  }));
+
+  // Sort inscriptions by sat offset
+  const sorted = allIns.map((ins, i) => ({ ins, offset: offsets[i] }))
+                       .sort((a, b) => a.offset - b.offset);
+  _splitAllParams.sorted = sorted;
+
+  // Calculate output specs based on actual sat offsets
+  _splitAllParams.outputSpecs = saCalcOutputSpecs(sorted, utxo.value, feeRate, addrEl.value.trim(), addrEl.value.trim());
 
   const srcAddr = addrEl.value.trim();
   const n = allIns.length;
@@ -4975,19 +4996,19 @@ async function renderSplitAllS1() {
         border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:14px;">
         <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;
           letter-spacing:.6px;margin-bottom:8px;">Inscriptions to separate (${n})</div>
-        ${allIns.map((ins, i) => `
+        ${sorted.map(({ ins, offset }) => `
           <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
             <span style="color:var(--purple);font-weight:600;">
               ${ins.inscriptionNumber != null ? '#'+fmt(ins.inscriptionNumber) : ins.inscriptionId.slice(0,12)+'…'}
             </span>
-            <span style="color:var(--text3);font-size:11px;">→ output ${i} · 546 sats</span>
+            <span style="color:var(--text3);font-size:11px;">sat offset ${offset.toLocaleString()}</span>
           </div>`).join('')}
       </div>
 
       <div style="margin-bottom:14px;">
         <label style="display:block;font-size:11px;font-weight:700;color:var(--text3);
           text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Inscription Destination</label>
-        <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">All ${n} inscriptions go here (each on its own 546 sat UTXO). Use your Ordinals wallet.</div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">All ${n} inscriptions go here (each on its own UTXO). Use your Ordinals wallet.</div>
         <div style="position:relative;">
           <input type="text" id="sa-insc-addr" value="${esc(srcAddr)}" placeholder="bc1p… / bc1q… / 3…"
             autocomplete="off" spellcheck="false" oninput="onSplitAllAddrInput()"
@@ -5014,8 +5035,45 @@ async function renderSplitAllS1() {
   onSplitAllAddrInput();
 }
 
+// Calculate output specs based on actual sat offsets of inscriptions
+function saCalcOutputSpecs(sorted, totalSats, feeRate, inscAddr, changeAddr) {
+  if (!isValidAddr(inscAddr) || !isValidAddr(changeAddr)) return null;
+  const srcAddr = addrEl.value.trim();
+  const specs = []; // {size, addr, type}
+  let cumulative = 0;
+
+  for (const { ins, offset } of sorted) {
+    const gap = offset - cumulative;
+    if (gap >= 546) {
+      // Large gap — send gap sats back to change address
+      specs.push({ size: gap, addr: changeAddr, type: 'gap' });
+      cumulative += gap;
+    }
+    // Inscription output: sized to cover from cumulative to at least 546 sats
+    const remaining_gap = offset - cumulative; // 0 if we handled it, or < 546
+    const insSize = remaining_gap + 546;
+    specs.push({ size: insSize, addr: inscAddr, type: 'ins', ins });
+    cumulative += insSize;
+  }
+
+  // Calculate fee based on output count
+  const outCount = specs.length + 2; // + change + service fee
+  const vsize = Math.ceil(10.5 + _inVb(_addrType(srcAddr))
+    + specs.reduce((s, sp) => s + _outVb(_addrType(sp.addr)), 0)
+    + _outVb(_addrType(changeAddr))
+    + _outVb(_addrType(SERVICE_FEE_ADDR)));
+  const netFee = vsize * (feeRate || 5);
+
+  const inscSatsTotal = specs.filter(s => s.type === 'ins').reduce((s, sp) => s + sp.size, 0);
+  const gapSatsTotal  = specs.filter(s => s.type === 'gap').reduce((s, sp) => s + sp.size, 0);
+  const changeAmt = totalSats - inscSatsTotal - gapSatsTotal - SPLIT_SERVICE_FEE - netFee;
+
+  if (changeAmt < 0) return null;
+  return { specs, vsize, netFee, changeAmt, inscSatsTotal, gapSatsTotal };
+}
+
 function onSplitAllAddrInput() {
-  const { row, feeRate } = _splitAllParams;
+  const { row, feeRate, sorted } = _splitAllParams;
   const { utxo, allIns } = row;
   const n = allIns.length;
   const inscInput  = document.getElementById('sa-insc-addr');
@@ -5035,30 +5093,22 @@ function onSplitAllAddrInput() {
   if (changeDot) changeDot.className = 'addr-dot' + (changeAddr ? (changeOk ? ' ok' : ' bad') : '');
   if (!inscOk || !changeOk) { preview.innerHTML = ''; confirm.disabled = true; return; }
 
-  const srcAddr  = addrEl.value.trim();
-  // vsize: 1 input + N inscription outputs + 1 change + 1 fee
-  const vsize    = Math.ceil(10.5 + _inVb(_addrType(srcAddr))
-    + n * _outVb(_addrType(inscAddr))
-    + _outVb(_addrType(changeAddr))
-    + _outVb(_addrType(SERVICE_FEE_ADDR)));
-  const netFee   = vsize * (feeRate || 5);
-  const totalInscSats = n * SPLIT_INSC_SATS;
-  const changeAmt = utxo.value - totalInscSats - SPLIT_SERVICE_FEE - netFee;
-
-  if (changeAmt < 546) {
-    preview.innerHTML = `<div class="err-box show">Not enough sats. Need ${fmt(totalInscSats + SPLIT_SERVICE_FEE + netFee)} sats, UTXO has ${fmt(utxo.value)}.</div>`;
+  const calc = saCalcOutputSpecs(sorted || allIns.map((ins,i) => ({ins,offset:i*546})), utxo.value, feeRate, inscAddr, changeAddr);
+  if (!calc || calc.changeAmt < 546) {
+    preview.innerHTML = `<div class="err-box show">Not enough sats to cover all outputs and fees.</div>`;
     confirm.disabled = true;
     return;
   }
 
-  _splitAllParams.inscAddr  = inscAddr;
-  _splitAllParams.changeAddr= changeAddr;
-  _splitAllParams.changeAmt = changeAmt;
-  _splitAllParams.netFee    = netFee;
-  _splitAllParams.vsize     = vsize;
+  _splitAllParams.inscAddr   = inscAddr;
+  _splitAllParams.changeAddr = changeAddr;
+  _splitAllParams.calc       = calc;
 
-  const btcChange = (changeAmt/1e8).toFixed(8);
-  const usdChange = btcPrice > 0 ? ` · ≈ $${(changeAmt/1e8*btcPrice).toFixed(2)}` : '';
+  const { specs, vsize, netFee, changeAmt, inscSatsTotal } = calc;
+  const insOutputs = specs.filter(s => s.type === 'ins');
+  const gapOutputs = specs.filter(s => s.type === 'gap');
+  const btcChange  = (changeAmt/1e8).toFixed(8);
+  const usdChange  = btcPrice > 0 ? ` · ≈ $${(changeAmt/1e8*btcPrice).toFixed(2)}` : '';
 
   preview.innerHTML = `
     <div style="background:var(--surface2);border:1px solid var(--border);
@@ -5066,9 +5116,14 @@ function onSplitAllAddrInput() {
       <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;
         letter-spacing:.6px;margin-bottom:8px;">Transaction preview</div>
       <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;">
-        <span style="color:var(--text3);">${n} inscription outputs</span>
-        <span style="color:var(--purple);font-weight:700;">${n} × 546 = ${fmt(totalInscSats)} sats</span>
+        <span style="color:var(--text3);">${insOutputs.length} inscription outputs</span>
+        <span style="color:var(--purple);font-weight:700;">${fmt(inscSatsTotal)} sats total</span>
       </div>
+      ${gapOutputs.length ? `
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;">
+        <span style="color:var(--text3);">${gapOutputs.length} gap output(s) → change addr</span>
+        <span style="color:var(--text2);">${fmt(gapOutputs.reduce((s,sp)=>s+sp.size,0))} sats</span>
+      </div>` : ''}
       <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;">
         <span style="color:var(--text3);">Change (you receive)</span>
         <span style="color:var(--green);font-weight:700;">${fmt(changeAmt)} sats</span>
@@ -5087,23 +5142,22 @@ function onSplitAllAddrInput() {
   confirm.disabled = false;
 }
 
-function buildSplitAllPsbt(utxo, inscAddr, n, changeAddr, changeAmt, serviceFee, sourceAddr) {
+function buildSplitAllPsbt(utxo, specs, changeAddr, changeAmt, serviceFee, sourceAddr) {
   const srcSc    = addrScript(sourceAddr);
-  const inscSc   = addrScript(inscAddr);
   const changeSc = addrScript(changeAddr);
   const feeSc    = addrScript(SERVICE_FEE_ADDR);
   if (!srcSc)    throw new Error('Cannot derive scriptPubKey from source address.');
-  if (!inscSc)   throw new Error('Cannot derive scriptPubKey from inscription address.');
   if (!changeSc) throw new Error('Cannot derive scriptPubKey from change address.');
 
   const txIn = _cat(_fromHex(utxo.txid).reverse(), _numLE(utxo.vout,4), new Uint8Array([0x00]), _numLE(0xffffffff,4));
 
-  // N outputs of 546 sats each (one per inscription, FIFO sat order)
-  const inscOutputs = Array.from({length: n}, () =>
-    _cat(_numLE(SPLIT_INSC_SATS,8), _vi(inscSc.length), inscSc)
-  );
+  // Build outputs from specs (inscription outputs + gap outputs), then change + fee
   const txOuts = [
-    ...inscOutputs,
+    ...specs.map(sp => {
+      const sc = addrScript(sp.addr);
+      if (!sc) throw new Error('Cannot derive scriptPubKey for output address.');
+      return _cat(_numLE(sp.size,8), _vi(sc.length), sc);
+    }),
     _cat(_numLE(changeAmt,8),  _vi(changeSc.length), changeSc),
     _cat(_numLE(serviceFee,8), _vi(feeSc.length),    feeSc),
   ];
@@ -5123,7 +5177,7 @@ function buildSplitAllPsbt(utxo, inscAddr, n, changeAddr, changeAmt, serviceFee,
 }
 
 async function executeSplitAll() {
-  const { row, inscAddr, changeAddr, changeAmt, netFee } = _splitAllParams;
+  const { row, inscAddr, changeAddr, calc } = _splitAllParams;
   saStep(2);
   const msg  = document.getElementById('sa-s2-msg');
   const err  = document.getElementById('sa-s2-err');
@@ -5132,8 +5186,7 @@ async function executeSplitAll() {
   try {
     msg.textContent = 'Building transaction…';
     const srcAddr = addrEl.value.trim();
-    const n = row.allIns.length;
-    const psbtB64 = buildSplitAllPsbt(row.utxo, inscAddr, n, changeAddr, changeAmt, SPLIT_SERVICE_FEE, srcAddr);
+    const psbtB64 = buildSplitAllPsbt(row.utxo, calc.specs, changeAddr, calc.changeAmt, SPLIT_SERVICE_FEE, srcAddr);
     msg.textContent = 'Waiting for wallet signature…';
     const txid = await signAndBroadcast(psbtB64, 1, srcAddr);
     document.getElementById('sa-done-txid').textContent = txid;
