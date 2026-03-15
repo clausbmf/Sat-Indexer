@@ -3023,7 +3023,7 @@ async function mergeSelected() {
 }
 
 /* ─── Clean Wallet ──────────────────────────────────────────────────────── */
-const SERVICE_FEE_ADDR = 'bc1p3temu3hskhz843mc8sh4wpsazvyzra6pdrkf0nupmcqhgchrnnuqtu5ms6';
+const SERVICE_FEE_ADDR = 'bc1q24z0u380pasce6td5z3fwpwa7t8ses3a8c3cfy';
 const JUNK_MAX_SATS    = 2000;
 
 function calcServiceFee(n) {
@@ -3200,10 +3200,8 @@ async function buildMergePreview(junk) {
   const confirm  = document.getElementById('clean-confirm-btn');
 
   if (destAmt < 546) {
-    body.innerHTML = `<div style="color:var(--red);font-size:13px;padding:10px 0;line-height:1.7;">
-      Not enough sats to cover fees.<br>
-      Total in: ${fmt(totalIn)} sats &mdash; Fees: ${fmt(SERVICE_FEE_SATS + netFee)} sats &mdash; Remaining: ${fmt(destAmt)} sats
-    </div>`;
+    body.innerHTML = `<div class="err-box show">Not enough sats to cover fees.
+      Total in: ${fmt(totalIn)} sats — Fees: ${fmt(SERVICE_FEE_SATS + netFee)} sats — Remaining: ${fmt(destAmt)} sats (minimum 546 required).</div>`;
     confirm.disabled = true;
     return;
   }
@@ -3318,9 +3316,9 @@ function _addrType(addr) {
 }
 function _inVb(t)  { return t === 'segwit' ? 68 : t === 'nested' ? 91 : 57.5; }
 function _outVb(t) { return t === 'segwit' ? 31 : t === 'nested' ? 32 : 43; }
-// nIn inputs from srcAddr, one output to dstAddr, one output to P2TR fee addr
+// nIn inputs from srcAddr, one output to dstAddr, one output to fee addr
 function calcVsize(nIn, srcAddr, dstAddr) {
-  return Math.ceil(10.5 + nIn * _inVb(_addrType(srcAddr)) + _outVb(_addrType(dstAddr)) + 43);
+  return Math.ceil(10.5 + nIn * _inVb(_addrType(srcAddr)) + _outVb(_addrType(dstAddr)) + _outVb(_addrType(SERVICE_FEE_ADDR)));
 }
 
 /* ─── bech32m → P2TR scriptPubKey ───────────────────────────────────────── */
@@ -3367,12 +3365,12 @@ function _psbtKV(k,v) { return _cat(_vi(k.length),k,_vi(v.length),v); }
 function buildMergePsbt(utxos, destAddr, feeAddr, feeSats, netFee, sourceAddr) {
   const totalIn = utxos.reduce((s,u)=>s+u.value,0);
   const destAmt = totalIn - feeSats - netFee;
-  if (destAmt < 546) throw new Error(`Insufficient funds: only ${destAmt} sats remain after fees.`);
+  if (destAmt < 546) throw new Error(`Not enough sats to cover fees — only ${destAmt} sats remain after fees (minimum 546 required).`);
 
   const srcAddr = sourceAddr || destAddr;
   const srcSc  = addrScript(srcAddr);
   const destSc = addrScript(destAddr);
-  const feeSc  = p2trScript(feeAddr);  // service fee address is always P2TR
+  const feeSc  = addrScript(feeAddr);
   if (!srcSc)  throw new Error('Cannot derive scriptPubKey from source address.');
   if (!destSc) throw new Error('Cannot derive scriptPubKey from destination address.');
   if (!feeSc)  throw new Error('Cannot derive scriptPubKey from service fee address.');
@@ -3595,7 +3593,7 @@ function onSendAddrInput() {
   const destAmt = totalIn - serviceFee - netFee;
   if (destAmt < 546) {
     preview.innerHTML = `<div class="err-box show">Not enough sats to cover fees.
-      Total: ${fmt(totalIn)} sats — Fees: ${fmt(serviceFee + netFee)} sats — Remaining: ${fmt(destAmt)} sats</div>`;
+      Total: ${fmt(totalIn)} sats — Fees: ${fmt(serviceFee + netFee)} sats — Remaining: ${fmt(destAmt)} sats (minimum 546 required).</div>`;
     confirm.disabled = true;
     return;
   }
@@ -3756,8 +3754,8 @@ async function renderSplitS1() {
 }
 
 function calcSplitVsize(srcAddr, inscAddr, changeAddr) {
-  // 1 input, 3 outputs: inscription + change + service fee (P2TR)
-  return Math.ceil(10.5 + _inVb(_addrType(srcAddr)) + _outVb(_addrType(inscAddr)) + _outVb(_addrType(changeAddr)) + 43);
+  // 1 input, 3 outputs: inscription + change + service fee
+  return Math.ceil(10.5 + _inVb(_addrType(srcAddr)) + _outVb(_addrType(inscAddr)) + _outVb(_addrType(changeAddr)) + _outVb(_addrType(SERVICE_FEE_ADDR)));
 }
 
 function onSplitAddrInput() {
@@ -3787,7 +3785,7 @@ function onSplitAddrInput() {
   const changeAmt = utxo.value - SPLIT_INSC_SATS - SPLIT_SERVICE_FEE - netFee;
 
   if (changeAmt < 546) {
-    preview.innerHTML = `<div class="err-box show">Not enough sats to cover fees and outputs.
+    preview.innerHTML = `<div class="err-box show">Not enough sats to cover fees.
       Remaining for change: ${fmt(changeAmt)} sats (minimum 546 required).</div>`;
     confirm.disabled = true;
     return;
@@ -3826,7 +3824,7 @@ function buildSplitPsbt(utxo, inscAddr, inscSats, changeAddr, changeAmt, service
   const srcSc    = addrScript(sourceAddr);
   const inscSc   = addrScript(inscAddr);
   const changeSc = addrScript(changeAddr);
-  const feeSc    = p2trScript(SERVICE_FEE_ADDR);
+  const feeSc    = addrScript(SERVICE_FEE_ADDR);
   if (!srcSc)    throw new Error('Cannot derive scriptPubKey from source address.');
   if (!inscSc)   throw new Error('Cannot derive scriptPubKey from inscription address.');
   if (!changeSc) throw new Error('Cannot derive scriptPubKey from change address.');
