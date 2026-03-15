@@ -3454,7 +3454,10 @@ function copyText(text, btnId, label) {
 }
 
 /* ─── Wallet connection ─────────────────────────────────────────────────── */
+let connectedWallet = null; // 'Xverse' | 'UniSat' | 'OP_NET'
+
 function setWalletAddress(address, walletName) {
+  connectedWallet = walletName;
   addrEl.value = address;
   addrEl.dispatchEvent(new Event('input'));
   const statusEl = document.getElementById('wallet-status');
@@ -4155,8 +4158,11 @@ function _b64toHex(b64) {
 async function signAndBroadcast(psbtB64, inputCount, signerAddr) {
   const indices = Array.from({length: inputCount}, (_, i) => i);
 
-  // UniSat: sign → autoFinalized raw tx hex → broadcast via mempool.space
-  if (window.unisat) {
+  // Use the wallet the user explicitly connected — never guess from window.xxx order
+  const wallet = connectedWallet;
+
+  // UniSat
+  if (wallet === 'UniSat' && window.unisat) {
     const psbtHex   = _b64toHex(psbtB64);
     const signedHex = await window.unisat.signPsbt(psbtHex, {
       autoFinalized: true,
@@ -4167,9 +4173,10 @@ async function signAndBroadcast(psbtB64, inputCount, signerAddr) {
     return await res.text();
   }
 
-  // Xverse: sign + broadcast in one call → returns txid
-  const xverse = window.XverseProviders?.BitcoinProvider ?? window.BitcoinProvider;
-  if (xverse) {
+  // Xverse
+  if (wallet === 'Xverse') {
+    const xverse = window.XverseProviders?.BitcoinProvider ?? window.BitcoinProvider;
+    if (!xverse) throw new Error('Xverse not found. Is the extension installed?');
     const res = await xverse.request('signPsbt', {
       psbt:           psbtB64,
       signInputs:     { [signerAddr]: indices },
@@ -4181,8 +4188,8 @@ async function signAndBroadcast(psbtB64, inputCount, signerAddr) {
     return txid;
   }
 
-  // OP_NET fallback
-  if (window.opnet?.signPsbt) {
+  // OP_NET
+  if (wallet === 'OP_NET' && window.opnet?.signPsbt) {
     const signed = await window.opnet.signPsbt(psbtB64);
     const hex    = typeof signed === 'string' && !signed.includes('=') ? signed : _b64toHex(signed);
     const res    = await fetch(`${MEMPOOL}/tx`, { method:'POST', headers:{'Content-Type':'text/plain'}, body: hex });
@@ -4190,7 +4197,7 @@ async function signAndBroadcast(psbtB64, inputCount, signerAddr) {
     return await res.text();
   }
 
-  throw new Error('No wallet connected. Connect Xverse, UniSat, or OP_NET before merging.');
+  throw new Error('No wallet connected. Connect Xverse, UniSat, or OP_NET before signing.');
 }
 
 /* ─── Protocol detection (Stamps + Atomicals) ───────────────────────────── */
