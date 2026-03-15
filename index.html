@@ -770,10 +770,10 @@
 
   <!-- search -->
   <div class="search-card">
-    <label for="addr">Bitcoin Taproot Address (bc1p)</label>
+    <label for="addr">Bitcoin Address (bc1p Taproot, bc1q Native SegWit, or 3… Nested SegWit)</label>
     <div class="input-row">
       <div class="addr-wrap">
-        <input type="text" id="addr" placeholder="bc1p…" autocomplete="off" spellcheck="false" list="addr-history" />
+        <input type="text" id="addr" placeholder="bc1p…, bc1q…, or 3…" autocomplete="off" spellcheck="false" list="addr-history" />
         <datalist id="addr-history"></datalist>
         <div class="addr-dot" id="dot"></div>
       </div>
@@ -787,7 +787,7 @@
       <label style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="feerate" value="priority" style="accent-color:var(--accent)"> Priority</label>
       <span id="feerate-hint" style="font-size:11px;color:var(--text3);margin-left:4px;"></span>
     </div>
-    <div class="hint" id="hint">Paste a Taproot address starting with <code>bc1p</code></div>
+    <div class="hint" id="hint">Paste a <code>bc1p</code> Taproot, <code>bc1q</code> Native SegWit, or <code>3…</code> Nested SegWit address</div>
   </div>
 
   <!-- error -->
@@ -897,6 +897,10 @@
       <div class="sel-sum-item">
         <span class="sel-sum-val" id="ss-btc">0.00000000 BTC</span>
         <span class="sel-sum-lbl">Selected BTC</span>
+      </div>
+      <div class="sel-sum-item">
+        <span class="sel-sum-val" id="ss-usd">—</span>
+        <span class="sel-sum-lbl">Est. USD value</span>
       </div>
       <div class="sel-sum-item">
         <span class="sel-sum-val" id="ss-fee">0 sats</span>
@@ -1839,21 +1843,30 @@ const addrEl = document.getElementById('addr');
 const dotEl  = document.getElementById('dot');
 const hintEl = document.getElementById('hint');
 
-function isTaproot(v) { return /^bc1p[ac-hj-np-z02-9]{6,87}$/i.test(v); }
+function isTaproot(v)      { return /^bc1p[ac-hj-np-z02-9]{6,87}$/i.test(v); }
+function isSegwit(v)       { return /^bc1q[ac-hj-np-z02-9]{38}$/i.test(v); }
+function isNestedSegwit(v) { return /^3[1-9A-HJ-NP-Za-km-z]{33}$/.test(v); }
+function isValidAddr(v)    { return isTaproot(v) || isSegwit(v) || isNestedSegwit(v); }
 
 addrEl.addEventListener('input', () => {
   const v = addrEl.value.trim();
   if (!v) {
     addrEl.className = ''; dotEl.className = 'addr-dot';
-    hintEl.className = 'hint'; hintEl.textContent = 'Paste a Taproot address starting with bc1p';
+    hintEl.className = 'hint'; hintEl.innerHTML = 'Paste a <code>bc1p</code> Taproot, <code>bc1q</code> Native SegWit, or <code>3…</code> Nested SegWit address';
     return;
   }
   if (isTaproot(v)) {
     addrEl.className = 'ok'; dotEl.className = 'addr-dot ok';
-    hintEl.className = 'hint ok'; hintEl.textContent = 'Valid Taproot address';
+    hintEl.className = 'hint ok'; hintEl.textContent = 'Valid Taproot (P2TR) address';
+  } else if (isSegwit(v)) {
+    addrEl.className = 'ok'; dotEl.className = 'addr-dot ok';
+    hintEl.className = 'hint ok'; hintEl.textContent = 'Valid Native SegWit (P2WPKH) address';
+  } else if (isNestedSegwit(v)) {
+    addrEl.className = 'ok'; dotEl.className = 'addr-dot ok';
+    hintEl.className = 'hint ok'; hintEl.textContent = 'Valid Nested SegWit (P2SH-P2WPKH) address — scan only';
   } else {
     addrEl.className = 'bad'; dotEl.className = 'addr-dot bad';
-    hintEl.className = 'hint err'; hintEl.textContent = 'Must be a bc1p bech32m address';
+    hintEl.className = 'hint err'; hintEl.textContent = 'Must be a bc1p, bc1q, or 3… Bitcoin address';
   }
 });
 addrEl.addEventListener('keydown', e => { if (e.key === 'Enter') run(); });
@@ -2032,9 +2045,9 @@ function matchAndMerge(utxos, inscriptions, runeMap = new Map()) {
 /* ─── Main ──────────────────────────────────────────────────────────────── */
 async function run() {
   const address = addrEl.value.trim();
-  if (!isTaproot(address)) {
+  if (!isValidAddr(address)) {
     addrEl.className = 'bad'; dotEl.className = 'addr-dot bad';
-    hintEl.className = 'hint err'; hintEl.textContent = 'Enter a valid bc1p address first';
+    hintEl.className = 'hint err'; hintEl.textContent = 'Enter a valid bc1p, bc1q, or 3… address first';
     return;
   }
 
@@ -2774,9 +2787,11 @@ function updateSelectionUI() {
       const totalSats = [...selectedIdxs].reduce((acc, idx) => acc + (rows[idx]?.utxo?.value || 0), 0);
       const btc       = (totalSats / 1e8).toFixed(8);
       const fee       = calcServiceFee(n);
+      const usd = btcPrice > 0 ? '$' + (totalSats / 1e8 * btcPrice).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—';
       document.getElementById('ss-utxos').textContent = n.toLocaleString();
       document.getElementById('ss-sats').textContent  = totalSats.toLocaleString();
       document.getElementById('ss-btc').textContent   = btc + ' BTC';
+      document.getElementById('ss-usd').textContent   = usd;
       document.getElementById('ss-fee').textContent   = fee.toLocaleString() + ' sats';
       sumEl.classList.add('show');
     } else {
