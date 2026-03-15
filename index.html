@@ -4190,6 +4190,72 @@ function _b64toHex(b64) {
   return [...atob(b64)].map(c=>c.charCodeAt(0).toString(16).padStart(2,'0')).join('');
 }
 
+// Extract a raw segwit transaction from a signed PSBT hex.
+// Needed because UniSat sometimes returns a signed PSBT instead of a raw tx.
+function _psbtToRawTx(psbtHex) {
+  if (!psbtHex.startsWith('70736274ff')) return psbtHex; // not a PSBT — use as-is
+  const bytes = new Uint8Array(psbtHex.match(/../g).map(h => parseInt(h, 16)));
+  let p = 5; // skip magic (5 bytes)
+  const rb  = () => bytes[p++];
+  const rbs = n => { const r = bytes.slice(p, p+n); p+=n; return r; };
+  const rvi = () => { const f=rb(); if(f<0xfd) return f; if(f===0xfd){const v=bytes[p]|(bytes[p+1]<<8);p+=2;return v;} return 0; };
+  const rkv = () => { const kl=rvi(); if(!kl) return null; const k=rbs(kl); const vl=rvi(); const v=rbs(vl); return {k,v}; };
+
+  // Global map — find unsigned tx (key 0x00)
+  let utx = null;
+  for (let kv; (kv=rkv());) { if(kv.k[0]===0x00) utx=kv.v; }
+  if (!utx) return psbtHex;
+
+  // Parse unsigned tx
+  let tp = 0;
+  const tb  = () => utx[tp++];
+  const tbs = n => { const r=utx.slice(tp,tp+n); tp+=n; return r; };
+  const tvi = () => { const f=tb(); if(f<0xfd) return f; if(f===0xfd){const v=utx[tp]|(utx[tp+1]<<8);tp+=2;return v;} return 0; };
+  const ver = tbs(4);
+  const inN = tvi();
+  const ins = [];
+  for (let i=0;i<inN;i++) { const txid=tbs(32),vout=tbs(4); tvi(); const seq=tbs(4); ins.push({txid,vout,seq}); }
+  const outN = tvi();
+  const outs = [];
+  for (let i=0;i<outN;i++) { const val=tbs(8),sl=tvi(),sc=tbs(sl); outs.push({val,sc}); }
+  const lock = tbs(4);
+
+  // Per-input maps — collect TAP_KEY_SIG (0x13) and FINAL_SCRIPTWITNESS (0x08)
+  const sigs = [];
+  for (let i=0;i<inN;i++) {
+    let tapSig=null, finWit=null;
+    for (let kv; (kv=rkv());) {
+      if(kv.k[0]===0x13) tapSig=kv.v;
+      if(kv.k[0]===0x08) finWit=kv.v;
+    }
+    sigs.push({tapSig, finWit});
+  }
+
+  // Build raw segwit tx
+  const enc = v => { // minimal varint encoder
+    if(v<0xfd) return new Uint8Array([v]);
+    return new Uint8Array([0xfd, v&0xff, (v>>8)&0xff]);
+  };
+  const parts = [ver, new Uint8Array([0x00,0x01]), enc(inN)];
+  for (const i of ins) parts.push(i.txid, i.vout, new Uint8Array([0x00]), i.seq);
+  parts.push(enc(outN));
+  for (const o of outs) parts.push(o.val, enc(o.sc.length), o.sc);
+  for (const s of sigs) {
+    if (s.finWit) {
+      parts.push(s.finWit); // already encoded witness stack
+    } else if (s.tapSig) {
+      parts.push(enc(1), enc(s.tapSig.length), s.tapSig); // 1-item witness: [sig]
+    } else {
+      parts.push(new Uint8Array([0x00])); // no witness
+    }
+  }
+  parts.push(lock);
+  const total = parts.reduce((s,p)=>s+p.length,0);
+  const out = new Uint8Array(total); let off=0;
+  for (const p of parts) { out.set(p,off); off+=p.length; }
+  return [...out].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
 async function signAndBroadcast(psbtB64, inputCount, signerAddr) {
   const indices = Array.from({length: inputCount}, (_, i) => i);
 
@@ -4203,12 +4269,10 @@ async function signAndBroadcast(psbtB64, inputCount, signerAddr) {
       autoFinalized: true,
       toSignInputs:  indices.map(i => ({ index: i, address: signerAddr })),
     });
-    // UniSat may return base64 PSBT or hex — normalise to hex
-    if (signed && !signed.match(/^[0-9a-fA-F]+$/)) {
-      // looks like base64 — convert
-      signed = _b64toHex(signed);
-    }
-    // If still a PSBT (starts with 70736274ff), try pushing directly — mempool accepts finalized PSBTs too
+    // Normalise: UniSat may return base64 instead of hex
+    if (signed && !signed.match(/^[0-9a-fA-F]+$/)) signed = _b64toHex(signed);
+    // If UniSat returned a PSBT instead of raw tx, extract the raw tx
+    signed = _psbtToRawTx(signed);
     const res = await fetch(`${MEMPOOL}/tx`, { method:'POST', headers:{'Content-Type':'text/plain'}, body: signed });
     if (!res.ok) throw new Error('Broadcast failed: ' + (await res.text()).slice(0,200));
     return await res.text();
