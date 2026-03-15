@@ -2917,17 +2917,19 @@ function renderPanel({ utxo, ins, allIns, rarity, meta, satributes, specialSats,
             </div>`;
           }
         })()}
-        <button id="panel-sel-btn"
-          class="${selectedIdxs.has(activeIdx) ? 'btn-panel-desel' : 'btn-panel-sel'}"
-          onclick="togglePanelSelect()">
-          ${selectedIdxs.has(activeIdx) ? '&#10003; Selected for merge — click to remove' : '+ Add to merge selection'}
-        </button>
+        <div style="display:flex;gap:6px;">
+          <button id="panel-sel-btn"
+            class="${selectedIdxs.has(activeIdx) ? 'btn-panel-desel' : 'btn-panel-sel'}"
+            onclick="togglePanelSelect()" style="flex:1;">
+            ${selectedIdxs.has(activeIdx) ? '&#10003; In merge — click to remove' : '+ Add to merge'}
+          </button>
+          ${utxo.value > 1800 ? `<button class="btn-split" onclick="openSplitModal(${activeIdx})" style="flex:1;margin-top:0;">
+            &#9986; Split
+          </button>` : ''}
+        </div>
         <button class="btn-exclude" onclick="excludeInscription('${id}')" style="margin-top:6px;">
           Hide this UTXO from results
         </button>
-        ${utxo.value > 1800 ? `<button class="btn-split" onclick="openSplitModal(${activeIdx})" style="margin-top:6px;">
-          &#9986; Split — separate inscription from excess sats
-        </button>` : ''}
       </div>`;
 
     // Use cached metadata if already fetched by loadRarities(), otherwise fetch now
