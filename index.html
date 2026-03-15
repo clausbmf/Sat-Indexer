@@ -1374,9 +1374,9 @@
     </div>
     <div style="padding:18px 20px 8px;">
       <p style="font-size:13px;color:var(--text2);margin-bottom:18px;line-height:1.6;">
-        OP_NET can't sign PSBTs.<br>
-        Pick a wallet to sign this transaction.<br>
-        <span style="font-size:11px;color:var(--text3);">Your scanned address stays the same.</span>
+        OP_NET doesn't support transaction signing.<br>
+        Choose a wallet below to sign — it will open<br>that wallet's approval popup.
+        <br><span style="font-size:11px;color:var(--text3);">Tip: import your OP_NET seed into UniSat or Xverse first.</span>
       </p>
       <div style="display:flex;gap:10px;justify-content:center;margin-bottom:16px;">
         <button onclick="pickSigningWallet('Xverse')"
@@ -1384,14 +1384,14 @@
           color:var(--text);font-size:13px;font-weight:700;padding:12px 0;cursor:pointer;transition:all var(--ease);"
           onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
           onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text)'">
-          Xverse
+          &#9998; Sign with Xverse
         </button>
         <button onclick="pickSigningWallet('UniSat')"
           style="flex:1;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);
           color:var(--text);font-size:13px;font-weight:700;padding:12px 0;cursor:pointer;transition:all var(--ease);"
           onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
           onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text)'">
-          UniSat
+          &#9998; Sign with UniSat
         </button>
       </div>
       <button onclick="cancelSignPicker()" style="background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;">Cancel</button>
@@ -3495,7 +3495,7 @@ function setWalletAddress(address, walletName) {
   addrEl.dispatchEvent(new Event('input'));
   const statusEl = document.getElementById('wallet-status');
   if (statusEl) statusEl.textContent = walletName === 'OP_NET'
-    ? 'OP_NET connected (scan only — use Xverse or UniSat for Merge, Send & Split)'
+    ? 'OP_NET connected (scan only — import your OP_NET seed into UniSat or Xverse to Merge, Send & Split)'
     : walletName + ' connected';
 }
 
