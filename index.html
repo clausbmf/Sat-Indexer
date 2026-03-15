@@ -4198,12 +4198,18 @@ async function signAndBroadcast(psbtB64, inputCount, signerAddr) {
 
   // UniSat
   if (wallet === 'UniSat' && window.unisat) {
-    const psbtHex   = _b64toHex(psbtB64);
-    const signedHex = await window.unisat.signPsbt(psbtHex, {
+    const psbtHex = _b64toHex(psbtB64);
+    let signed = await window.unisat.signPsbt(psbtHex, {
       autoFinalized: true,
       toSignInputs:  indices.map(i => ({ index: i, address: signerAddr })),
     });
-    const res = await fetch(`${MEMPOOL}/tx`, { method:'POST', headers:{'Content-Type':'text/plain'}, body: signedHex });
+    // UniSat may return base64 PSBT or hex — normalise to hex
+    if (signed && !signed.match(/^[0-9a-fA-F]+$/)) {
+      // looks like base64 — convert
+      signed = _b64toHex(signed);
+    }
+    // If still a PSBT (starts with 70736274ff), try pushing directly — mempool accepts finalized PSBTs too
+    const res = await fetch(`${MEMPOOL}/tx`, { method:'POST', headers:{'Content-Type':'text/plain'}, body: signed });
     if (!res.ok) throw new Error('Broadcast failed: ' + (await res.text()).slice(0,200));
     return await res.text();
   }
