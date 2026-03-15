@@ -355,6 +355,15 @@
     .ext:hover { border-color: var(--accent); color: var(--accent); }
     .ext.pur:hover { border-color: var(--purple); color: var(--purple); }
 
+    /* ── split button ─────────────────────────────────────────────────────── */
+    .btn-split {
+      background: rgba(168,85,247,.08); border: 1px solid rgba(168,85,247,.3);
+      border-radius: 5px; color: var(--purple); font-size: 11px;
+      padding: 4px 10px; cursor: pointer; width: 100%; margin-top: 6px;
+      display: block; text-align: center; transition: all var(--ease);
+    }
+    .btn-split:hover { background: rgba(168,85,247,.2); }
+
     /* ── exclude button ───────────────────────────────────────────────────── */
     .btn-exclude {
       background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.3);
@@ -1050,6 +1059,56 @@
   </div>
 </div>
 
+<!-- split modal -->
+<div id="split-modal" class="clean-overlay" style="display:none" onclick="if(event.target===this)closeSplitModal()">
+  <div class="clean-box">
+    <div class="clean-hdr">
+      <h3>&#9986; Split Inscription</h3>
+      <button class="panel-close" onclick="closeSplitModal()">&#10005;</button>
+    </div>
+
+    <!-- Step 1: configure -->
+    <div id="split-s1">
+      <div class="clean-scroll" id="split-s1-body"></div>
+      <div class="clean-footer">
+        <button class="btn-cw-back" onclick="closeSplitModal()">Cancel</button>
+        <button class="btn-cw-primary" id="split-confirm-btn" disabled>Sign &amp; Split</button>
+      </div>
+    </div>
+
+    <!-- Step 2: signing / broadcasting -->
+    <div id="split-s2" style="display:none">
+      <div class="clean-scroll">
+        <div style="text-align:center;padding:32px 20px;">
+          <div class="spinner" style="margin:0 auto 18px;width:32px;height:32px;border-width:3px;"></div>
+          <div id="split-s2-msg" style="font-size:13px;color:var(--text2);margin-bottom:10px;"></div>
+          <div id="split-s2-err" style="color:var(--red);font-size:12px;line-height:1.5;display:none;"></div>
+          <button id="split-s2-back" class="btn-cw-back" style="display:none;margin-top:16px;" onclick="splitStep(1)">&#8592; Back</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: success -->
+    <div id="split-s3" style="display:none">
+      <div class="clean-scroll">
+        <div style="text-align:center;padding:32px 20px;">
+          <div style="font-size:44px;color:var(--green);margin-bottom:12px;">&#10003;</div>
+          <div style="font-size:15px;font-weight:700;margin-bottom:6px;color:var(--green);">Transaction Broadcast!</div>
+          <div style="font-size:12px;color:var(--text3);margin-bottom:20px;">Inscription split — excess sats returned to your change address.</div>
+          <div class="m-row m-col" style="text-align:left;margin-bottom:10px;">
+            <span class="m-key">TXID</span>
+            <span class="m-val sm" id="split-done-txid" style="word-break:break-all"></span>
+          </div>
+          <a id="split-done-link" class="ext" href="#" target="_blank" rel="noopener">&#10138; View on mempool.space</a>
+        </div>
+      </div>
+      <div class="clean-footer">
+        <button class="btn-cw-primary" onclick="closeSplitModal()">Done</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- README modal -->
 <div id="readme-modal" class="faq-overlay" style="display:none" onclick="if(event.target===this)closeReadme()">
   <div class="faq-box" style="max-width:680px;">
@@ -1478,6 +1537,105 @@
           <p><strong>What this means for you:</strong></p>
           <p>The 7 inscriptions are not lost. However, you can no longer spend the clean sats independently — they are all tangled together inside one UTXO. To separate them you would need to send each inscription individually to its own output using an ordinals-aware wallet such as Xverse or UniSat, which understands sat offsets and will not accidentally destroy them.</p>
           <p>If the projects behind those 7 inscriptions are dead and worthless, you can simply use this tool to merge or send that entire UTXO and reclaim the 200,000 sats (minus fees), accepting that the inscriptions will be burned in the process.</p>
+        </div>
+      </div>
+
+      <hr class="faq-divider">
+
+      <div class="faq-item">
+        <div class="faq-q">I have a UTXO containing multiple inscriptions from dead projects. What happens if I send it to a bc1q address or directly to an exchange?</div>
+        <div class="faq-a">
+          <p>The inscriptions travel with the satoshis — they are not destroyed, they simply move to whoever controls the new address.</p>
+          <p><strong>Sending to a bc1q address you own:</strong> The 7 inscriptions now sit inside your bc1q wallet. A standard bc1q wallet is not ordinals-aware and will not display them, but according to ordinal theory they are still attached to those specific satoshis. Since the projects are dead and worthless this does not matter — you simply have spendable BTC.</p>
+          <p><strong>Sending to an exchange:</strong> The exchange receives the BTC, credits your account with the full value, and has no idea there are inscriptions on those satoshis. You get your sats credited as plain BTC. The inscriptions become the exchange's problem — and exchanges do not care.</p>
+          <p>Because the inscriptions are worthless you can send that UTXO directly to a bc1q address or an exchange without any concern. You will receive the full sat value (minus the network fee) as spendable Bitcoin.</p>
+        </div>
+      </div>
+
+      <hr class="faq-divider">
+
+      <div class="faq-item">
+        <div class="faq-q">If those sats are later spent as regular BTC from a bc1q address, what happens to the ordinals that were inscribed on them?</div>
+        <div class="faq-a">
+          <p>They keep travelling. Every time those satoshis are spent, the ordinals move to the new output according to ordinal theory's first-in-first-out rule. They never disappear — they just keep moving through the blockchain, permanently attached to those specific satoshis, completely invisible to anyone not actively looking for them.</p>
+          <p>In practice, once inscribed sats land on an exchange or get mixed into a regular wallet and spent as normal BTC, nobody tracks them any further. The inscription IDs still exist on ordinals.com, but the satoshis are effectively absorbed into the general Bitcoin supply. The inscriptions become <em>lost</em> — technically still alive on the blockchain, but practically gone forever.</p>
+          <p>For worthless inscriptions from dead projects, this is completely fine. Just spend the BTC normally.</p>
+        </div>
+      </div>
+
+      <hr class="faq-divider">
+
+      <div class="faq-item">
+        <div class="faq-q">How is it possible to have an Ordinal inscription on a UTXO worth 30,000 sats? Isn't the minimum just 546 sats?</div>
+        <div class="faq-a">
+          <p>An inscription only ever lives on the <strong>first satoshi</strong> of the UTXO — sat offset 0. The remaining 29,999+ satoshis are just padding sitting alongside it, locked in the same output. The inscription protocol does not care how large the UTXO is — it simply marks the first sat, and everything else is trapped there with it.</p>
+          <p>There are several common reasons why you end up with a large UTXO holding an inscription:</p>
+          <table class="faq-table">
+            <thead><tr><th>Reason</th><th>What happened</th></tr></thead>
+            <tbody>
+              <tr><td>Wallet used a large UTXO as the inscription output</td><td>Your wallet only had one UTXO (e.g. 30,000 sats) and used it directly as the inscription output instead of making change</td></tr>
+              <tr><td>Someone sent extra BTC to your inscription address</td><td>They treated your bc1p inscription address like a regular Bitcoin address and topped it up</td></tr>
+              <tr><td>Change from another transaction landed in it</td><td>A poorly configured wallet routed leftover change into an already-inscribed output</td></tr>
+              <tr><td>UTXOs were consolidated before inscribing</td><td>Multiple small UTXOs were merged first, then the resulting fat UTXO got inscribed</td></tr>
+            </tbody>
+          </table>
+          <p>The extra satoshis cannot be spent without also moving the inscription. This tool flags these as <strong>Fat Ordinals</strong> (5,000–19,999 sats) or <strong>Whale Ordinals</strong> (20,000+ sats) so you know which UTXOs have significant BTC trapped inside them. The recommended approach is to send the inscription to a safe Ordinals wallet first, then reclaim the freed sats separately.</p>
+        </div>
+      </div>
+
+      <hr class="faq-divider">
+
+      <div class="faq-item">
+        <div class="faq-q">I sent a Fat Ordinal from Xverse to UniSat but it arrived with the same large UTXO size — why didn't the excess sats get freed?</div>
+        <div class="faq-a">
+          <p>Sending an inscription preserves the UTXO as-is. Xverse simply moved the entire 30,000 sat UTXO to UniSat — the inscription is still on the first satoshi and all the excess sats are still trapped with it.</p>
+          <p>To actually free the excess sats you need a specific operation called a <strong>split</strong> — where the wallet constructs a transaction with two outputs:</p>
+          <table class="faq-table">
+            <thead><tr><th>Output</th><th>What it contains</th></tr></thead>
+            <tbody>
+              <tr><td>Inscription output (~546 sats)</td><td>The first satoshi (with the inscription) plus just enough padding to stay above the dust limit</td></tr>
+              <tr><td>Change output</td><td>All remaining sats returned to your wallet as spendable BTC</td></tr>
+            </tbody>
+          </table>
+          <p>Most wallets do not do this automatically when you hit Send — they just move the whole UTXO intact. You need to look for a dedicated split or extract feature:</p>
+          <table class="faq-table">
+            <thead><tr><th>Wallet</th><th>Feature</th></tr></thead>
+            <tbody>
+              <tr><td>UniSat</td><td>UTXO Manager → find the fat UTXO → Extract / Split</td></tr>
+              <tr><td>Ordinals Wallet</td><td>Send inscription with custom output size</td></tr>
+              <tr><td>Xverse</td><td>Advanced output options when sending an inscription</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <hr class="faq-divider">
+
+      <div class="faq-item">
+        <div class="faq-q">Why can't the wallet just put the inscription in a 546 sat output when splitting?</div>
+        <div class="faq-a">
+          <p>It can — 546 sats is the dust limit and is technically the minimum allowed output size. The reason wallets rarely go that low is:</p>
+          <table class="faq-table">
+            <thead><tr><th>Reason</th><th>Explanation</th></tr></thead>
+            <tbody>
+              <tr><td>Safety buffer</td><td>Most wallets use 600–1,000 sats to stay safely above the dust limit in case fee rules tighten</td></tr>
+              <tr><td>Sat math must be exact</td><td>The wallet must ensure the inscription's specific satoshi lands in the small output — if it gets the offset wrong the inscription moves to the wrong output and is destroyed</td></tr>
+              <tr><td>Fees must come from somewhere</td><td>The network fee is paid out of the change output, so the change output must be large enough to cover it</td></tr>
+            </tbody>
+          </table>
+          <p>546 sats is fine for a worthless inscription. For a valuable one, using 600–1,000 sats gives a safer buffer. The inscription output size is a wallet design choice — the protocol only enforces the dust limit floor.</p>
+        </div>
+      </div>
+
+      <hr class="faq-divider">
+
+      <div class="faq-item">
+        <div class="faq-q">Is there a way to split a Fat or Whale Ordinal UTXO — separating the inscription from the excess sats?</div>
+        <div class="faq-a">
+          <p>Yes. The options are:</p>
+          <p><strong>Existing wallets:</strong> UniSat's UTXO Manager has an Extract/Split feature that lets you set a custom inscription output size (~546 sats) and returns the rest to you as change. Ordinals Wallet and Xverse have similar options when sending inscriptions.</p>
+          <p><strong>This tool:</strong> Click any inscribed UTXO to open the inspector panel, then click <strong>&#9986; Split</strong>. Enter the inscription destination (where the 546 sat inscription output goes) and the change address (where the excess sats are returned). The tool builds and signs a single transaction with three outputs: inscription, change, and service fee.</p>
+          <p>If the UTXO contains multiple inscriptions (from a previous merge), only the first inscription lands in the 546 sat output. The remaining inscriptions stay in the change output — you can then split that change UTXO again to separate the next inscription, and so on.</p>
         </div>
       </div>
 
@@ -2461,6 +2619,9 @@ function renderPanel({ utxo, ins, allIns, rarity, meta, satributes, specialSats,
         <button class="btn-exclude" onclick="excludeInscription('${id}')" style="margin-top:6px;">
           Hide this UTXO from results
         </button>
+        ${utxo.value > 1800 ? `<button class="btn-split" onclick="openSplitModal(${activeIdx})" style="margin-top:6px;">
+          &#9986; Split — separate inscription from excess sats
+        </button>` : ''}
       </div>`;
 
     // Use cached metadata if already fetched by loadRarities(), otherwise fetch now
@@ -3496,6 +3657,230 @@ function sendStep(n) {
 
 function closeSendModal() {
   document.getElementById('send-modal').style.display = 'none';
+}
+
+/* ─── Split Inscription ──────────────────────────────────────────────────── */
+const SPLIT_INSC_SATS  = 546;   // inscription output size (dust limit minimum)
+const SPLIT_SERVICE_FEE = 500;  // flat service fee for splits
+
+let _splitParams = {};
+
+function openSplitModal(idx) {
+  const row = rows[idx];
+  if (!row?.ins) return;
+  _splitParams = { idx, row };
+  splitStep(1);
+  document.getElementById('split-modal').style.display = 'flex';
+  renderSplitS1();
+}
+
+function closeSplitModal() {
+  document.getElementById('split-modal').style.display = 'none';
+}
+
+function splitStep(n) {
+  [1, 2, 3].forEach(i => {
+    const el = document.getElementById('split-s' + i);
+    if (el) el.style.display = (i === n) ? '' : 'none';
+  });
+}
+
+async function renderSplitS1() {
+  const { row } = _splitParams;
+  const { utxo, ins, allIns } = row;
+  const body    = document.getElementById('split-s1-body');
+  const confirm = document.getElementById('split-confirm-btn');
+  confirm.disabled = true;
+  body.innerHTML = `<div style="color:var(--text3);font-size:12px;padding:10px 0;">Fetching recommended fee rate…</div>`;
+
+  let feeRate = 5;
+  try {
+    const fees = await apiFetch(`${MEMPOOL}/v1/fees/recommended`);
+    feeRate = getSelectedFeeRate(fees);
+  } catch { /* use default */ }
+  _splitParams.feeRate = feeRate;
+
+  const srcAddr  = addrEl.value.trim();
+  const insCount = allIns ? allIns.length : 1;
+  const multiNote = insCount > 1
+    ? `<div style="background:rgba(234,179,8,.08);border:1px solid rgba(234,179,8,.25);
+        border-radius:var(--radius-sm);padding:8px 12px;font-size:11px;color:#eab308;
+        margin-bottom:12px;line-height:1.6;">
+        &#9888; This UTXO contains <strong>${insCount} inscriptions</strong>.
+        Only the first inscription (sat offset 0) lands in the 546 sat inscription output.
+        The remaining ${insCount - 1} inscription(s) stay in the change output — you can split them again afterwards.
+       </div>`
+    : '';
+
+  body.innerHTML = `
+    ${multiNote}
+    <div style="background:var(--surface2);border:1px solid var(--border);
+      border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:14px;">
+      <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;
+        letter-spacing:.6px;margin-bottom:6px;">UTXO to split</div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;">
+        <span class="mono" style="color:var(--text2);font-size:11px;">${short(utxo.txid)}:${utxo.vout}</span>
+        <span style="font-weight:700;color:var(--accent);">${fmt(utxo.value)} sats</span>
+      </div>
+      ${ins.inscriptionNumber != null
+        ? `<div style="font-size:11px;color:var(--purple);margin-top:3px;">Inscription #${fmt(ins.inscriptionNumber)}</div>`
+        : ''}
+    </div>
+    <div style="margin-bottom:14px;">
+      <label style="display:block;font-size:11px;font-weight:700;color:var(--text3);
+        text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Inscription Destination</label>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">Where to send the inscription (${SPLIT_INSC_SATS} sats). Usually your own Ordinals bc1p wallet.</div>
+      <div style="position:relative;">
+        <input type="text" id="split-insc-addr" placeholder="bc1p… / bc1q… / 3…"
+          value="${esc(srcAddr)}" autocomplete="off" spellcheck="false"
+          oninput="onSplitAddrInput()"
+          style="width:100%;padding-right:34px;font-family:'Cascadia Code','Fira Code','Courier New',monospace;" />
+        <div id="split-insc-dot" class="addr-dot ${isValidAddr(srcAddr) ? 'ok' : ''}"></div>
+      </div>
+    </div>
+    <div style="margin-bottom:14px;">
+      <label style="display:block;font-size:11px;font-weight:700;color:var(--text3);
+        text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Change Address</label>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">Where to return the excess sats. Usually your own BTC wallet.</div>
+      <div style="position:relative;">
+        <input type="text" id="split-change-addr" placeholder="bc1p… / bc1q… / 3…"
+          value="${esc(srcAddr)}" autocomplete="off" spellcheck="false"
+          oninput="onSplitAddrInput()"
+          style="width:100%;padding-right:34px;font-family:'Cascadia Code','Fira Code','Courier New',monospace;" />
+        <div id="split-change-dot" class="addr-dot ${isValidAddr(srcAddr) ? 'ok' : ''}"></div>
+      </div>
+    </div>
+    <div id="split-fee-preview"></div>`;
+
+  onSplitAddrInput();
+}
+
+function calcSplitVsize(srcAddr, inscAddr, changeAddr) {
+  // 1 input, 3 outputs: inscription + change + service fee (P2TR)
+  return Math.ceil(10.5 + _inVb(_addrType(srcAddr)) + _outVb(_addrType(inscAddr)) + _outVb(_addrType(changeAddr)) + 43);
+}
+
+function onSplitAddrInput() {
+  const { row, feeRate } = _splitParams;
+  const { utxo } = row;
+  const inscInput  = document.getElementById('split-insc-addr');
+  const changeInput= document.getElementById('split-change-addr');
+  const inscDot    = document.getElementById('split-insc-dot');
+  const changeDot  = document.getElementById('split-change-dot');
+  const preview    = document.getElementById('split-fee-preview');
+  const confirm    = document.getElementById('split-confirm-btn');
+  const inscAddr   = inscInput?.value.trim();
+  const changeAddr = changeInput?.value.trim();
+  const inscOk     = isValidAddr(inscAddr);
+  const changeOk   = isValidAddr(changeAddr);
+
+  if (inscInput)   inscInput.className   = inscAddr   ? (inscOk   ? 'ok' : 'bad') : '';
+  if (changeInput) changeInput.className = changeAddr ? (changeOk ? 'ok' : 'bad') : '';
+  if (inscDot)   inscDot.className   = 'addr-dot' + (inscAddr   ? (inscOk   ? ' ok' : ' bad') : '');
+  if (changeDot) changeDot.className = 'addr-dot' + (changeAddr ? (changeOk ? ' ok' : ' bad') : '');
+
+  if (!inscOk || !changeOk) { preview.innerHTML = ''; confirm.disabled = true; return; }
+
+  const srcAddr  = addrEl.value.trim();
+  const vsize    = calcSplitVsize(srcAddr, inscAddr, changeAddr);
+  const netFee   = vsize * (feeRate || 5);
+  const changeAmt = utxo.value - SPLIT_INSC_SATS - SPLIT_SERVICE_FEE - netFee;
+
+  if (changeAmt < 546) {
+    preview.innerHTML = `<div class="err-box show">Not enough sats to cover fees and outputs.
+      Remaining for change: ${fmt(changeAmt)} sats (minimum 546 required).</div>`;
+    confirm.disabled = true;
+    return;
+  }
+
+  const usdChange = btcPrice > 0 ? ` <span style="color:var(--text3);font-size:11px;">≈ $${(changeAmt/1e8*btcPrice).toFixed(2)}</span>` : '';
+  preview.innerHTML = `
+    <div style="background:var(--surface2);border:1px solid var(--border);
+      border-radius:var(--radius-sm);padding:12px 14px;">
+      <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;
+        letter-spacing:.6px;margin-bottom:8px;">Transaction preview</div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;">
+        <span style="color:var(--text3);">Inscription output</span>
+        <span style="color:var(--purple);font-weight:700;">${fmt(SPLIT_INSC_SATS)} sats → ${short(inscAddr)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;">
+        <span style="color:var(--text3);">Change (you receive)</span>
+        <span style="color:var(--green);font-weight:700;">${fmt(changeAmt)} sats${usdChange}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;">
+        <span style="color:var(--text3);">Network fee (~${fmt(vsize)} vB @ ${feeRate} sat/vB)</span>
+        <span style="color:var(--text2);">&#8722; ${fmt(netFee)} sats</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;
+        border-top:1px solid var(--border);padding-top:6px;margin-top:2px;">
+        <span style="color:var(--text3);">Service fee</span>
+        <span style="color:var(--text2);">&#8722; ${fmt(SPLIT_SERVICE_FEE)} sats</span>
+      </div>
+    </div>`;
+
+  confirm.disabled = false;
+  confirm.onclick = () => executeSplit(inscAddr, changeAddr, changeAmt, netFee);
+}
+
+function buildSplitPsbt(utxo, inscAddr, inscSats, changeAddr, changeAmt, serviceFee, sourceAddr) {
+  const srcSc    = addrScript(sourceAddr);
+  const inscSc   = addrScript(inscAddr);
+  const changeSc = addrScript(changeAddr);
+  const feeSc    = p2trScript(SERVICE_FEE_ADDR);
+  if (!srcSc)    throw new Error('Cannot derive scriptPubKey from source address.');
+  if (!inscSc)   throw new Error('Cannot derive scriptPubKey from inscription address.');
+  if (!changeSc) throw new Error('Cannot derive scriptPubKey from change address.');
+  if (!feeSc)    throw new Error('Cannot derive scriptPubKey from service fee address.');
+
+  const txIn = _cat(_fromHex(utxo.txid).reverse(), _numLE(utxo.vout,4), new Uint8Array([0x00]), _numLE(0xffffffff,4));
+  const txOuts = [
+    _cat(_numLE(inscSats,8),   _vi(inscSc.length),   inscSc),   // output 0: inscription (first → carries sat offset 0)
+    _cat(_numLE(changeAmt,8),  _vi(changeSc.length),  changeSc), // output 1: change
+    _cat(_numLE(serviceFee,8), _vi(feeSc.length),     feeSc),    // output 2: service fee
+  ];
+  const rawTx = _cat(_numLE(2,4), _vi(1), txIn, _vi(txOuts.length), ...txOuts, _numLE(0,4));
+
+  const parts = [
+    new Uint8Array([0x70,0x73,0x62,0x74,0xff]),
+    _psbtKV(new Uint8Array([0x00]), rawTx),
+    new Uint8Array([0x00]),
+  ];
+  const wu = _cat(_numLE(utxo.value,8), _vi(srcSc.length), srcSc);
+  parts.push(_psbtKV(new Uint8Array([0x01]), wu)); // PSBT_IN_WITNESS_UTXO
+  parts.push(new Uint8Array([0x00]));              // input separator
+  parts.push(new Uint8Array([0x00]));              // output 0 separator
+  parts.push(new Uint8Array([0x00]));              // output 1 separator
+  parts.push(new Uint8Array([0x00]));              // output 2 separator
+
+  const bytes = _cat(...parts);
+  return btoa(String.fromCharCode(...bytes));
+}
+
+async function executeSplit(inscAddr, changeAddr, changeAmt, netFee) {
+  const { row } = _splitParams;
+  splitStep(2);
+  const msg  = document.getElementById('split-s2-msg');
+  const err  = document.getElementById('split-s2-err');
+  const back = document.getElementById('split-s2-back');
+  err.style.display = 'none'; back.style.display = 'none';
+
+  try {
+    msg.textContent = 'Building transaction…';
+    const srcAddr = addrEl.value.trim();
+    const psbtB64 = buildSplitPsbt(row.utxo, inscAddr, SPLIT_INSC_SATS, changeAddr, changeAmt, SPLIT_SERVICE_FEE, srcAddr);
+
+    msg.textContent = 'Waiting for wallet signature…';
+    const txid = await signAndBroadcast(psbtB64, 1, srcAddr);
+
+    document.getElementById('split-done-txid').textContent = txid;
+    document.getElementById('split-done-link').href = `https://mempool.space/tx/${encodeURIComponent(txid)}`;
+    splitStep(3);
+  } catch (e) {
+    msg.textContent = '';
+    err.textContent = e.message;
+    err.style.display = '';
+    back.style.display = '';
+  }
 }
 
 /* ─── README ─────────────────────────────────────────────────────────────── */
