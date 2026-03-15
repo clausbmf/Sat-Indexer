@@ -4188,11 +4188,16 @@ async function signAndBroadcast(psbtB64, inputCount, signerAddr) {
     return txid;
   }
 
-  // OP_NET
-  if (wallet === 'OP_NET' && window.opnet?.signPsbt) {
-    const signed = await window.opnet.signPsbt(psbtB64);
-    const hex    = typeof signed === 'string' && !signed.includes('=') ? signed : _b64toHex(signed);
-    const res    = await fetch(`${MEMPOOL}/tx`, { method:'POST', headers:{'Content-Type':'text/plain'}, body: hex });
+  // OP_NET — uses window.unisat which OP_NET injects, or window.opnet.signPsbt if available
+  if (wallet === 'OP_NET') {
+    const signer = window.opnet?.signPsbt ? window.opnet : window.unisat;
+    if (!signer?.signPsbt) throw new Error('OP_NET signing not available. Is the extension active?');
+    const psbtHex   = _b64toHex(psbtB64);
+    const signedHex = await signer.signPsbt(psbtHex, {
+      autoFinalized: true,
+      toSignInputs:  indices.map(i => ({ index: i, address: signerAddr })),
+    });
+    const res = await fetch(`${MEMPOOL}/tx`, { method:'POST', headers:{'Content-Type':'text/plain'}, body: signedHex });
     if (!res.ok) throw new Error('Broadcast failed: ' + (await res.text()).slice(0,200));
     return await res.text();
   }
