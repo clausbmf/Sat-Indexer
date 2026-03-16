@@ -1683,11 +1683,11 @@
           <table class="faq-table">
             <thead><tr><th>Action</th><th>UTXOs</th><th>Service fee</th></tr></thead>
             <tbody>
-              <tr><td rowspan="4"><strong>Merge</strong></td><td>1–5</td><td>500 sats</td></tr>
+              <tr><td rowspan="4"><strong>Merge</strong></td><td>1–5</td><td>546 sats</td></tr>
               <tr><td>6–20</td><td>1,000 sats</td></tr>
               <tr><td>21–50</td><td>2,000 sats</td></tr>
               <tr><td>51+</td><td>3,000 sats</td></tr>
-              <tr><td><strong>Send</strong></td><td>any</td><td>500 sats (flat)</td></tr>
+              <tr><td><strong>Send</strong></td><td>any</td><td>546 sats (flat)</td></tr>
             </tbody>
           </table>
           <p>The exact fee breakdown — service fee, network fee, and amount you receive — is always shown in the confirmation screen before you sign anything.</p>
@@ -2178,7 +2178,7 @@
               <tr><td>Input</td><td>196,000</td></tr>
               <tr><td>Recipient receives</td><td>~188,000</td></tr>
               <tr><td>Network fee (miners)</td><td>~7,000</td></tr>
-              <tr><td>Service fee</td><td>500</td></tr>
+              <tr><td>Service fee</td><td>546</td></tr>
             </tbody>
           </table>
           <p><strong>Sending a 546-sat inscription UTXO is different.</strong> There is not enough value in the UTXO to also cover fees. In that case you have two options:</p>
@@ -3807,13 +3807,13 @@ const SERVICE_FEE_ADDR = 'bc1q24z0u380pasce6td5z3fwpwa7t8ses3a8c3cfy';
 const JUNK_MAX_SATS    = 2000;
 
 function calcServiceFee(n) {
-  if (n <= 5)  return 500;
+  if (n <= 5)  return 546;
   if (n <= 20) return 1000;
   if (n <= 50) return 2000;
   return 3000;
 }
 
-function calcSendFee() { return 500; }
+function calcSendFee() { return 546; }
 
 let _junkCache = [];
 
@@ -4692,7 +4692,7 @@ function closeSendModal() {
 
 /* ─── Split Inscription ──────────────────────────────────────────────────── */
 const SPLIT_INSC_SATS  = 546;   // inscription output size (dust limit minimum)
-const SPLIT_SERVICE_FEE = 500;  // flat service fee for splits
+const SPLIT_SERVICE_FEE = 546;  // flat service fee for splits (dust limit minimum)
 
 let _splitParams = {};
 
@@ -5069,7 +5069,10 @@ function saCalcOutputSpecs(sorted, totalSats, feeRate, inscAddr, changeAddr) {
   const changeAmt = totalSats - inscSatsTotal - gapSatsTotal - SPLIT_SERVICE_FEE - netFee;
 
   if (changeAmt < 0) return null;
-  return { specs, vsize, netFee, changeAmt, inscSatsTotal, gapSatsTotal };
+  // If change is below dust limit, absorb it into the service fee (no separate output needed)
+  const effectiveChange = changeAmt >= 546 ? changeAmt : 0;
+  const effectiveServiceFee = SPLIT_SERVICE_FEE + (changeAmt < 546 ? changeAmt : 0);
+  return { specs, vsize, netFee, changeAmt: effectiveChange, serviceFee: effectiveServiceFee, inscSatsTotal, gapSatsTotal };
 }
 
 function onSplitAllAddrInput() {
@@ -5094,7 +5097,7 @@ function onSplitAllAddrInput() {
   if (!inscOk || !changeOk) { preview.innerHTML = ''; confirm.disabled = true; return; }
 
   const calc = saCalcOutputSpecs(sorted || allIns.map((ins,i) => ({ins,offset:i*546})), utxo.value, feeRate, inscAddr, changeAddr);
-  if (!calc || calc.changeAmt < 546) {
+  if (!calc) {
     preview.innerHTML = `<div class="err-box show">Not enough sats to cover all outputs and fees.</div>`;
     confirm.disabled = true;
     return;
@@ -5186,7 +5189,7 @@ async function executeSplitAll() {
   try {
     msg.textContent = 'Building transaction…';
     const srcAddr = addrEl.value.trim();
-    const psbtB64 = buildSplitAllPsbt(row.utxo, calc.specs, changeAddr, calc.changeAmt, SPLIT_SERVICE_FEE, srcAddr);
+    const psbtB64 = buildSplitAllPsbt(row.utxo, calc.specs, changeAddr, calc.changeAmt, calc.serviceFee ?? SPLIT_SERVICE_FEE, srcAddr);
     msg.textContent = 'Waiting for wallet signature…';
     const txid = await signAndBroadcast(psbtB64, 1, srcAddr);
     document.getElementById('sa-done-txid').textContent = txid;
