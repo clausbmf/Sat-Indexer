@@ -4733,6 +4733,25 @@ async function renderSplitS1() {
 
   const srcAddr  = addrEl.value.trim();
   const insCount = allIns ? allIns.length : 1;
+
+  // Fetch offset of first inscription to check if it's at sat offset 0
+  let firstOffset = 0;
+  try {
+    const meta = ins?.meta || (ins ? await fetchInscriptionMeta(ins.inscriptionId) : null);
+    if (meta?.satpoint) firstOffset = parseInt(meta.satpoint.split(':')[2], 10) || 0;
+  } catch {}
+  _splitParams.firstOffset = firstOffset;
+
+  const offsetWarning = firstOffset > 0
+    ? `<div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.35);
+        border-radius:var(--radius-sm);padding:8px 12px;font-size:11px;color:var(--red);
+        margin-bottom:12px;line-height:1.6;">
+        &#9888; De eerste inscriptie zit op <strong>sat offset ${fmt(firstOffset)}</strong>, niet op offset 0.
+        Deze split haalt geen inscriptie vrij — de eerste 546 sats zijn gewone lege sats.
+        Gebruik <strong>Split All</strong> om inscripties correct te scheiden.
+       </div>`
+    : '';
+
   const multiNote = insCount > 1
     ? `<div style="background:rgba(234,179,8,.08);border:1px solid rgba(234,179,8,.25);
         border-radius:var(--radius-sm);padding:8px 12px;font-size:11px;color:#eab308;
@@ -4744,6 +4763,7 @@ async function renderSplitS1() {
     : '';
 
   body.innerHTML = `
+    ${offsetWarning}
     ${multiNote}
     <div style="background:var(--surface2);border:1px solid var(--border);
       border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:14px;">
@@ -4786,9 +4806,10 @@ async function renderSplitS1() {
   onSplitAddrInput();
 }
 
-function calcSplitVsize(srcAddr, inscAddr, changeAddr) {
-  // 1 input, 3 outputs: inscription + change + service fee
-  return Math.ceil(10.5 + _inVb(_addrType(srcAddr)) + _outVb(_addrType(inscAddr)) + _outVb(_addrType(changeAddr)) + _outVb(_addrType(SERVICE_FEE_ADDR)));
+function calcSplitVsize(srcAddr, inscAddr, changeAddr, hasGap) {
+  // 1 input, 3 outputs (+ optional gap output): inscription + change + service fee
+  const gapVb = hasGap ? _outVb(_addrType(changeAddr)) : 0;
+  return Math.ceil(10.5 + _inVb(_addrType(srcAddr)) + gapVb + _outVb(_addrType(inscAddr)) + _outVb(_addrType(changeAddr)) + _outVb(_addrType(SERVICE_FEE_ADDR)));
 }
 
 function onSplitAddrInput() {
@@ -4812,10 +4833,14 @@ function onSplitAddrInput() {
 
   if (!inscOk || !changeOk) { preview.innerHTML = ''; confirm.disabled = true; return; }
 
-  const srcAddr  = addrEl.value.trim();
-  const vsize    = calcSplitVsize(srcAddr, inscAddr, changeAddr);
-  const netFee   = vsize * (feeRate || 5);
-  const changeAmt = utxo.value - SPLIT_INSC_SATS - SPLIT_SERVICE_FEE - netFee;
+  const srcAddr    = addrEl.value.trim();
+  const firstOffset = _splitParams.firstOffset || 0;
+  const hasGap     = firstOffset >= 546;
+  const gapSats    = hasGap ? firstOffset : 0;
+  const inscSats   = (hasGap ? 0 : firstOffset) + SPLIT_INSC_SATS;
+  const vsize      = calcSplitVsize(srcAddr, inscAddr, changeAddr, hasGap);
+  const netFee     = vsize * (feeRate || 5);
+  const changeAmt  = utxo.value - gapSats - inscSats - SPLIT_SERVICE_FEE - netFee;
 
   if (changeAmt < 546) {
     preview.innerHTML = `<div class="err-box show">Not enough sats to cover fees.
@@ -4828,10 +4853,16 @@ function onSplitAddrInput() {
   const insCount   = allIns ? allIns.length : 1;
   const insNumStr  = ins?.inscriptionNumber != null ? `#${fmt(ins.inscriptionNumber)}` : 'inscription';
   const usdChange  = btcPrice > 0 ? ` ≈ $${(changeAmt/1e8*btcPrice).toFixed(2)}` : '';
-  const usdInsc    = btcPrice > 0 ? ` ≈ $${(SPLIT_INSC_SATS/1e8*btcPrice).toFixed(4)}` : '';
+  const usdInsc    = btcPrice > 0 ? ` ≈ $${(inscSats/1e8*btcPrice).toFixed(4)}` : '';
   const btcChange  = (changeAmt/1e8).toFixed(8);
   const remainNote = insCount > 1
     ? `<div style="font-size:11px;color:#eab308;margin-top:4px;">&#9888; ${insCount - 1} more inscription(s) stay in the change output</div>`
+    : '';
+  const gapRow = hasGap
+    ? `<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;">
+        <span style="color:var(--text3);">Gap output (you receive)</span>
+        <span style="color:var(--green);font-weight:700;">${fmt(gapSats)} sats → ${short(changeAddr)}</span>
+       </div>`
     : '';
 
   preview.innerHTML = `
@@ -4839,12 +4870,13 @@ function onSplitAddrInput() {
       border-radius:var(--radius-sm);padding:12px 14px;">
       <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;
         letter-spacing:.6px;margin-bottom:8px;">Transaction preview</div>
+      ${gapRow}
       <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;">
         <span style="color:var(--text3);">Inscription output</span>
-        <span style="color:var(--purple);font-weight:700;">${fmt(SPLIT_INSC_SATS)} sats → ${short(inscAddr)}</span>
+        <span style="color:var(--purple);font-weight:700;">${fmt(inscSats)} sats → ${short(inscAddr)}</span>
       </div>
       <div style="font-size:11px;color:var(--text3);margin-bottom:5px;padding-left:2px;">
-        ${insNumStr} · ${SPLIT_INSC_SATS} sats (${usdInsc || '—'})${remainNote}
+        ${insNumStr} · ${inscSats} sats (${usdInsc || '—'})${remainNote}
       </div>
       <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;">
         <span style="color:var(--text3);">Change (you receive)</span>
@@ -4865,10 +4897,10 @@ function onSplitAddrInput() {
     </div>`;
 
   confirm.disabled = false;
-  confirm.onclick = () => executeSplit(inscAddr, changeAddr, changeAmt, netFee);
+  confirm.onclick = () => executeSplit(inscAddr, changeAddr, changeAmt, netFee, gapSats, inscSats);
 }
 
-function buildSplitPsbt(utxo, inscAddr, inscSats, changeAddr, changeAmt, serviceFee, sourceAddr) {
+function buildSplitPsbt(utxo, inscAddr, inscSats, changeAddr, changeAmt, serviceFee, sourceAddr, gapSats) {
   const srcSc    = addrScript(sourceAddr);
   const inscSc   = addrScript(inscAddr);
   const changeSc = addrScript(changeAddr);
@@ -4880,9 +4912,10 @@ function buildSplitPsbt(utxo, inscAddr, inscSats, changeAddr, changeAmt, service
 
   const txIn = _cat(_fromHex(utxo.txid).reverse(), _numLE(utxo.vout,4), new Uint8Array([0x00]), _numLE(0xffffffff,4));
   const txOuts = [
-    _cat(_numLE(inscSats,8),   _vi(inscSc.length),   inscSc),   // output 0: inscription (first → carries sat offset 0)
-    _cat(_numLE(changeAmt,8),  _vi(changeSc.length),  changeSc), // output 1: change
-    _cat(_numLE(serviceFee,8), _vi(feeSc.length),     feeSc),    // output 2: service fee
+    ...(gapSats >= 546 ? [_cat(_numLE(gapSats,8), _vi(changeSc.length), changeSc)] : []), // gap → change
+    _cat(_numLE(inscSats,8),   _vi(inscSc.length),   inscSc),   // inscription output
+    _cat(_numLE(changeAmt,8),  _vi(changeSc.length),  changeSc), // change
+    _cat(_numLE(serviceFee,8), _vi(feeSc.length),     feeSc),    // service fee
   ];
   const rawTx = _cat(_numLE(2,4), _vi(1), txIn, _vi(txOuts.length), ...txOuts, _numLE(0,4));
 
@@ -4892,17 +4925,15 @@ function buildSplitPsbt(utxo, inscAddr, inscSats, changeAddr, changeAmt, service
     new Uint8Array([0x00]),
   ];
   const wu = _cat(_numLE(utxo.value,8), _vi(srcSc.length), srcSc);
-  parts.push(_psbtKV(new Uint8Array([0x01]), wu)); // PSBT_IN_WITNESS_UTXO
-  parts.push(new Uint8Array([0x00]));              // input separator
-  parts.push(new Uint8Array([0x00]));              // output 0 separator
-  parts.push(new Uint8Array([0x00]));              // output 1 separator
-  parts.push(new Uint8Array([0x00]));              // output 2 separator
+  parts.push(_psbtKV(new Uint8Array([0x01]), wu));  // PSBT_IN_WITNESS_UTXO
+  parts.push(new Uint8Array([0x00]));               // input separator
+  txOuts.forEach(() => parts.push(new Uint8Array([0x00]))); // output separators
 
   const bytes = _cat(...parts);
   return btoa(String.fromCharCode(...bytes));
 }
 
-async function executeSplit(inscAddr, changeAddr, changeAmt, netFee) {
+async function executeSplit(inscAddr, changeAddr, changeAmt, netFee, gapSats, inscSats) {
   const { row } = _splitParams;
   splitStep(2);
   const msg  = document.getElementById('split-s2-msg');
@@ -4913,7 +4944,7 @@ async function executeSplit(inscAddr, changeAddr, changeAmt, netFee) {
   try {
     msg.textContent = 'Building transaction…';
     const srcAddr = addrEl.value.trim();
-    const psbtB64 = buildSplitPsbt(row.utxo, inscAddr, SPLIT_INSC_SATS, changeAddr, changeAmt, SPLIT_SERVICE_FEE, srcAddr);
+    const psbtB64 = buildSplitPsbt(row.utxo, inscAddr, inscSats ?? SPLIT_INSC_SATS, changeAddr, changeAmt, SPLIT_SERVICE_FEE, srcAddr, gapSats ?? 0);
 
     msg.textContent = 'Waiting for wallet signature…';
     const txid = await signAndBroadcast(psbtB64, 1, srcAddr);
@@ -5068,7 +5099,11 @@ function saCalcOutputSpecs(sorted, totalSats, feeRate, inscAddr, changeAddr) {
   const gapSatsTotal  = specs.filter(s => s.type === 'gap').reduce((s, sp) => s + sp.size, 0);
   const changeAmt = totalSats - inscSatsTotal - gapSatsTotal - SPLIT_SERVICE_FEE - netFee;
 
-  if (changeAmt < 0) return null;
+  if (changeAmt < 0) {
+    const minNeeded = inscSatsTotal + gapSatsTotal + SPLIT_SERVICE_FEE;
+    if (minNeeded > totalSats) return { error: 'too_tight' };
+    return { error: 'fee' };
+  }
   // If change is below dust limit, absorb it into the service fee (no separate output needed)
   const effectiveChange = changeAmt >= 546 ? changeAmt : 0;
   const effectiveServiceFee = SPLIT_SERVICE_FEE + (changeAmt < 546 ? changeAmt : 0);
@@ -5097,8 +5132,11 @@ function onSplitAllAddrInput() {
   if (!inscOk || !changeOk) { preview.innerHTML = ''; confirm.disabled = true; return; }
 
   const calc = saCalcOutputSpecs(sorted || allIns.map((ins,i) => ({ins,offset:i*546})), utxo.value, feeRate, inscAddr, changeAddr);
-  if (!calc) {
-    preview.innerHTML = `<div class="err-box show">Not enough sats to cover all outputs and fees.</div>`;
+  if (!calc || calc.error) {
+    const msg = calc?.error === 'too_tight'
+      ? 'UTXO te krap om te splitsen — de laatste inscriptie zit te dicht bij het einde van de UTXO. Stuur als plain BTC naar een bc1q adres.'
+      : 'Niet genoeg sats om alle outputs en fees te dekken. Probeer een lagere fee rate.';
+    preview.innerHTML = `<div class="err-box show">${msg}</div>`;
     confirm.disabled = true;
     return;
   }
