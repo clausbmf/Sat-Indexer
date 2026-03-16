@@ -5568,7 +5568,7 @@ function renderFeeChart(blocks) {
   const cH = H - PAD.top  - PAD.bottom;
 
   // extract fee rate values
-  const rates = blocks.map(b => b.avgFeeRate ?? b.avgFee ?? 0).filter(v => v > 0);
+  const rates = blocks.map(b => b.avgFeeRate ?? b.avgFee ?? b.avgFees ?? 0).filter(v => v > 0);
   if (!rates.length) return;
 
   const minR = Math.max(0, Math.min(...rates) * 0.9);
@@ -5581,13 +5581,13 @@ function renderFeeChart(blocks) {
 
   // build polyline points
   const pts = blocks
-    .filter(b => (b.avgFeeRate ?? b.avgFee) > 0)
-    .map(b => `${xPos(b.timestamp).toFixed(1)},${yPos(b.avgFeeRate ?? b.avgFee).toFixed(1)}`)
+    .filter(b => (b.avgFeeRate ?? b.avgFee ?? b.avgFees) > 0)
+    .map(b => `${xPos(b.timestamp).toFixed(1)},${yPos(b.avgFeeRate ?? b.avgFee ?? b.avgFees).toFixed(1)}`)
     .join(' ');
 
   // fill path (area under line)
-  const firstB = blocks.find(b => (b.avgFeeRate ?? b.avgFee) > 0);
-  const lastB  = [...blocks].reverse().find(b => (b.avgFeeRate ?? b.avgFee) > 0);
+  const firstB = blocks.find(b => (b.avgFeeRate ?? b.avgFee ?? b.avgFees) > 0);
+  const lastB  = [...blocks].reverse().find(b => (b.avgFeeRate ?? b.avgFee ?? b.avgFees) > 0);
   const fillPts = `${xPos(firstB.timestamp).toFixed(1)},${(PAD.top + cH).toFixed(1)} ${pts} ${xPos(lastB.timestamp).toFixed(1)},${(PAD.top + cH).toFixed(1)}`;
 
   // current fee markers
