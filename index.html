@@ -4275,6 +4275,34 @@ function _psbtToRawTx(psbtHex) {
   return [...out].map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 
+// Validate that the signed raw tx has exactly `expected` inputs.
+// UniSat's signPsbt can silently add extra UTXOs as fee inputs; if an inscribed
+// UTXO is picked, its sats become miner fee and the inscription is burned.
+// This guard aborts before broadcast if the wallet modified the input set.
+function _assertRawTxInputCount(rawHex, expected) {
+  try {
+    const bytes = new Uint8Array(rawHex.match(/../g).map(h => parseInt(h, 16)));
+    let p = 4; // skip version (4 bytes)
+    // Segwit marker: 0x00 0x01
+    if (bytes[p] === 0x00 && bytes[p + 1] === 0x01) p += 2;
+    // Read input count varint
+    const f = bytes[p++];
+    const inCount = f < 0xfd ? f
+      : f === 0xfd ? (bytes[p++] | (bytes[p++] << 8))
+      : 0;
+    if (inCount !== expected) {
+      throw new Error(
+        `Transaction cancelled — your wallet added ${inCount - expected} extra UTXO(s) as fee input(s). ` +
+        `This can burn inscriptions on those UTXOs. ` +
+        `Please enable inscription protection in UniSat settings and try again.`
+      );
+    }
+  } catch (e) {
+    // Re-throw our own error; swallow parse errors (non-critical path)
+    if (e.message.startsWith('Transaction cancelled')) throw e;
+  }
+}
+
 async function signAndBroadcast(psbtB64, inputCount, signerAddr) {
   const indices = Array.from({length: inputCount}, (_, i) => i);
 
@@ -4292,6 +4320,10 @@ async function signAndBroadcast(psbtB64, inputCount, signerAddr) {
     if (signed && !signed.match(/^[0-9a-fA-F]+$/)) signed = _b64toHex(signed);
     // If UniSat returned a PSBT instead of raw tx, extract the raw tx
     signed = _psbtToRawTx(signed);
+    // Safety check: UniSat may auto-add extra UTXOs as fee inputs.
+    // If it added any, those sats (and any inscriptions on them) would go to miners.
+    // Abort before broadcast if input count doesn't match what we built.
+    _assertRawTxInputCount(signed, inputCount);
     const res = await fetch(`${MEMPOOL}/tx`, { method:'POST', headers:{'Content-Type':'text/plain'}, body: signed });
     if (!res.ok) throw new Error('Broadcast failed: ' + (await res.text()).slice(0,200));
     return await res.text();
@@ -4765,8 +4797,9 @@ async function renderSplitS1() {
   offsetResults.sort((a, b) => a.offset - b.offset);
   const firstInsc   = offsetResults[0]?.ins ?? ins;
   const firstOffset = offsetResults[0]?.offset ?? 0;
-  _splitParams.firstOffset = firstOffset;
-  _splitParams.firstInsc   = firstInsc;
+  _splitParams.firstOffset   = firstOffset;
+  _splitParams.firstInsc     = firstInsc;
+  _splitParams.offsetResults = offsetResults;
 
   const offsetWarning = firstOffset > 0
     ? `<div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.35);
@@ -4875,6 +4908,28 @@ function onSplitAddrInput() {
     return;
   }
 
+  // Check if any inscription (other than the first) falls within the service fee output range.
+  // Service fee consumes the last SPLIT_SERVICE_FEE sats of the UTXO (after change).
+  // Any inscription sat at offset >= (gapSats + inscSats + changeAmt) ends up in the
+  // service fee output instead of the change output — burning that inscription.
+  const serviceFeeStart = gapSats + inscSats + changeAmt;
+  const { offsetResults } = _splitParams;
+  const inServiceFeeRange = offsetResults
+    ? offsetResults.slice(1).filter(r => r.offset >= serviceFeeStart)
+    : [];
+  if (inServiceFeeRange.length > 0) {
+    const nums = inServiceFeeRange.map(r =>
+      r.ins?.inscriptionNumber != null ? `#${fmt(r.ins.inscriptionNumber)}` : r.ins?.inscriptionId?.slice(0,12)+'…'
+    ).join(', ');
+    preview.innerHTML = `<div class="err-box show">
+      Cannot split safely — inscription${inServiceFeeRange.length > 1 ? 's' : ''} ${nums}
+      sit${inServiceFeeRange.length === 1 ? 's' : ''} in the last ${fmt(SPLIT_SERVICE_FEE)} sats of this UTXO
+      and would be sent to the service fee output.
+      Use <strong>Split All</strong> instead to separate all inscriptions safely.</div>`;
+    confirm.disabled = true;
+    return;
+  }
+
   const { allIns } = row;
   const insCount   = allIns ? allIns.length : 1;
   const activeIns  = _splitParams.firstInsc ?? row.ins;
@@ -4883,7 +4938,7 @@ function onSplitAddrInput() {
   const usdInsc    = btcPrice > 0 ? ` ≈ $${(inscSats/1e8*btcPrice).toFixed(4)}` : '';
   const btcChange  = (changeAmt/1e8).toFixed(8);
   const remainNote = insCount > 1
-    ? `<div style="font-size:11px;color:#eab308;margin-top:4px;">&#9888; ${insCount - 1} more inscription(s) stay in the change output</div>`
+    ? `<div style="font-size:11px;color:#eab308;margin-top:4px;">&#9888; ${insCount - 1} more inscription(s) stay in the change output — split again to separate them</div>`
     : '';
   const gapRow = hasGap
     ? `<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;">
