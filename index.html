@@ -4746,9 +4746,9 @@ async function renderSplitS1() {
     ? `<div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.35);
         border-radius:var(--radius-sm);padding:8px 12px;font-size:11px;color:var(--red);
         margin-bottom:12px;line-height:1.6;">
-        &#9888; De eerste inscriptie zit op <strong>sat offset ${fmt(firstOffset)}</strong>, niet op offset 0.
-        Deze split haalt geen inscriptie vrij — de eerste 546 sats zijn gewone lege sats.
-        Gebruik <strong>Split All</strong> om inscripties correct te scheiden.
+        &#9888; First inscription is at <strong>sat offset ${fmt(firstOffset)}</strong>, not offset 0.
+        A gap output of ${fmt(firstOffset)} sats will be sent to your change address first, then the inscription output.
+        Or use <strong>Split All</strong> to separate all inscriptions at once.
        </div>`
     : '';
 
@@ -5134,8 +5134,8 @@ function onSplitAllAddrInput() {
   const calc = saCalcOutputSpecs(sorted || allIns.map((ins,i) => ({ins,offset:i*546})), utxo.value, feeRate, inscAddr, changeAddr);
   if (!calc || calc.error) {
     const msg = calc?.error === 'too_tight'
-      ? 'UTXO te krap om te splitsen — de laatste inscriptie zit te dicht bij het einde van de UTXO. Stuur als plain BTC naar een bc1q adres.'
-      : 'Niet genoeg sats om alle outputs en fees te dekken. Probeer een lagere fee rate.';
+      ? 'UTXO too tight to split — the last inscription is too close to the end of the UTXO. Send as plain BTC to a bc1q address instead.'
+      : 'Not enough sats to cover all outputs and fees. Try a lower fee rate.';
     preview.innerHTML = `<div class="err-box show">${msg}</div>`;
     confirm.disabled = true;
     return;
