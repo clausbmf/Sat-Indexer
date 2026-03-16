@@ -4734,13 +4734,20 @@ async function renderSplitS1() {
   const srcAddr  = addrEl.value.trim();
   const insCount = allIns ? allIns.length : 1;
 
-  // Fetch offset of first inscription to check if it's at sat offset 0
-  let firstOffset = 0;
-  try {
-    const meta = ins?.meta || (ins ? await fetchInscriptionMeta(ins.inscriptionId) : null);
-    if (meta?.satpoint) firstOffset = parseInt(meta.satpoint.split(':')[2], 10) || 0;
-  } catch {}
+  // Fetch offsets of all inscriptions and pick the one with the lowest offset
+  const inscList = allIns?.length ? allIns : (ins ? [ins] : []);
+  const offsetResults = await Promise.all(inscList.map(async i => {
+    try {
+      const meta = i.meta || await fetchInscriptionMeta(i.inscriptionId);
+      if (meta?.satpoint) return { ins: i, offset: parseInt(meta.satpoint.split(':')[2], 10) || 0 };
+    } catch {}
+    return { ins: i, offset: 0 };
+  }));
+  offsetResults.sort((a, b) => a.offset - b.offset);
+  const firstInsc   = offsetResults[0]?.ins ?? ins;
+  const firstOffset = offsetResults[0]?.offset ?? 0;
   _splitParams.firstOffset = firstOffset;
+  _splitParams.firstInsc   = firstInsc;
 
   const offsetWarning = firstOffset > 0
     ? `<div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.35);
@@ -4849,9 +4856,10 @@ function onSplitAddrInput() {
     return;
   }
 
-  const { ins, allIns } = row;
+  const { allIns } = row;
   const insCount   = allIns ? allIns.length : 1;
-  const insNumStr  = ins?.inscriptionNumber != null ? `#${fmt(ins.inscriptionNumber)}` : 'inscription';
+  const activeIns  = _splitParams.firstInsc ?? row.ins;
+  const insNumStr  = activeIns?.inscriptionNumber != null ? `#${fmt(activeIns.inscriptionNumber)}` : 'inscription';
   const usdChange  = btcPrice > 0 ? ` ≈ $${(changeAmt/1e8*btcPrice).toFixed(2)}` : '';
   const usdInsc    = btcPrice > 0 ? ` ≈ $${(inscSats/1e8*btcPrice).toFixed(4)}` : '';
   const btcChange  = (changeAmt/1e8).toFixed(8);
