@@ -2190,6 +2190,25 @@
         </div>
       </div>
 
+      <div>
+        <div class="faq-q">Does splitting a UTXO change the inscription — does it still belong to the collection?</div>
+        <div class="faq-a">
+          <p>No — splitting does not change the inscription in any way. The inscription is permanently tied to a specific satoshi (identified by its ordinal number). When you split, that sat simply moves to a new, smaller UTXO. The inscription ID, inscription number, content, and collection membership all stay exactly the same.</p>
+          <p>Collection indexers track by <strong>inscription ID</strong> — which is derived from the original reveal transaction and never changes. After a correct split, the indexer sees the same inscription ID at a new UTXO location. This happens every time anyone sends an Ordinal anywhere — the UTXO changes, the inscription ID never does.</p>
+          <p>Think of it like sending an NFT on Ethereum: the token ID stays the same, it just moves to a new wallet address.</p>
+          <p><strong>After a correct split:</strong> same inscription ID ✓ · same inscription number ✓ · same art/content ✓ · still part of the collection ✓ · just sitting in a smaller, cleaner UTXO ✓</p>
+        </div>
+      </div>
+
+      <div>
+        <div class="faq-q">How does this tool ensure the inscription lands in the correct output when splitting?</div>
+        <div class="faq-a">
+          <p>Ordinal theory uses <strong>first-in-first-out (FIFO) sat tracking</strong>: the sats from the input flow into the outputs in order. The tool builds the transaction outputs in the exact sequence required so the inscription sat lands precisely in the inscription output.</p>
+          <p>If the inscription is not at sat offset 0 in the UTXO (for example at offset 28,632), the tool automatically inserts a <strong>gap output</strong> first — consuming exactly that many sats into your change address — so the inscription output starts at precisely the sat where the inscription lives.</p>
+          <p>The inscription ID, inscription number, and the sat it is bound to are all unchanged by the split. The operation is ordinals-safe.</p>
+        </div>
+      </div>
+
     </div>
     <div class="faq-footer">
       <button class="btn-cw-back" onclick="closeFaq()">Close</button>
