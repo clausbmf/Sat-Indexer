@@ -4712,7 +4712,12 @@ async function executeSend(destAddr, destAmt, netFee, serviceFee) {
 
   try {
     msg.textContent = 'Building transaction…';
-    const psbtB64 = buildMergePsbt(selected.map(r => r.utxo), destAddr, SERVICE_FEE_ADDR, serviceFee, netFee, addrEl.value.trim());
+    // Inscribed UTXOs first so their sats land in output 0 (destination) via FIFO sat tracking.
+    // Clean UTXOs at the end cover the service fee output (output 1).
+    const cleanSats = selected.filter(r => !r.ins).reduce((s, r) => s + r.utxo.value, 0);
+    if (cleanSats < serviceFee + netFee) throw new Error(`Not enough clean UTXOs to cover fees — select more clean UTXOs or deselect the inscribed one.`);
+    const sortedUtxos = [...selected.filter(r => r.ins), ...selected.filter(r => !r.ins)].map(r => r.utxo);
+    const psbtB64 = buildMergePsbt(sortedUtxos, destAddr, SERVICE_FEE_ADDR, serviceFee, netFee, addrEl.value.trim());
 
     msg.textContent = 'Waiting for wallet signature…';
     const signerAddr = addrEl.value.trim();
