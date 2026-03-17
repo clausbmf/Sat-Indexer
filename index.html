@@ -852,6 +852,7 @@
   <div class="hdr-left">
     <div class="btc-icon">&#8383;</div>
     <h1>Ordinals Wallet Inspector</h1>
+    <span style="font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.5px;">v1.0</span>
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <button class="btn-watchlist" onclick="openWatchlist()">&#128065; Watchlist</button>
@@ -4207,7 +4208,6 @@ function buildMergePsbt(utxos, destAddr, feeAddr, feeSats, netFee, sourceAddr) {
     // PSBT_IN_WITNESS_UTXO: value + scriptPubKey of the UTXO being spent (source address)
     const wu = _cat(_numLE(u.value,8), _vi(srcSc.length), srcSc);
     parts.push(_psbtKV(new Uint8Array([0x01]), wu));   // PSBT_IN_WITNESS_UTXO
-    if (isTaproot(srcAddr)) parts.push(_psbtKV(new Uint8Array([0x03]), new Uint8Array([0x01, 0x00, 0x00, 0x00]))); // PSBT_IN_SIGHASH_TYPE
     if (isTaproot(srcAddr) && xverseTapInternalKey)
       parts.push(_psbtKV(new Uint8Array([0x04]), xverseTapInternalKey)); // PSBT_IN_TAP_INTERNAL_KEY
     parts.push(new Uint8Array([0x00]));                // input separator
@@ -4351,10 +4351,9 @@ async function signAndBroadcast(psbtB64, inputCount, signerAddr) {
     let res;
     try {
       res = await xverse.request('signPsbt', {
-        psbt:           psbtB64,
-        signInputs:     { [signerAddr]: indices },
-        broadcast:      false,
-        allowedSighash: [0x00, 0x01, 0x02, 0x03, 0x81, 0x82, 0x83],
+        psbt:        psbtB64,
+        signInputs:  { [signerAddr]: indices },
+        broadcast:   false,
       });
     } catch (xErr) {
       console.error('[Xverse signPsbt threw]', xErr);
@@ -5043,7 +5042,6 @@ function buildSplitPsbt(utxo, inscAddr, inscSats, changeAddr, changeAmt, service
   ];
   const wu = _cat(_numLE(utxo.value,8), _vi(srcSc.length), srcSc);
   parts.push(_psbtKV(new Uint8Array([0x01]), wu));  // PSBT_IN_WITNESS_UTXO
-  parts.push(_psbtKV(new Uint8Array([0x03]), new Uint8Array([0x01, 0x00, 0x00, 0x00]))); // PSBT_IN_SIGHASH_TYPE = SIGHASH_ALL
   if (xverseTapInternalKey)
     parts.push(_psbtKV(new Uint8Array([0x04]), xverseTapInternalKey)); // PSBT_IN_TAP_INTERNAL_KEY
   parts.push(new Uint8Array([0x00]));               // input separator
@@ -5333,7 +5331,6 @@ function buildSplitAllPsbt(utxo, specs, changeAddr, changeAmt, serviceFee, sourc
   ];
   const wu = _cat(_numLE(utxo.value,8), _vi(srcSc.length), srcSc);
   parts.push(_psbtKV(new Uint8Array([0x01]), wu));
-  parts.push(_psbtKV(new Uint8Array([0x03]), new Uint8Array([0x01, 0x00, 0x00, 0x00]))); // PSBT_IN_SIGHASH_TYPE = SIGHASH_ALL
   if (xverseTapInternalKey)
     parts.push(_psbtKV(new Uint8Array([0x04]), xverseTapInternalKey)); // PSBT_IN_TAP_INTERNAL_KEY
   parts.push(new Uint8Array([0x00])); // input sep
