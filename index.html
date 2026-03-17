@@ -852,7 +852,7 @@
   <div class="hdr-left">
     <div class="btc-icon">&#8383;</div>
     <h1>Ordinals Wallet Inspector</h1>
-    <span style="font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.5px;">v1.0</span>
+    <span style="font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.5px;">v1.2</span>
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <button class="btn-watchlist" onclick="openWatchlist()">&#128065; Watchlist</button>
@@ -878,10 +878,10 @@
   <!-- wallet connect -->
   <div class="wallet-connect">
     <span class="wallet-connect-label">Connect Wallet</span>
-    <button class="btn-wallet" id="btn-xverse" onclick="connectXverse()">Xverse</button>
+    <button class="btn-wallet" id="btn-xverse" onclick="connectXverse()" title="Xverse 2.0.1 has a bug signing custom taproot PSBTs — import your wallet into UniSat to use Merge, Send &amp; Split">Xverse <span style="font-size:9px;opacity:.6;">(scan only)</span></button>
     <button class="btn-wallet" id="btn-unisat" onclick="connectUniSat()">UniSat</button>
-    <button class="btn-wallet" id="btn-opnet"  onclick="connectOpNet()" title="OP_NET: scan only — use Xverse or UniSat for transactions">OP_NET <span style="font-size:9px;opacity:.6;">(scan)</span></button>
-    <span class="wallet-status" id="wallet-status">Wallet connection only required for Merge, Send &amp; Split — to scan, just paste your address below</span>
+    <button class="btn-wallet" id="btn-opnet"  onclick="connectOpNet()" title="OP_NET wallet does not support PSBT signing — import your wallet into UniSat to use Merge, Send &amp; Split">OP_NET <span style="font-size:9px;opacity:.6;">(scan only)</span></button>
+    <span class="wallet-status" id="wallet-status">Use UniSat for Merge, Send &amp; Split — other wallets are scan only (import your seed into UniSat)</span>
   </div>
 
   <!-- search -->
@@ -3273,10 +3273,10 @@ function renderPanel({ utxo, ins, allIns, rarity, meta, satributes, specialSats,
             style="flex:1;background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.3);color:var(--green);">
             &#10148; Send
           </button>
-          ${utxo.value > 1800 ? `<button class="btn-split" onclick="openSplitModal(${activeIdx})" style="flex:1;margin-top:0;">
+          ${(utxo.value > 1800 && connectedWallet !== 'Xverse') ? `<button class="btn-split" onclick="openSplitModal(${activeIdx})" style="flex:1;margin-top:0;">
             &#9986; Split
           </button>` : ''}
-          ${(allIns && allIns.length > 1 && utxo.value > allIns.length * 546 + 1000) ? `<button class="btn-split" onclick="openSplitAllModal(${activeIdx})" style="flex:1;margin-top:0;background:rgba(168,85,247,.18);">
+          ${(allIns && allIns.length > 1 && utxo.value > allIns.length * 546 + 1000 && connectedWallet !== 'Xverse') ? `<button class="btn-split" onclick="openSplitAllModal(${activeIdx})" style="flex:1;margin-top:0;background:rgba(168,85,247,.18);">
             &#9986; Split All (${allIns.length})
           </button>` : ''}
         </div>
@@ -3746,8 +3746,9 @@ function updateSelectionUI() {
   const selN     = document.getElementById('sel-n');
   const selNSend = document.getElementById('sel-n-send');
   if (countEl)  countEl.textContent   = n ? `${n} selected` : '';
-  if (mergeBtn) mergeBtn.style.display = n ? '' : 'none';
-  if (sendBtn)  sendBtn.style.display  = n ? '' : 'none';
+  const xverseActive = connectedWallet === 'Xverse';
+  if (mergeBtn) mergeBtn.style.display = (n && !xverseActive) ? '' : 'none';
+  if (sendBtn)  sendBtn.style.display  = (n && !xverseActive) ? '' : 'none';
   if (selN)     selN.textContent      = n;
   if (selNSend) selNSend.textContent  = n;
 
@@ -3759,7 +3760,7 @@ function updateSelectionUI() {
       const r = rows[idx];
       return r?.ins && r.utxo.value > 1800;
     })();
-    splitBtn.style.display = canSplit ? '' : 'none';
+    splitBtn.style.display = (canSplit && !xverseActive) ? '' : 'none';
   }
 
   // Split All button: only show when exactly 1 UTXO with multiple inscriptions is selected
@@ -3771,7 +3772,7 @@ function updateSelectionUI() {
       const insCount = r?.allIns?.length ?? (r?.ins ? 1 : 0);
       return insCount > 1 && r.utxo.value > insCount * 546 + 1000;
     })();
-    splitAllBtn.style.display = canSplitAll ? '' : 'none';
+    splitAllBtn.style.display = (canSplitAll && !xverseActive) ? '' : 'none';
     if (canSplitAll) {
       const idx = [...selectedIdxs][0];
       const r = rows[idx];
