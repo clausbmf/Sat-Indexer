@@ -5037,6 +5037,7 @@ function buildSplitPsbt(utxo, inscAddr, inscSats, changeAddr, changeAmt, service
   parts.push(_psbtKV(new Uint8Array([0x01]), wu));  // PSBT_IN_WITNESS_UTXO
   if (xverseTapInternalKey)
     parts.push(_psbtKV(new Uint8Array([0x04]), xverseTapInternalKey)); // PSBT_IN_TAP_INTERNAL_KEY
+  parts.push(_psbtKV(new Uint8Array([0x03]), new Uint8Array([0x01, 0x00, 0x00, 0x00]))); // PSBT_IN_SIGHASH_TYPE = SIGHASH_ALL
   parts.push(new Uint8Array([0x00]));               // input separator
   txOuts.forEach(() => parts.push(new Uint8Array([0x00]))); // output separators
 
@@ -5057,7 +5058,7 @@ async function executeSplit(inscAddr, changeAddr, changeAmt, netFee, gapSats, in
     const srcAddr = addrEl.value.trim();
     console.log('[executeSplit] srcAddr:', srcAddr, '| connectedWallet:', connectedWallet, '| xverseTapInternalKey:', xverseTapInternalKey ? [...xverseTapInternalKey].map(b=>b.toString(16).padStart(2,'0')).join('') : 'null');
     const psbtB64 = buildSplitPsbt(row.utxo, inscAddr, inscSats ?? SPLIT_INSC_SATS, changeAddr, changeAmt, SPLIT_SERVICE_FEE, srcAddr, gapSats ?? 0);
-    console.log('[executeSplit] psbtB64 built, length:', psbtB64.length);
+    console.log('[executeSplit] psbtB64 built, length:', psbtB64.length, '\n', psbtB64);
 
     msg.textContent = 'Waiting for wallet signature…';
     const txid = await signAndBroadcast(psbtB64, 1, srcAddr);
