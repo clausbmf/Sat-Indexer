@@ -4348,8 +4348,10 @@ async function signAndBroadcast(psbtB64, inputCount, signerAddr) {
       broadcast:      true,
       allowedSighash: [0x00, 0x01],
     });
+    console.log('[Xverse signPsbt response]', JSON.stringify(res));
+    if (res?.error) throw new Error('Xverse error: ' + JSON.stringify(res.error));
     const txid = res?.result?.txid ?? res?.result;
-    if (!txid) throw new Error('Xverse did not return a txid. Check the extension for errors.');
+    if (!txid) throw new Error('Xverse did not return a txid. Response: ' + JSON.stringify(res));
     return txid;
   }
 
