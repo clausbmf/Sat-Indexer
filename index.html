@@ -4202,8 +4202,6 @@ function buildMergePsbt(utxos, destAddr, feeAddr, feeSats, netFee, sourceAddr) {
     // PSBT_IN_WITNESS_UTXO: value + scriptPubKey of the UTXO being spent (source address)
     const wu = _cat(_numLE(u.value,8), _vi(srcSc.length), srcSc);
     parts.push(_psbtKV(new Uint8Array([0x01]), wu));   // PSBT_IN_WITNESS_UTXO
-    if (isTaproot(srcAddr) && xverseTapInternalKey)
-      parts.push(_psbtKV(new Uint8Array([0x04]), xverseTapInternalKey)); // PSBT_IN_TAP_INTERNAL_KEY
     parts.push(new Uint8Array([0x00]));                // input separator
   }
   parts.push(new Uint8Array([0x00]));                  // output 0 separator
@@ -4342,12 +4340,18 @@ async function signAndBroadcast(psbtB64, inputCount, signerAddr) {
   if (wallet === 'Xverse') {
     const xverse = window.XverseProviders?.BitcoinProvider ?? window.BitcoinProvider;
     if (!xverse) throw new Error('Xverse not found. Is the extension installed?');
-    const res = await xverse.request('signPsbt', {
-      psbt:           psbtB64,
-      signInputs:     { [signerAddr]: indices },
-      broadcast:      true,
-      allowedSighash: [0x00, 0x01],
-    });
+    let res;
+    try {
+      res = await xverse.request('signPsbt', {
+        psbt:           psbtB64,
+        signInputs:     { [signerAddr]: indices },
+        broadcast:      true,
+        allowedSighash: [0x00, 0x01, 0x02, 0x03, 0x81, 0x82, 0x83],
+      });
+    } catch (xErr) {
+      console.error('[Xverse signPsbt threw]', xErr);
+      throw new Error('Xverse: ' + (xErr?.message ?? JSON.stringify(xErr)));
+    }
     console.log('[Xverse signPsbt response]', JSON.stringify(res));
     if (res?.error) throw new Error('Xverse error: ' + JSON.stringify(res.error));
     const txid = res?.result?.txid ?? res?.result;
@@ -5024,8 +5028,6 @@ function buildSplitPsbt(utxo, inscAddr, inscSats, changeAddr, changeAmt, service
   ];
   const wu = _cat(_numLE(utxo.value,8), _vi(srcSc.length), srcSc);
   parts.push(_psbtKV(new Uint8Array([0x01]), wu));  // PSBT_IN_WITNESS_UTXO
-  if (isTaproot(sourceAddr) && xverseTapInternalKey)
-    parts.push(_psbtKV(new Uint8Array([0x04]), xverseTapInternalKey)); // PSBT_IN_TAP_INTERNAL_KEY
   parts.push(new Uint8Array([0x00]));               // input separator
   txOuts.forEach(() => parts.push(new Uint8Array([0x00]))); // output separators
 
@@ -5044,7 +5046,9 @@ async function executeSplit(inscAddr, changeAddr, changeAmt, netFee, gapSats, in
   try {
     msg.textContent = 'Building transaction…';
     const srcAddr = addrEl.value.trim();
+    console.log('[executeSplit] srcAddr:', srcAddr, '| connectedWallet:', connectedWallet, '| xverseTapInternalKey:', xverseTapInternalKey ? 'set' : 'null');
     const psbtB64 = buildSplitPsbt(row.utxo, inscAddr, inscSats ?? SPLIT_INSC_SATS, changeAddr, changeAmt, SPLIT_SERVICE_FEE, srcAddr, gapSats ?? 0);
+    console.log('[executeSplit] psbtB64 built, length:', psbtB64.length);
 
     msg.textContent = 'Waiting for wallet signature…';
     const txid = await signAndBroadcast(psbtB64, 1, srcAddr);
@@ -5311,8 +5315,6 @@ function buildSplitAllPsbt(utxo, specs, changeAddr, changeAmt, serviceFee, sourc
   ];
   const wu = _cat(_numLE(utxo.value,8), _vi(srcSc.length), srcSc);
   parts.push(_psbtKV(new Uint8Array([0x01]), wu));
-  if (isTaproot(sourceAddr) && xverseTapInternalKey)
-    parts.push(_psbtKV(new Uint8Array([0x04]), xverseTapInternalKey)); // PSBT_IN_TAP_INTERNAL_KEY
   parts.push(new Uint8Array([0x00])); // input sep
   txOuts.forEach(() => parts.push(new Uint8Array([0x00]))); // output seps
 
