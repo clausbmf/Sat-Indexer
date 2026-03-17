@@ -4352,7 +4352,7 @@ async function signAndBroadcast(psbtB64, inputCount, signerAddr) {
       res = await xverse.request('signPsbt', {
         psbt:           psbtB64,
         signInputs:     { [signerAddr]: indices },
-        broadcast:      true,
+        broadcast:      false,
         allowedSighash: [0x00, 0x01, 0x02, 0x03, 0x81, 0x82, 0x83],
       });
     } catch (xErr) {
@@ -4361,8 +4361,15 @@ async function signAndBroadcast(psbtB64, inputCount, signerAddr) {
     }
     console.log('[Xverse signPsbt response]', JSON.stringify(res));
     if (res?.error) throw new Error('Xverse error: ' + JSON.stringify(res.error));
-    const txid = res?.result?.txid ?? res?.result;
-    if (!txid) throw new Error('Xverse did not return a txid. Response: ' + JSON.stringify(res));
+    // broadcast: false → xverse returns signed PSBT, we extract raw tx and broadcast
+    const signedPsbt = res?.result?.psbt;
+    if (!signedPsbt) throw new Error('Xverse did not return a signed PSBT. Response: ' + JSON.stringify(res));
+    console.log('[Xverse signed PSBT]', signedPsbt);
+    const rawHex = _psbtToRawTx(_b64toHex(signedPsbt));
+    console.log('[Xverse raw tx hex]', rawHex);
+    const broadcastRes = await fetch(`${MEMPOOL}/tx`, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: rawHex });
+    if (!broadcastRes.ok) throw new Error('Broadcast failed: ' + (await broadcastRes.text()).slice(0, 200));
+    const txid = await broadcastRes.text();
     return txid;
   }
 
