@@ -3546,6 +3546,11 @@ async function connectXverse() {
           const pk = hit?.publicKey;
           if (pk && pk.length === 66) xverseTapInternalKey = _fromHex(pk.slice(2));
           else if (pk && pk.length === 64) xverseTapInternalKey = _fromHex(pk);
+          // Check if xverse returned the tweaked key (same as address) or the internal key
+          const addrSc = p2trScript(addr);
+          const tweakedHex = addrSc ? [...addrSc.slice(2)].map(b=>b.toString(16).padStart(2,'0')).join('') : null;
+          const pkHex = pk?.length === 66 ? pk.slice(2) : pk;
+          console.log('[Xverse connect] publicKey:', pkHex, '| tweakedKey from addr:', tweakedHex, '| match (tweaked):', pkHex === tweakedHex);
           break;
         }
       } catch { /* try next method */ }
