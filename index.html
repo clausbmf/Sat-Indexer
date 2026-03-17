@@ -3990,12 +3990,12 @@ async function buildMergePreview(junk) {
     : '';
 
   const nIn      = junk.length;
+  const destAddr = addrEl.value.trim();
   const vsize    = calcVsize(nIn, destAddr, destAddr); // merge: inputs and output are same address type
   const netFee   = vsize * feeRate;
   const totalIn  = junk.reduce((s, r) => s + r.utxo.value, 0);
   const SERVICE_FEE_SATS = calcServiceFee(nIn);
   const destAmt  = totalIn - SERVICE_FEE_SATS - netFee;
-  const destAddr = addrEl.value.trim();
   const confirm  = document.getElementById('clean-confirm-btn');
 
   if (destAmt < 546) {
