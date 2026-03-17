@@ -3506,7 +3506,8 @@ function copyText(text, btnId, label) {
 }
 
 /* ─── Wallet connection ─────────────────────────────────────────────────── */
-let connectedWallet = null; // 'Xverse' | 'UniSat' | 'OP_NET'
+let connectedWallet  = null; // 'Xverse' | 'UniSat' | 'OP_NET'
+let xverseTapInternalKey = null; // x-only 32-byte internal pubkey for PSBT_IN_TAP_INTERNAL_KEY
 
 function setWalletAddress(address, walletName) {
   connectedWallet = walletName;
@@ -3540,7 +3541,13 @@ async function connectXverse() {
           ? list.find(a => a.purpose === 'ordinals' || a.purposes?.includes('ordinals')) ?? list[0]
           : null;
         addr = hit?.address;
-        if (addr) break;
+        if (addr) {
+          // publicKey is compressed (33 bytes hex) — strip prefix byte to get x-only 32 bytes
+          const pk = hit?.publicKey;
+          if (pk && pk.length === 66) xverseTapInternalKey = _fromHex(pk.slice(2));
+          else if (pk && pk.length === 64) xverseTapInternalKey = _fromHex(pk);
+          break;
+        }
       } catch { /* try next method */ }
     }
 
@@ -4195,6 +4202,8 @@ function buildMergePsbt(utxos, destAddr, feeAddr, feeSats, netFee, sourceAddr) {
     // PSBT_IN_WITNESS_UTXO: value + scriptPubKey of the UTXO being spent (source address)
     const wu = _cat(_numLE(u.value,8), _vi(srcSc.length), srcSc);
     parts.push(_psbtKV(new Uint8Array([0x01]), wu));   // PSBT_IN_WITNESS_UTXO
+    if (isTaproot(srcAddr) && xverseTapInternalKey)
+      parts.push(_psbtKV(new Uint8Array([0x04]), xverseTapInternalKey)); // PSBT_IN_TAP_INTERNAL_KEY
     parts.push(new Uint8Array([0x00]));                // input separator
   }
   parts.push(new Uint8Array([0x00]));                  // output 0 separator
@@ -5013,6 +5022,8 @@ function buildSplitPsbt(utxo, inscAddr, inscSats, changeAddr, changeAmt, service
   ];
   const wu = _cat(_numLE(utxo.value,8), _vi(srcSc.length), srcSc);
   parts.push(_psbtKV(new Uint8Array([0x01]), wu));  // PSBT_IN_WITNESS_UTXO
+  if (isTaproot(sourceAddr) && xverseTapInternalKey)
+    parts.push(_psbtKV(new Uint8Array([0x04]), xverseTapInternalKey)); // PSBT_IN_TAP_INTERNAL_KEY
   parts.push(new Uint8Array([0x00]));               // input separator
   txOuts.forEach(() => parts.push(new Uint8Array([0x00]))); // output separators
 
@@ -5298,6 +5309,8 @@ function buildSplitAllPsbt(utxo, specs, changeAddr, changeAmt, serviceFee, sourc
   ];
   const wu = _cat(_numLE(utxo.value,8), _vi(srcSc.length), srcSc);
   parts.push(_psbtKV(new Uint8Array([0x01]), wu));
+  if (isTaproot(sourceAddr) && xverseTapInternalKey)
+    parts.push(_psbtKV(new Uint8Array([0x04]), xverseTapInternalKey)); // PSBT_IN_TAP_INTERNAL_KEY
   parts.push(new Uint8Array([0x00])); // input sep
   txOuts.forEach(() => parts.push(new Uint8Array([0x00]))); // output seps
 
