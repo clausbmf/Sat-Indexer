@@ -4207,7 +4207,8 @@ function buildMergePsbt(utxos, destAddr, feeAddr, feeSats, netFee, sourceAddr) {
     // PSBT_IN_WITNESS_UTXO: value + scriptPubKey of the UTXO being spent (source address)
     const wu = _cat(_numLE(u.value,8), _vi(srcSc.length), srcSc);
     parts.push(_psbtKV(new Uint8Array([0x01]), wu));   // PSBT_IN_WITNESS_UTXO
-    if (xverseTapInternalKey)
+    if (isTaproot(srcAddr)) parts.push(_psbtKV(new Uint8Array([0x03]), new Uint8Array([0x01, 0x00, 0x00, 0x00]))); // PSBT_IN_SIGHASH_TYPE
+    if (isTaproot(srcAddr) && xverseTapInternalKey)
       parts.push(_psbtKV(new Uint8Array([0x04]), xverseTapInternalKey)); // PSBT_IN_TAP_INTERNAL_KEY
     parts.push(new Uint8Array([0x00]));                // input separator
   }
@@ -5042,9 +5043,9 @@ function buildSplitPsbt(utxo, inscAddr, inscSats, changeAddr, changeAmt, service
   ];
   const wu = _cat(_numLE(utxo.value,8), _vi(srcSc.length), srcSc);
   parts.push(_psbtKV(new Uint8Array([0x01]), wu));  // PSBT_IN_WITNESS_UTXO
+  parts.push(_psbtKV(new Uint8Array([0x03]), new Uint8Array([0x01, 0x00, 0x00, 0x00]))); // PSBT_IN_SIGHASH_TYPE = SIGHASH_ALL
   if (xverseTapInternalKey)
     parts.push(_psbtKV(new Uint8Array([0x04]), xverseTapInternalKey)); // PSBT_IN_TAP_INTERNAL_KEY
-  parts.push(_psbtKV(new Uint8Array([0x03]), new Uint8Array([0x01, 0x00, 0x00, 0x00]))); // PSBT_IN_SIGHASH_TYPE = SIGHASH_ALL
   parts.push(new Uint8Array([0x00]));               // input separator
   txOuts.forEach(() => parts.push(new Uint8Array([0x00]))); // output separators
 
@@ -5332,6 +5333,7 @@ function buildSplitAllPsbt(utxo, specs, changeAddr, changeAmt, serviceFee, sourc
   ];
   const wu = _cat(_numLE(utxo.value,8), _vi(srcSc.length), srcSc);
   parts.push(_psbtKV(new Uint8Array([0x01]), wu));
+  parts.push(_psbtKV(new Uint8Array([0x03]), new Uint8Array([0x01, 0x00, 0x00, 0x00]))); // PSBT_IN_SIGHASH_TYPE = SIGHASH_ALL
   if (xverseTapInternalKey)
     parts.push(_psbtKV(new Uint8Array([0x04]), xverseTapInternalKey)); // PSBT_IN_TAP_INTERNAL_KEY
   parts.push(new Uint8Array([0x00])); // input sep
