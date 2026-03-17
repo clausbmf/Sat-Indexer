@@ -6,6 +6,14 @@ A single-file, no-install Bitcoin wallet scanner that shows you exactly what is 
 
 ---
 
+## ⚠️ Use UniSat for Merge / Send / Split
+
+**Just use UniSat.** It is the only wallet that fully supports the PSBT signing this tool needs.
+
+Xverse and OP_NET can scan your UTXOs, but cannot sign transactions — so Merge, Send, and Split are disabled for them. If you currently use Xverse or OP_NET, import your seed phrase or WIF private key into UniSat to use all features.
+
+---
+
 ## Why this tool exists
 
 Most Bitcoin wallets show you a balance. This tool shows you what is *inside* that balance — which UTXOs are safe to spend, which ones carry inscriptions, which ones are fat (holding more BTC than necessary), and exactly how much value is locked up and why.
@@ -41,7 +49,7 @@ All transactions are built as PSBTs and signed by your wallet — private keys n
 
 - Correct fee calculation for all address types (P2TR, P2WPKH, P2SH)
 - Service fee: 500–3,000 sats depending on number of UTXOs
-- Supported wallets: **Xverse**, **UniSat**, **OP_NET**
+- Supported wallets: **UniSat** (Xverse and OP_NET are scan-only — see note at top)
 
 ### Tools & Utilities
 - **Historical Fee Chart** — 24h or 1-week fee rate history so you pick the best time to merge
@@ -70,7 +78,7 @@ A wallet connection is required for Merge, Send, and Split.
 5. Click any row to open the inspector panel for that UTXO
 
 ### Merging junk inscriptions
-1. Connect Xverse, UniSat, or OP_NET
+1. Connect **UniSat** (Xverse and OP_NET are scan-only)
 2. Check the boxes next to UTXOs you want to merge (or click **Select Junk**)
 3. Click **Merge Selected**
 4. Review the transaction preview and confirm
