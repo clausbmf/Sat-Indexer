@@ -4195,8 +4195,6 @@ function buildMergePsbt(utxos, destAddr, feeAddr, feeSats, netFee, sourceAddr) {
     // PSBT_IN_WITNESS_UTXO: value + scriptPubKey of the UTXO being spent (source address)
     const wu = _cat(_numLE(u.value,8), _vi(srcSc.length), srcSc);
     parts.push(_psbtKV(new Uint8Array([0x01]), wu));   // PSBT_IN_WITNESS_UTXO
-    if (isTaproot(srcAddr) && srcSc.length === 34)
-      parts.push(_psbtKV(new Uint8Array([0x04]), srcSc.slice(2))); // PSBT_IN_TAP_INTERNAL_KEY
     parts.push(new Uint8Array([0x00]));                // input separator
   }
   parts.push(new Uint8Array([0x00]));                  // output 0 separator
@@ -4339,7 +4337,7 @@ async function signAndBroadcast(psbtB64, inputCount, signerAddr) {
       psbt:           psbtB64,
       signInputs:     { [signerAddr]: indices },
       broadcast:      true,
-      allowedSighash: [0x01],
+      allowedSighash: [0x00, 0x01],
     });
     const txid = res?.result?.txid ?? res?.result;
     if (!txid) throw new Error('Xverse did not return a txid. Check the extension for errors.');
@@ -5015,8 +5013,6 @@ function buildSplitPsbt(utxo, inscAddr, inscSats, changeAddr, changeAmt, service
   ];
   const wu = _cat(_numLE(utxo.value,8), _vi(srcSc.length), srcSc);
   parts.push(_psbtKV(new Uint8Array([0x01]), wu));  // PSBT_IN_WITNESS_UTXO
-  if (isTaproot(sourceAddr) && srcSc.length === 34)
-    parts.push(_psbtKV(new Uint8Array([0x04]), srcSc.slice(2))); // PSBT_IN_TAP_INTERNAL_KEY
   parts.push(new Uint8Array([0x00]));               // input separator
   txOuts.forEach(() => parts.push(new Uint8Array([0x00]))); // output separators
 
@@ -5302,8 +5298,6 @@ function buildSplitAllPsbt(utxo, specs, changeAddr, changeAmt, serviceFee, sourc
   ];
   const wu = _cat(_numLE(utxo.value,8), _vi(srcSc.length), srcSc);
   parts.push(_psbtKV(new Uint8Array([0x01]), wu));
-  if (isTaproot(sourceAddr) && srcSc.length === 34)
-    parts.push(_psbtKV(new Uint8Array([0x04]), srcSc.slice(2))); // PSBT_IN_TAP_INTERNAL_KEY
   parts.push(new Uint8Array([0x00])); // input sep
   txOuts.forEach(() => parts.push(new Uint8Array([0x00]))); // output seps
 
