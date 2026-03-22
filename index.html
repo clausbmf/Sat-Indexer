@@ -3203,18 +3203,26 @@ function renderPanel({ utxo, ins, allIns, rarity, meta, satributes, specialSats,
     const extraInsHtml = extraIns.length ? `
       <div class="p-section">
         <div class="p-title">All inscriptions in this UTXO (${allIns.length} total)</div>
-        ${allIns.map((ins2, i) => {
-          const id2  = esc(ins2.inscriptionId);
-          const num2 = ins2.inscriptionNumber != null ? '#' + fmt(ins2.inscriptionNumber) : 'inscribed';
-          const isPrimary = i === 0;
-          return `<div class="m-row" style="margin-bottom:4px;">
-            <span class="m-key" style="font-size:10px;">${isPrimary ? '&#9654; ' : ''}${num2}</span>
-            <a class="m-val sm" href="${ORDINALS}/inscription/${id2}" target="_blank" rel="noopener"
-              style="color:var(--purple);text-decoration:none;font-size:10px;word-break:break-all;" title="${id2}">
-              ${id2.slice(0,16)}…&#10138;
-            </a>
-          </div>`;
-        }).join('')}
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin-top:8px;">
+          ${allIns.map((ins2, i) => {
+            const id2  = esc(ins2.inscriptionId);
+            const num2 = ins2.inscriptionNumber != null ? '#' + fmt(ins2.inscriptionNumber) : 'inscribed';
+            const isPrimary = i === 0;
+            return `<div style="position:relative;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;background:var(--surface2);">
+              ${isPrimary ? '<div style="position:absolute;top:4px;left:4px;z-index:1;background:var(--accent);color:#000;font-size:9px;font-weight:700;padding:1px 5px;border-radius:99px;pointer-events:none;">&#9654;</div>' : ''}
+              <div style="aspect-ratio:1;overflow:hidden;">
+                <iframe src="${ORDINALS}/preview/${id2}"
+                  sandbox="allow-scripts allow-same-origin"
+                  style="width:100%;height:100%;border:none;pointer-events:none;"
+                  scrolling="no">
+                </iframe>
+              </div>
+              <div style="padding:4px 6px;font-size:10px;color:var(--text2);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${num2}</div>
+              <a href="${ORDINALS}/inscription/${id2}" target="_blank" rel="noopener"
+                style="position:absolute;inset:0;" title="${id2}"></a>
+            </div>`;
+          }).join('')}
+        </div>
       </div>` : '';
 
     insMeta = `
