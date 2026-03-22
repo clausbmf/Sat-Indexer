@@ -314,6 +314,42 @@
       border-radius: var(--radius); padding: 30px; text-align: center;
       color: var(--text3); margin-bottom: 18px; font-size: 13px;
     }
+    .ins-thumb-card {
+      position: relative; border: 1px solid var(--border);
+      border-radius: var(--radius-sm); overflow: hidden;
+      background: var(--surface2); transition: border-color .15s, box-shadow .15s, transform .15s;
+      cursor: pointer;
+    }
+    .ins-thumb-card:hover {
+      border-color: var(--accent); box-shadow: 0 0 0 2px rgba(247,147,26,.25);
+      transform: translateY(-1px);
+    }
+    .ins-thumb-card .thumb-img {
+      width: 100%; height: 100%; object-fit: contain; display: block;
+    }
+    .ins-thumb-card .thumb-placeholder {
+      width: 100%; height: 100%; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 4px;
+    }
+    .ins-thumb-card .thumb-badge {
+      font-size: 10px; font-weight: 700; color: var(--text3);
+      letter-spacing: 1px; background: var(--surface3);
+      padding: 2px 7px; border-radius: 99px; border: 1px solid var(--border2);
+    }
+    .ins-thumb-card .thumb-icon { font-size: 22px; opacity: .5; }
+    .ins-thumb-card .thumb-label {
+      padding: 4px 6px; font-size: 10px; color: var(--text2);
+      text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      border-top: 1px solid var(--border);
+    }
+    .ins-thumb-card .thumb-primary {
+      position: absolute; top: 4px; left: 4px; z-index: 1;
+      background: var(--accent); color: #000; font-size: 9px; font-weight: 700;
+      padding: 1px 5px; border-radius: 99px; pointer-events: none;
+    }
+    .ins-thumb-card .thumb-overlay {
+      position: absolute; inset: 0;
+    }
 
     .p-section { margin-bottom: 20px; }
     .p-title {
@@ -3208,18 +3244,16 @@ function renderPanel({ utxo, ins, allIns, rarity, meta, satributes, specialSats,
             const id2  = esc(ins2.inscriptionId);
             const num2 = ins2.inscriptionNumber != null ? '#' + fmt(ins2.inscriptionNumber) : 'inscribed';
             const isPrimary = i === 0;
-            return `<div style="position:relative;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;background:var(--surface2);">
-              ${isPrimary ? '<div style="position:absolute;top:4px;left:4px;z-index:1;background:var(--accent);color:#000;font-size:9px;font-weight:700;padding:1px 5px;border-radius:99px;pointer-events:none;">&#9654;</div>' : ''}
+            return `<div class="ins-thumb-card">
+              ${isPrimary ? '<div class="thumb-primary">&#9654;</div>' : ''}
               <div style="aspect-ratio:1;overflow:hidden;">
                 <iframe src="${ORDINALS}/preview/${id2}"
                   sandbox="allow-scripts allow-same-origin"
                   style="width:100%;height:100%;border:none;pointer-events:none;"
-                  scrolling="no">
-                </iframe>
+                  scrolling="no"></iframe>
               </div>
-              <div style="padding:4px 6px;font-size:10px;color:var(--text2);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${num2}</div>
-              <a href="${ORDINALS}/inscription/${id2}" target="_blank" rel="noopener"
-                style="position:absolute;inset:0;" title="${id2}"></a>
+              <div class="thumb-label">${num2}</div>
+              <a class="thumb-overlay" href="${ORDINALS}/inscription/${id2}" target="_blank" rel="noopener" title="View on ordinals.com"></a>
             </div>`;
           }).join('')}
         </div>
