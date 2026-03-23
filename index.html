@@ -1416,7 +1416,7 @@
         <div style="text-align:center;padding:32px 20px;">
           <div style="font-size:44px;color:var(--green);margin-bottom:12px;">&#10003;</div>
           <div style="font-size:15px;font-weight:700;margin-bottom:6px;color:var(--green);">Transaction Broadcast!</div>
-          <div style="font-size:12px;color:var(--text3);margin-bottom:20px;">Inscription split — excess sats returned to your change address.</div>
+          <div id="split-done-subtitle" style="font-size:12px;color:var(--text3);margin-bottom:20px;">Inscription split — excess sats returned to your change address.</div>
           <div class="m-row m-col" style="text-align:left;margin-bottom:10px;">
             <span class="m-key">TXID</span>
             <span class="m-val sm" id="split-done-txid" style="word-break:break-all"></span>
@@ -4949,6 +4949,8 @@ function openSplitModal(idx) {
   if (!row?.ins) return;
   _splitParams = { idx, row };
   splitStep(1);
+  const sub = document.getElementById('split-done-subtitle');
+  if (sub) sub.textContent = 'Inscription split — excess sats returned to your change address.';
   document.getElementById('split-modal').style.display = 'flex';
   renderSplitS1();
 }
@@ -5099,9 +5101,16 @@ function onSplitAddrInput() {
   const changeAmt  = utxo.value - gapSats - inscSats - SPLIT_SERVICE_FEE - netFee;
 
   if (changeAmt < 546) {
-    preview.innerHTML = `<div class="err-box show">Not enough sats to cover fees.
-      Remaining for change: ${fmt(changeAmt)} sats (minimum 546 required).</div>`;
-    confirm.disabled = true;
+    const lastOffset = offsetResults?.length > 0 ? offsetResults[offsetResults.length - 1].offset : firstOffset;
+    const tailSats   = utxo.value - lastOffset;
+    const tooTight   = tailSats < (SPLIT_SERVICE_FEE + SPLIT_INSC_SATS + 546 + netFee);
+    if (tooTight) {
+      _renderTightSendUI(preview, confirm, utxo, lastOffset, tailSats, srcAddr, feeRate);
+    } else {
+      preview.innerHTML = `<div class="err-box show">Not enough sats to cover fees.
+        Remaining for change: ${fmt(changeAmt)} sats (minimum 546 required).</div>`;
+      confirm.disabled = true;
+    }
     return;
   }
 
@@ -5177,6 +5186,130 @@ function onSplitAddrInput() {
 
   confirm.disabled = false;
   confirm.onclick = () => executeSplit(inscAddr, changeAddr, changeAmt, netFee, gapSats, inscSats);
+}
+
+/* ─── "Too tight to split" — plain BTC send helpers ────────────────────── */
+function _calcPlainSendVsize(srcAddr, destAddr) {
+  return Math.ceil(10.5 + _inVb(_addrType(srcAddr)) + _outVb(_addrType(destAddr)));
+}
+
+function _renderTightSendUI(preview, confirm, utxo, lastOffset, tailSats, srcAddr, feeRate) {
+  confirm.disabled = true;
+  preview.innerHTML = `
+    <div class="err-box show" style="margin-bottom:10px;">
+      UTXO too tight to split — the last inscription is at offset ${fmt(lastOffset)},
+      leaving only ${fmt(tailSats)} sat${tailSats === 1 ? '' : 's'} at the end of the UTXO.
+      Not enough room for a change output and service fee after splitting.
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border);
+      border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:4px;">
+      <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;
+        letter-spacing:.6px;margin-bottom:8px;">Send as plain BTC instead</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px;line-height:1.5;">
+        Send the entire UTXO (${fmt(utxo.value)} sats) to a
+        <code style="font-size:10px;">bc1q</code> Native SegWit address — no inscription routing, no service fee.
+      </div>
+      <label style="display:block;font-size:11px;font-weight:700;color:var(--text3);
+        text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Destination (bc1q only)</label>
+      <div style="position:relative;">
+        <input type="text" id="split-plain-addr" placeholder="bc1q…"
+          autocomplete="off" spellcheck="false"
+          oninput="_onTightSendInput()"
+          style="width:100%;padding-right:34px;font-family:'Cascadia Code','Fira Code','Courier New',monospace;" />
+        <div id="split-plain-dot" class="addr-dot"></div>
+      </div>
+      <div id="split-plain-preview" style="margin-top:8px;"></div>
+    </div>`;
+  // pre-fill with source address if it's bc1q
+  const plainInput = document.getElementById('split-plain-addr');
+  if (isSegwit(srcAddr)) { plainInput.value = srcAddr; _onTightSendInput(); }
+}
+
+function _onTightSendInput() {
+  const { row, feeRate } = _splitParams;
+  const { utxo } = row;
+  const srcAddr  = addrEl.value.trim();
+  const input    = document.getElementById('split-plain-addr');
+  const dot      = document.getElementById('split-plain-dot');
+  const subPrev  = document.getElementById('split-plain-preview');
+  const confirm  = document.getElementById('split-confirm-btn');
+  const addr     = input?.value.trim() ?? '';
+  const ok       = isSegwit(addr);  // bc1q only for plain send
+  if (input) input.className = addr ? (ok ? 'ok' : 'bad') : '';
+  if (dot)   dot.className   = 'addr-dot' + (addr ? (ok ? ' ok' : ' bad') : '');
+  if (!ok)   { if (subPrev) subPrev.innerHTML = ''; confirm.disabled = true; return; }
+
+  const vsize   = _calcPlainSendVsize(srcAddr, addr);
+  const netFee  = vsize * (feeRate || 5);
+  const outAmt  = utxo.value - netFee;
+  if (outAmt < 546) {
+    if (subPrev) subPrev.innerHTML = `<div style="color:var(--red);font-size:11px;">Output too small after fee (${fmt(outAmt)} sats).</div>`;
+    confirm.disabled = true;
+    return;
+  }
+  const usd = btcPrice > 0 ? ` ≈ $${(outAmt/1e8*btcPrice).toFixed(2)}` : '';
+  if (subPrev) subPrev.innerHTML = `
+    <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;">
+      <span style="color:var(--text3);">You send</span>
+      <span style="color:var(--green);font-weight:700;">${fmt(outAmt)} sats${usd ? ' · ' + usd : ''} → ${short(addr)}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;">
+      <span style="color:var(--text3);">Network fee (~${fmt(vsize)} vB @ ${feeRate} sat/vB)</span>
+      <span style="color:var(--text2);">&#8722; ${fmt(netFee)} sats</span>
+    </div>`;
+  confirm.disabled = false;
+  confirm.onclick = () => executePlainSend(addr, outAmt);
+}
+
+function buildPlainSendPsbt(utxo, destAddr, destAmt, sourceAddr) {
+  const srcSc  = addrScript(sourceAddr);
+  const destSc = addrScript(destAddr);
+  if (!srcSc)  throw new Error('Cannot derive scriptPubKey from source address.');
+  if (!destSc) throw new Error('Cannot derive scriptPubKey from destination address.');
+
+  const txIn  = _cat(_fromHex(utxo.txid).reverse(), _numLE(utxo.vout,4), new Uint8Array([0x00]), _numLE(0xffffffff,4));
+  const txOut = _cat(_numLE(destAmt,8), _vi(destSc.length), destSc);
+  const rawTx = _cat(_numLE(2,4), _vi(1), txIn, _vi(1), txOut, _numLE(0,4));
+
+  const parts = [
+    new Uint8Array([0x70,0x73,0x62,0x74,0xff]),
+    _psbtKV(new Uint8Array([0x00]), rawTx),
+    new Uint8Array([0x00]),
+  ];
+  const wu = _cat(_numLE(utxo.value,8), _vi(srcSc.length), srcSc);
+  parts.push(_psbtKV(new Uint8Array([0x01]), wu));
+  if (xverseTapInternalKey)
+    parts.push(_psbtKV(new Uint8Array([0x04]), xverseTapInternalKey));
+  parts.push(new Uint8Array([0x00]));  // input separator
+  parts.push(new Uint8Array([0x00]));  // output separator
+
+  return btoa(String.fromCharCode(..._cat(...parts)));
+}
+
+async function executePlainSend(destAddr, destAmt) {
+  const { row } = _splitParams;
+  splitStep(2);
+  const msg  = document.getElementById('split-s2-msg');
+  const err  = document.getElementById('split-s2-err');
+  const back = document.getElementById('split-s2-back');
+  err.style.display = 'none'; back.style.display = 'none';
+  try {
+    msg.textContent = 'Building transaction…';
+    const srcAddr = addrEl.value.trim();
+    const psbtB64 = buildPlainSendPsbt(row.utxo, destAddr, destAmt, srcAddr);
+    msg.textContent = 'Waiting for wallet signature…';
+    const txid = await signAndBroadcast(psbtB64, 1, srcAddr);
+    document.getElementById('split-done-txid').textContent = txid;
+    document.getElementById('split-done-link').href = `https://mempool.space/tx/${encodeURIComponent(txid)}`;
+    document.getElementById('split-done-subtitle').textContent = 'Sent as plain BTC — UTXO forwarded to your bc1q address.';
+    splitStep(3);
+    mempoolMonitor(txid);
+  } catch (e) {
+    msg.textContent = '';
+    err.textContent = e.message;
+    err.style.display = '';
+    back.style.display = '';
+  }
 }
 
 function buildSplitPsbt(utxo, inscAddr, inscSats, changeAddr, changeAmt, serviceFee, sourceAddr, gapSats) {
