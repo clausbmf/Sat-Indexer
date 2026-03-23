@@ -871,6 +871,34 @@
       .page-title img { width: calc(50% - 8px) !important; height: auto !important; aspect-ratio: 1 / 1; object-fit: cover; flex-shrink: 1 !important; }
       .page-title div { order: -1; }
     }
+
+    /* ── tx flow ──────────────────────────────────────────────────────────── */
+    .tx-flow { margin-top: 4px; }
+    .tx-io-list { display: flex; flex-direction: column; gap: 3px; }
+    .tx-io-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 10px; background: var(--bg);
+      border-radius: var(--radius-sm); font-size: 11.5px;
+      border: 1px solid transparent;
+    }
+    .tx-io-row.tx-highlight {
+      background: var(--accent-dim); border-color: rgba(247,147,26,.35);
+    }
+    .tx-io-left { display: flex; align-items: center; gap: 5px; flex: 1; min-width: 0; overflow: hidden; }
+    .tx-io-addr { font-family: monospace; color: var(--text2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tx-io-val { color: var(--text); font-weight: 700; white-space: nowrap; font-size: 11px; }
+    .tx-io-badge { font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 99px; white-space: nowrap; flex-shrink: 0; }
+    .tib-ord  { background: var(--accent-dim);  color: var(--accent);  border: 1px solid rgba(247,147,26,.3); }
+    .tib-rune { background: var(--purple-dim);  color: var(--purple);  border: 1px solid rgba(168,85,247,.3); }
+    .tib-op   { background: var(--surface3);    color: var(--text3);   border: 1px solid var(--border); }
+    .tib-cur  { font-size: 9px; font-weight: 700; color: var(--accent); white-space: nowrap; flex-shrink: 0; }
+    .tx-arrow { text-align: center; color: var(--text3); font-size: 13px; margin: 5px 0 7px; }
+    .tx-lbl   { font-size: 10px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 5px; }
+    .tx-merge-warn {
+      background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.3);
+      border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 10px;
+      font-size: 12px; color: var(--red); line-height: 1.55;
+    }
   </style>
 </head>
 <body>
@@ -3529,8 +3557,96 @@ function renderPanel({ utxo, ins, allIns, rarity, meta, satributes, specialSats,
         &#10138; View on mempool.space
       </a>
     </div>
+    <div class="p-section">
+      <div class="p-title">Transaction Flow</div>
+      <div id="tx-flow-section" style="color:var(--text3);font-size:12px;">Loading…</div>
+    </div>
     ${cleanSafeHtml}
     ${insMeta}`;
+
+  // Async: populate the transaction flow section
+  loadTxFlow(utxo.txid, utxo.vout);
+}
+
+/* ─── Fetch full transaction details from mempool.space ─────────────────── */
+async function fetchTxDetails(txid) {
+  try {
+    const res = await fetch(`${MEMPOOL}/tx/${encodeURIComponent(txid)}`);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch { return null; }
+}
+
+/* ─── Render transaction flow into the panel ────────────────────────────── */
+async function loadTxFlow(txid, vout) {
+  const el = document.getElementById('tx-flow-section');
+  if (!el) return;
+
+  const tx = await fetchTxDetails(txid);
+  if (!tx) {
+    el.innerHTML = `<span style="color:var(--text3);font-size:12px;">Could not load transaction details.</span>`;
+    return;
+  }
+
+  // Inputs HTML
+  const inputsHtml = tx.vin.map(inp => {
+    const addr = inp.prevout?.scriptpubkey_address;
+    const val  = inp.prevout?.value;
+    const cb   = inp.is_coinbase;
+    return `<div class="tx-io-row">
+      <div class="tx-io-left">
+        <span class="tx-io-addr">${cb ? 'coinbase' : (addr ? addr.slice(0,10)+'…'+addr.slice(-6) : 'unknown')}</span>
+      </div>
+      <span class="tx-io-val">${val != null ? fmt(val)+' sats' : '—'}</span>
+    </div>`;
+  }).join('');
+
+  // Build vout → known data map from loaded rows
+  const inscribedVouts = new Set(rows.filter(r => r.utxo.txid === txid && r.ins).map(r => r.utxo.vout));
+  const runeVouts      = new Set(rows.filter(r => r.utxo.txid === txid && r.runes?.length).map(r => r.utxo.vout));
+
+  // Outputs HTML
+  const outputsHtml = tx.vout.map((out, i) => {
+    const addr   = out.scriptpubkey_address;
+    const isCur  = i === vout;
+    const isOpRet= out.scriptpubkey_type === 'op_return';
+    const badges = [];
+    if (inscribedVouts.has(i)) badges.push(`<span class="tx-io-badge tib-ord">ordinal</span>`);
+    if (runeVouts.has(i))      badges.push(`<span class="tx-io-badge tib-rune">rune</span>`);
+    if (isOpRet)               badges.push(`<span class="tx-io-badge tib-op">OP_RETURN</span>`);
+    return `<div class="tx-io-row${isCur ? ' tx-highlight' : ''}">
+      <div class="tx-io-left">
+        <span class="tx-io-addr">${isOpRet ? 'OP_RETURN' : (addr ? addr.slice(0,10)+'…'+addr.slice(-6) : 'unknown')}</span>
+        ${badges.join('')}
+        ${isCur ? `<span class="tib-cur">&#9664; this UTXO</span>` : ''}
+      </div>
+      <span class="tx-io-val">${fmt(out.value)} sats</span>
+    </div>`;
+  }).join('');
+
+  // Merge warning when this UTXO holds multiple inscriptions
+  const thisRow  = rows.find(r => r.utxo.txid === txid && r.utxo.vout === vout);
+  const insCount = thisRow?.allIns?.length ?? 0;
+  const inCount  = tx.vin.length;
+  let mergeWarn  = '';
+  if (insCount > 1) {
+    mergeWarn = `<div class="tx-merge-warn">
+      &#9888; <strong>${insCount} inscriptions ended up in this single output.</strong><br>
+      This tx had ${inCount} input${inCount !== 1 ? 's' : ''} — multiple previously-separate inscribed UTXOs
+      were likely used as inputs and their sats (and ordinals) were consolidated into one output.
+      This is usually a wallet coin-selection error or an intentional batch transfer.
+    </div>`;
+  }
+
+  el.innerHTML = `
+    ${mergeWarn}
+    <div class="tx-flow">
+      <div class="tx-lbl">${inCount} input${inCount !== 1 ? 's' : ''}</div>
+      <div class="tx-io-list">${inputsHtml}</div>
+      <div class="tx-arrow">&#8595;</div>
+      <div class="tx-lbl">${tx.vout.length} output${tx.vout.length !== 1 ? 's' : ''}</div>
+      <div class="tx-io-list">${outputsHtml}</div>
+    </div>`;
 }
 
 /* ─── Fetch inscription metadata from ordinals.com/r/inscription/{id} ───── */
