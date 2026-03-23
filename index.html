@@ -5184,15 +5184,68 @@ function onSplitAddrInput() {
     ? offsetResults.slice(1).filter(r => r.offset >= serviceFeeStart)
     : [];
   if (inServiceFeeRange.length > 0) {
+    // Service fee would burn inscriptions at the end of the UTXO — split without it instead.
+    // changeAmtTight is guaranteed >= changeAmt + SPLIT_SERVICE_FEE > 546 here.
+    const vsizeTight     = calcSplitVsizeTight(srcAddr, inscAddr, changeAddr, hasGap);
+    const netFeeTight    = vsizeTight * (feeRate || 5);
+    const changeAmtTight = utxo.value - gapSats - inscSats - netFeeTight;
     const nums = inServiceFeeRange.map(r =>
       r.ins?.inscriptionNumber != null ? `#${fmt(r.ins.inscriptionNumber)}` : r.ins?.inscriptionId?.slice(0,12)+'…'
     ).join(', ');
-    preview.innerHTML = `<div class="err-box show">
-      Cannot split safely — inscription${inServiceFeeRange.length > 1 ? 's' : ''} ${nums}
-      sit${inServiceFeeRange.length === 1 ? 's' : ''} in the last ${fmt(SPLIT_SERVICE_FEE)} sats of this UTXO
-      and would be sent to the service fee output.
-      Use <strong>Split All</strong> instead to separate all inscriptions safely.</div>`;
-    confirm.disabled = true;
+    const { allIns } = row;
+    const insCount2   = allIns ? allIns.length : 1;
+    const activeIns2  = _splitParams.firstInsc ?? row.ins;
+    const insNumStr2  = activeIns2?.inscriptionNumber != null ? `#${fmt(activeIns2.inscriptionNumber)}` : 'inscription';
+    const usdChange2  = btcPrice > 0 ? ` ≈ $${(changeAmtTight/1e8*btcPrice).toFixed(2)}` : '';
+    const usdInsc2    = btcPrice > 0 ? ` ≈ $${(inscSats/1e8*btcPrice).toFixed(4)}` : '';
+    const remainNote2 = insCount2 > 1
+      ? `<div style="font-size:11px;color:#eab308;margin-top:4px;">&#9888; ${insCount2 - 1} more inscription(s) stay in the change output — split again to separate them</div>`
+      : '';
+    const gapRowS = hasGap
+      ? `<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;">
+          <span style="color:var(--text3);">Gap output (you receive)</span>
+          <span style="color:var(--green);font-weight:700;">${fmt(gapSats)} sats → ${short(changeAddr)}</span>
+         </div>`
+      : '';
+    preview.innerHTML = `
+      <div style="background:rgba(234,179,8,.08);border:1px solid rgba(234,179,8,.3);
+        border-radius:var(--radius-sm);padding:8px 12px;font-size:11px;color:#eab308;
+        margin-bottom:10px;line-height:1.5;">
+        &#9888; Inscription${inServiceFeeRange.length > 1 ? 's' : ''} ${nums}
+        sit${inServiceFeeRange.length === 1 ? 's' : ''} in the last ${fmt(SPLIT_SERVICE_FEE)} sats —
+        splitting without service fee so they stay safe in the change output.
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);
+        border-radius:var(--radius-sm);padding:12px 14px;">
+        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;
+          letter-spacing:.6px;margin-bottom:8px;">Transaction preview</div>
+        ${gapRowS}
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;">
+          <span style="color:var(--text3);">Inscription output</span>
+          <span style="color:var(--purple);font-weight:700;">${fmt(inscSats)} sats → ${short(inscAddr)}</span>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:5px;padding-left:2px;">
+          ${insNumStr2} · ${inscSats} sats (${usdInsc2 || '—'})${remainNote2}
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;">
+          <span style="color:var(--text3);">Change (you receive)</span>
+          <span style="color:var(--green);font-weight:700;">${fmt(changeAmtTight)} sats</span>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:5px;padding-left:2px;">
+          ${(changeAmtTight/1e8).toFixed(8)} BTC${usdChange2 ? ' · ' + usdChange2 : ''}
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;">
+          <span style="color:var(--text3);">Network fee (~${fmt(vsizeTight)} vB @ ${feeRate} sat/vB)</span>
+          <span style="color:var(--text2);">&#8722; ${fmt(netFeeTight)} sats</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;
+          border-top:1px solid var(--border);padding-top:6px;margin-top:2px;">
+          <span style="color:var(--text3);">Service fee</span>
+          <span style="color:var(--text3);">waived (inscription at end of UTXO)</span>
+        </div>
+      </div>`;
+    confirm.disabled = false;
+    confirm.onclick = () => executeSplitTight(inscAddr, changeAddr, changeAmtTight, netFeeTight, gapSats, inscSats);
     return;
   }
 
