@@ -3875,17 +3875,31 @@ async function connectOpNet() {
     btn.disabled = true;
     const provider = window.opnet;
     if (!provider) throw new Error('OP_NET wallet not detected. Install the OP_NET browser extension.');
+
     let addr;
     if (typeof provider.connect === 'function') {
       const result = await provider.connect();
-      addr = Array.isArray(result) ? result[0]
-           : (result?.taproot ?? result?.address ?? result);
+      if (Array.isArray(result)) {
+        // Pick the first taproot address if available, else first valid address
+        addr = result.find(a => isTaproot(a)) ?? result.find(a => isValidAddr(a)) ?? result[0];
+      } else if (result && typeof result === 'object') {
+        // Try all common property names for the taproot/ordinals address
+        const candidates = [
+          result.taproot, result.p2tr, result.ordinals, result.taprootAddress,
+          result.p2trAddress, result.ordinalsAddress, result.address,
+        ].filter(a => typeof a === 'string' && a);
+        addr = candidates.find(a => isTaproot(a)) ?? candidates[0] ?? result;
+      } else {
+        addr = result;
+      }
     } else if (typeof provider.requestAccounts === 'function') {
       const accounts = await provider.requestAccounts();
-      addr = accounts?.[0];
+      const list = Array.isArray(accounts) ? accounts : [accounts];
+      addr = list.find(a => isTaproot(a)) ?? list.find(a => isValidAddr(a)) ?? list[0];
     }
+
     if (typeof addr !== 'string' || !addr) throw new Error('No address returned by OP_NET.');
-    if (!isTaproot(addr)) throw new Error('OP_NET returned a non-Taproot address: ' + addr);
+    if (!isValidAddr(addr)) throw new Error('OP_NET returned an unrecognised address: ' + addr);
     setWalletAddress(addr, 'OP_NET');
     document.querySelectorAll('.btn-wallet').forEach(b => b.classList.remove('connected'));
     btn.classList.add('connected');
