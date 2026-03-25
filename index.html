@@ -457,12 +457,13 @@
       color: #10b981; border-color: rgba(16,185,129,.35); background: rgba(16,185,129,.1);
     }
     .cbrc20-badge {
-      display: inline-block; font-size: 9px; font-weight: 700;
+      display: inline-block; font-size: 11px; font-weight: 800;
       padding: 2px 6px; border-radius: 99px;
       text-transform: uppercase; letter-spacing: .4px;
       border: 1px solid; white-space: nowrap;
       color: #818cf8; border-color: rgba(129,140,248,.35); background: rgba(129,140,248,.1);
     }
+    .cbrc20-badge .rune-amount { font-size: 11px; font-weight: 800; color: #818cf8; }
 
     /* ── satribute badges ────────────────────────────────────────────────── */
     .sat-badges { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
@@ -2581,12 +2582,33 @@ async function loadRarities() {
         // cBRC-20 detection — metaprotocol field (fast, no extra fetch) or JSON content fallback
         const mp = (meta?.metaprotocol || '').toLowerCase();
         if (mp.startsWith('cbrc-20')) {
-          // metaprotocol format: "cbrc-20:op:tick=amt" — parse what we can
+          // metaprotocol may be just "cbrc-20" or "cbrc-20:op:tick=amt" etc.
+          // The amount/tick/op are in the inscription JSON content — fetch it always.
           const parts = mp.split(':');
-          r.cbrc20 = { p: 'cbrc-20', op: parts[1], raw: meta.metaprotocol };
-          const kv = (parts[2] || '').split('=');
-          if (kv[0]) r.cbrc20.tick = kv[0].toUpperCase();
-          if (kv[1]) r.cbrc20.amt  = kv[1];
+          r.cbrc20 = { p: 'cbrc-20', raw: meta.metaprotocol };
+          if (/^\d+(\.\d+)?$/.test(parts[1] || '')) {
+            r.cbrc20.amt  = parts[1];
+            r.cbrc20.tick = (parts[2] || '').toUpperCase();
+          } else if (parts[1]) {
+            r.cbrc20.op = parts[1];
+            const kv = (parts[2] || '').split('=');
+            if (kv[0]) r.cbrc20.tick = kv[0].toUpperCase();
+            if (kv[1]) r.cbrc20.amt  = kv[1];
+          }
+          // Always try JSON content to fill in missing fields (amt, tick, op)
+          if (!r.cbrc20.amt || !r.cbrc20.tick) {
+            try {
+              const cr = await fetch(`${ORDINALS}/content/${encodeURIComponent(r.ins.inscriptionId)}`);
+              if (cr.ok) {
+                const json = JSON.parse(await cr.text());
+                if (typeof json?.p === 'string' && json.p.toLowerCase() === 'cbrc-20') {
+                  if (!r.cbrc20.amt  && json.amt)  r.cbrc20.amt  = json.amt;
+                  if (!r.cbrc20.tick && json.tick)  r.cbrc20.tick = json.tick.toUpperCase();
+                  if (!r.cbrc20.op   && json.op)    r.cbrc20.op   = json.op;
+                }
+              }
+            } catch { /* not JSON or fetch failed */ }
+          }
         } else {
           const ct = (meta?.content_type || '').toLowerCase();
           if (ct.startsWith('text/') || ct === 'application/json') {
@@ -3019,6 +3041,18 @@ function updateSortUI() {
   });
 }
 
+/* ─── Token cell HTML (used by renderTable and loadCharms) ──────────────── */
+function tokenCellHtml(row) {
+  const parts = [];
+  if (row.runes?.length) parts.push(...row.runes.map(rn =>
+    `<span class="rune-badge">${esc(rn.name)}${rn.amount ? `<span class="rune-amount">${esc(rn.amount)}</span>` : ''}</span>`));
+  if (row.atomicals?.length) parts.push(...row.atomicals.map(a =>
+    `<span class="atomical-badge">ATOMICAL</span>`));
+  if (row.cbrc20) parts.push(
+    `<span class="cbrc20-badge">cBRC-20${row.cbrc20.tick ? ' ' + esc(row.cbrc20.tick) : ''}${row.cbrc20.amt ? `<span class="rune-amount">${esc(row.cbrc20.amt)}</span>` : ''}</span>`);
+  return parts.length ? parts.join(' ') : `<span style="color:var(--text3);font-size:11px">—</span>`;
+}
+
 /* ─── Table ─────────────────────────────────────────────────────────────── */
 function renderTable() {
   const tbody = document.getElementById('tbody');
@@ -3069,20 +3103,6 @@ function renderTable() {
 
     // Preview thumbnail
     const thumb = ins ? thumbHtml(ins) : `<span class="no-ins-thumb">&#8212;</span>`;
-
-    // Token cell (runes already known; stamps/atomicals filled in by loadProtocols)
-    function tokenCellHtml(row) {
-      const parts = [];
-      if (row.runes?.length) parts.push(...row.runes.map(rn =>
-        `<span class="rune-badge">${esc(rn.name)}${rn.amount ? `<span class="rune-amount">${esc(rn.amount)}</span>` : ''}</span>`));
-      if (row.stamps?.length) parts.push(...row.stamps.map(s =>
-        `<span class="stamp-badge">STAMP #${s.stamp ?? '?'}</span>`));
-      if (row.atomicals?.length) parts.push(...row.atomicals.map(a =>
-        `<span class="atomical-badge">ATOMICAL</span>`));
-      if (row.cbrc20) parts.push(
-        `<span class="cbrc20-badge">cBRC-20${row.cbrc20.tick ? ' ' + esc(row.cbrc20.tick) : ''}</span>`);
-      return parts.length ? parts.join(' ') : `<span style="color:var(--text3);font-size:11px">—</span>`;
-    }
 
     // Sats
     const satsClass = isLarge ? 'sats-val large' : 'sats-val';
