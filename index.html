@@ -464,6 +464,14 @@
       color: #818cf8; border-color: rgba(129,140,248,.35); background: rgba(129,140,248,.1);
     }
     .cbrc20-badge .rune-amount { font-size: 11px; font-weight: 800; color: #818cf8; }
+    .alkane-badge {
+      display: inline-block; font-size: 9px; font-weight: 700;
+      padding: 2px 6px; border-radius: 99px;
+      text-transform: uppercase; letter-spacing: .4px;
+      border: 1px solid; white-space: nowrap;
+      color: #f472b6; border-color: rgba(244,114,182,.35); background: rgba(244,114,182,.1);
+    }
+    .alkane-badge .rune-amount { font-size: 9px; color: var(--text3); margin-left: 2px; }
 
     /* ── satribute badges ────────────────────────────────────────────────── */
     .sat-badges { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
@@ -3050,6 +3058,8 @@ function tokenCellHtml(row) {
     `<span class="atomical-badge">ATOMICAL</span>`));
   if (row.cbrc20) parts.push(
     `<span class="cbrc20-badge">cBRC-20${row.cbrc20.tick ? ' ' + esc(row.cbrc20.tick) : ''}${row.cbrc20.amt ? `<span class="rune-amount">${esc(row.cbrc20.amt)}</span>` : ''}</span>`);
+  if (row.alkanes?.length) parts.push(...row.alkanes.map(al =>
+    `<span class="alkane-badge">ALKANE ${esc(al.id ?? '')}${al.value ? `<span class="rune-amount">${esc(al.value)}</span>` : ''}</span>`));
   return parts.length ? parts.join(' ') : `<span style="color:var(--text3);font-size:11px">—</span>`;
 }
 
@@ -3228,7 +3238,7 @@ function closePanel() {
   }
 }
 
-function renderPanel({ utxo, ins, allIns, rarity, meta, satributes, specialSats, runes, stamps, atomicals, cbrc20 }) {
+function renderPanel({ utxo, ins, allIns, rarity, meta, satributes, specialSats, runes, stamps, atomicals, cbrc20, alkanes }) {
   const body = document.getElementById('panel-body');
 
   // ── inscription preview ──────────────────────────────────────────────────
@@ -3332,7 +3342,7 @@ function renderPanel({ utxo, ins, allIns, rarity, meta, satributes, specialSats,
       <div class="p-section">
         <div class="p-title">Actions</div>
         ${(() => {
-          const hasAnyToken = (runes?.length || stamps?.length || atomicals?.length || cbrc20);
+          const hasAnyToken = (runes?.length || stamps?.length || atomicals?.length || cbrc20 || alkanes?.length);
           if (!ins && !hasAnyToken) {
             return `<div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.35);
               border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px;">
@@ -3349,6 +3359,7 @@ function renderPanel({ utxo, ins, allIns, rarity, meta, satributes, specialSats,
             if (stamps?.length) warnings.push('Stamp');
             if (atomicals?.length) warnings.push('Atomical');
             if (cbrc20) warnings.push('cBRC-20');
+            if (alkanes?.length) warnings.push('Alkane');
             return `<div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.35);
               border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px;">
               <span style="font-size:20px;">&#9888;</span>
@@ -3513,6 +3524,21 @@ function renderPanel({ utxo, ins, allIns, rarity, meta, satributes, specialSats,
           target="_blank" rel="noopener">&#10138; Check balance on cybord.motoswap.org</a>
       </div>`;
   }
+  if (alkanes?.length) {
+    const alkaneRows = alkanes.map(al => `
+      <div class="m-row">
+        <span class="m-key">${esc(al.id ?? 'Alkane')}</span>
+        <span class="m-val">${al.value ? esc(al.value) : '—'}</span>
+      </div>`).join('');
+    runeSection += `
+      <div class="p-section">
+        <div class="p-title">Alkanes</div>
+        ${alkaneRows}
+        <a class="ext" style="margin-top:6px;color:#f472b6;"
+          href="https://alkanes.xyz"
+          target="_blank" rel="noopener">&#10138; View on alkanes.xyz</a>
+      </div>`;
+  }
 
   const mempoolUrl = `https://mempool.space/tx/${esc(utxo.txid)}`;
   // Find the row for this UTXO to get blockTime
@@ -3522,7 +3548,7 @@ function renderPanel({ utxo, ins, allIns, rarity, meta, satributes, specialSats,
     : '';
 
   // Safe to spend box for non-inscribed UTXOs (when no inscription section present)
-  const hasAnyTokenUtxo = (runes?.length || stamps?.length || atomicals?.length || cbrc20);
+  const hasAnyTokenUtxo = (runes?.length || stamps?.length || atomicals?.length || cbrc20 || alkanes?.length);
   let cleanSafeHtml = '';
   if (!ins && !hasAnyTokenUtxo) {
     cleanSafeHtml = `<div class="p-section">
@@ -3533,6 +3559,39 @@ function renderPanel({ utxo, ins, allIns, rarity, meta, satributes, specialSats,
         <div>
           <div style="font-size:12px;font-weight:700;color:var(--green);">Safe to spend as BTC</div>
           <div style="font-size:11px;color:var(--text3);">No inscription or token detected on this UTXO.</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn-panel-sel" onclick="panelQuickMerge(${activeIdx})" style="flex:1;">
+          &#9851; Merge
+        </button>
+        <button class="btn-panel-sel" onclick="panelQuickSend(${activeIdx})"
+          style="flex:1;background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.3);color:var(--green);">
+          &#10148; Send
+        </button>
+      </div>
+      <button id="panel-sel-btn"
+        class="${selectedIdxs.has(activeIdx) ? 'btn-panel-desel' : 'btn-panel-sel'}"
+        onclick="togglePanelSelect()" style="margin-top:6px;font-size:11px;opacity:.7;">
+        ${selectedIdxs.has(activeIdx) ? '&#10003; In merge selection — click to remove' : '+ Add to merge selection'}
+      </button>
+    </div>`;
+  } else if (!ins && hasAnyTokenUtxo) {
+    // Token-only UTXO (Rune / Stamp / Atomical / cBRC-20 but no inscription)
+    const tokenWarnings = [];
+    if (runes?.length)     tokenWarnings.push('Rune');
+    if (stamps?.length)    tokenWarnings.push('Stamp');
+    if (atomicals?.length) tokenWarnings.push('Atomical');
+    if (cbrc20)            tokenWarnings.push('cBRC-20');
+    if (alkanes?.length)   tokenWarnings.push('Alkane');
+    cleanSafeHtml = `<div class="p-section">
+      <div class="p-title">Actions</div>
+      <div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.35);
+        border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px;">
+        <span style="font-size:20px;">&#9888;</span>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--red);">Do NOT spend as plain BTC</div>
+          <div style="font-size:11px;color:var(--text3);">Contains: ${tokenWarnings.join(', ')} — spending destroys it.</div>
         </div>
       </div>
       <div style="display:flex;gap:6px;">
@@ -3861,6 +3920,7 @@ function selectJunk() {
     if (r.stamps?.length) return;
     if (r.atomicals?.length) return;
     if (r.cbrc20) return;
+    if (r.alkanes?.length) return;
     if (r.utxo.value > JUNK_MAX_SATS) return;
     if (r.rarity && r.rarity !== 'common') return;
     if (r.satributes && r.satributes.length > 0) return;
@@ -3879,6 +3939,7 @@ function selectClean() {
     if (r.stamps?.length) return;
     if (r.atomicals?.length) return;
     if (r.cbrc20) return;
+    if (r.alkanes?.length) return;
     selectedIdxs.add(idx);
   });
   syncCheckboxes();
@@ -4039,6 +4100,7 @@ function detectJunkUtxos() {
     if (r.stamps?.length) return false;                        // has stamps — skip
     if (r.atomicals?.length) return false;                     // has atomicals — skip
     if (r.cbrc20) return false;                                // has cBRC-20 — skip
+    if (r.alkanes?.length) return false;                       // has alkanes — skip
     if (r.utxo.value > JUNK_MAX_SATS) return false;           // ≤ 2000 sats
     if (r.rarity  && r.rarity  !== 'common') return false;   // no rare sat
     if (r.satributes && r.satributes.length > 0) return false; // no satributes
@@ -4615,9 +4677,10 @@ function cancelSignPicker() {
   if (_signPickerReject) _signPickerReject();
 }
 
-/* ─── Protocol detection (Stamps + Atomicals) ───────────────────────────── */
+/* ─── Protocol detection (Stamps + Atomicals + Alkanes) ─────────────────── */
 const STAMPCHAIN = 'https://stampchain.io/api/v2';
 const ATOMICALS  = 'https://ep.atomicals.xyz/proxy';
+const ALKANES_RPC = 'https://mainnet.sandshrew.io/v2/lasereyes';
 
 async function loadProtocols() {
   const BATCH = 4;
@@ -4649,6 +4712,32 @@ async function loadProtocols() {
           } else { r.atomicals = null; }
         } catch { r.atomicals = null; }
         if (r.atomicals?.length) changed = true;
+      }
+
+      // ── Alkanes (by txid:vout via Sandshrew JSON-RPC) ────────────────────
+      if (r.alkanes === undefined) {
+        try {
+          const res = await fetch(ALKANES_RPC, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              jsonrpc: '2.0', id: 1,
+              method: 'alkanes_protorunesbyoutpoint',
+              params: [{ txid, vout }],
+            }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const list = data?.result?.alkanes ?? data?.result ?? [];
+            r.alkanes = Array.isArray(list) && list.length
+              ? list.map(al => ({
+                  id: al.id ? `${al.id.block}:${al.id.tx}` : (al.name ?? ''),
+                  value: al.value ?? al.balance ?? null,
+                }))
+              : null;
+          } else { r.alkanes = null; }
+        } catch { r.alkanes = null; }
+        if (r.alkanes?.length) changed = true;
       }
 
       // Update cell if anything found
@@ -4767,12 +4856,13 @@ function exportTaxCsv() {
     const usd = btcPrice > 0 ? (r.utxo.value/1e8*btcPrice).toFixed(2) : '';
     const date = r.blockTime ? new Date(r.blockTime*1000).toISOString().slice(0,10) : '';
     const days = r.blockTime ? Math.floor((Date.now()/1000 - r.blockTime) / 86400) : '';
-    const type = r.ins ? 'Inscribed' : (r.runes?.length ? 'Rune' : (r.stamps?.length ? 'Stamp' : (r.atomicals?.length ? 'Atomical' : 'Clean BTC')));
+    const type = r.ins ? 'Inscribed' : (r.runes?.length ? 'Rune' : (r.stamps?.length ? 'Stamp' : (r.atomicals?.length ? 'Atomical' : (r.alkanes?.length ? 'Alkane' : 'Clean BTC'))));
     const tokens = [
       ...(r.runes?.map(rn => rn.name) || []),
       ...(r.stamps?.map(() => 'STAMP') || []),
       ...(r.atomicals?.length ? ['ATOMICAL'] : []),
       ...(r.cbrc20 ? ['cBRC-20'] : []),
+      ...(r.alkanes?.map(al => 'ALKANE ' + (al.id ?? '')) || []),
     ].join('|') || '—';
     csvRows.push([
       addr, r.utxo.txid, r.utxo.vout, r.utxo.value,
@@ -6334,6 +6424,7 @@ function exportCsv() {
       ...(r.stamps?.map(() => 'STAMP') || []),
       ...(r.atomicals?.length ? ['ATOMICAL'] : []),
       ...(r.cbrc20 ? ['cBRC-20'] : []),
+      ...(r.alkanes?.map(al => 'ALKANE ' + (al.id ?? '')) || []),
     ].join('|') || '—';
     const usd = btcPrice > 0 ? (r.utxo.value/1e8*btcPrice).toFixed(2) : '—';
     csvRows.push([
