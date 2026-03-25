@@ -3427,6 +3427,12 @@ function renderPanel({ utxo, ins, allIns, rarity, meta, satributes, specialSats,
            </div>`;
       }
 
+      // Update raw metaprotocol field from inscription envelope
+      if (meta.metaprotocol) {
+        const mpVal = document.getElementById('panel-metaprotocol-val');
+        if (mpVal) mpVal.textContent = meta.metaprotocol;
+      }
+
       const metaRows = [
         ['Content type', esc(meta.content_type  || '—')],
         ['Genesis block', meta.genesis_height != null ? fmt(meta.genesis_height) : '—'],
@@ -3625,6 +3631,29 @@ function renderPanel({ utxo, ins, allIns, rarity, meta, satributes, specialSats,
       </div>
       <div class="m-row"><span class="m-key">Vout</span><span class="m-val">${utxo.vout}</span></div>
       ${ageHtml}
+      ${(() => {
+        const protos = [];
+        if (ins)               protos.push('Ordinal');
+        if (runes?.length)     protos.push('Rune');
+        if (stamps?.length)    protos.push('Stamp');
+        if (atomicals?.length) protos.push('Atomical');
+        if (cbrc20)            protos.push('cBRC-20');
+        if (alkanes?.length)   protos.push('Alkane');
+        if (!protos.length)    return '';
+        // meta.metaprotocol (raw inscription field) will override this async if available
+        const initial = protos.join(', ');
+        return `<div class="m-row" id="panel-metaprotocol-row"><span class="m-key">Metaprotocol</span><span class="m-val" id="panel-metaprotocol-val">${initial}</span></div>`;
+      })()}
+      ${(() => {
+        const parts = [];
+        if (runes?.length) parts.push(...runes.map(rn => `${esc(rn.name)}${rn.amount ? ' · ' + esc(rn.amount) : ''}`));
+        if (stamps?.length) parts.push(...stamps.map(s => `STAMP #${s.stamp ?? '?'}`));
+        if (atomicals?.length) parts.push(...atomicals.map(a => `${esc(a.atomical_id ?? 'atomical')}`));
+        if (cbrc20 && cbrc20.tick) parts.push(`${esc(cbrc20.tick)}${cbrc20.amt ? ' · ' + esc(cbrc20.amt) : ''}`);
+        if (alkanes?.length) parts.push(...alkanes.map(al => `${esc(al.id ?? 'alkane')}${al.value ? ' · ' + esc(al.value) : ''}`));
+        if (!parts.length) return '';
+        return `<div class="m-row m-col"><span class="m-key">Tokens</span><span class="m-val" style="line-height:1.7;">${parts.join('<br>')}</span></div>`;
+      })()}
       <div class="m-row m-col">
         <span class="m-key">TXID</span>
         <span class="m-val sm">${esc(utxo.txid)}</span>
