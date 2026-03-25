@@ -3433,15 +3433,34 @@ function renderPanel({ utxo, ins, allIns, rarity, meta, satributes, specialSats,
         if (mpVal) mpVal.textContent = meta.metaprotocol;
       }
 
-      const metaRows = [
-        ['Content type', esc(meta.content_type  || '—')],
-        ['Genesis block', meta.genesis_height != null ? fmt(meta.genesis_height) : '—'],
-        ['Sat',           meta.sat             != null ? fmt(meta.sat)           : '—'],
-        ['Parent',        meta.parent ? `<span class="m-val sm" style="word-break:break-all">${esc(meta.parent)}</span>` : '—'],
-      ].map(([k, v]) =>
+      const genesisDate = meta.timestamp
+        ? new Date(meta.timestamp * 1000).toLocaleDateString([], { year:'numeric', month:'short', day:'numeric' })
+        : null;
+
+      const metaFields = [
+        ['Content type',   meta.content_type   ? esc(meta.content_type)                          : null],
+        ['Content length', meta.content_length != null ? fmt(meta.content_length) + ' bytes'     : null],
+        ['Content encoding', meta.content_encoding ? esc(meta.content_encoding)                  : null],
+        ['Genesis block',  meta.genesis_height != null ? fmt(meta.genesis_height)                : null],
+        ['Genesis fee',    meta.genesis_fee    != null ? fmt(meta.genesis_fee) + ' sats'         : null],
+        ['Genesis date',   genesisDate                                                            ?? null],
+        ['Output value',   meta.output_value   != null ? fmt(meta.output_value) + ' sats'        : null],
+        ['Offset',         meta.offset         != null ? String(meta.offset)                     : null],
+        ['Sat',            meta.sat            != null ? fmt(meta.sat)                           : null],
+        ['Rune',           meta.rune           ? esc(meta.rune)                                  : null],
+        ['Delegate',       meta.delegate
+          ? `<span class="m-val sm" style="word-break:break-all">${esc(meta.delegate)}</span>`   : null],
+        ['Parent',         meta.parent
+          ? `<span class="m-val sm" style="word-break:break-all">${esc(meta.parent)}</span>`     : null],
+        ['Collection',     meta.collection_name ? esc(meta.collection_name)
+          : (meta.collection_slug ? esc(meta.collection_slug)                                    : null)],
+        ['Charms',         (meta.charms?.length) ? meta.charms.map(c => esc(c)).join(', ')       : null],
+      ].filter(([, v]) => v != null);
+
+      const metaRows = metaFields.map(([k, v]) =>
         `<div class="m-row"><span class="m-key">${k}</span><span class="m-val">${v}</span></div>`
       ).join('');
-      el.outerHTML = metaRows;
+      el.outerHTML = metaRows || '<div></div>';
     });
 
     // Fetch floor price in background
