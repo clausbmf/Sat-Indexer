@@ -908,6 +908,22 @@
       border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 10px;
       font-size: 12px; color: var(--red); line-height: 1.55;
     }
+
+    /* ── Satflow pre-action warning ──────────────────────────────────────── */
+    .satflow-warn {
+      display: flex; align-items: flex-start; gap: 10px;
+      background: rgba(247,147,26,.08); border: 1px solid rgba(247,147,26,.35);
+      border-radius: var(--radius-sm); padding: 11px 14px; margin: 12px 16px 0;
+      font-size: 12px; color: var(--text2); line-height: 1.6;
+    }
+    .satflow-warn-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+    .satflow-warn strong { color: var(--accent); }
+    .satflow-warn a { color: var(--accent); text-decoration: underline; white-space: nowrap; }
+    .satflow-warn a:hover { color: #ffb347; }
+
+    /* ── locked UTXO indicator ───────────────────────────────────────────── */
+    .wi-lock { color: #f59e0b; }
+    .locked-row td:not(.td-sel) { background: rgba(245,158,11,.04) !important; }
   </style>
 </head>
 <body>
@@ -1248,6 +1264,10 @@
 
     <!-- Step 1: detection results -->
     <div id="clean-s1">
+      <div class="satflow-warn">
+        <span class="satflow-warn-icon">&#9888;</span>
+        <span><strong>Move valued ordinals out first!</strong> Use <a href="https://satflow.com" target="_blank" rel="noopener">Satflow.com</a> to transfer inscriptions for as little as <strong>0.2 sats</strong> — multi-transfer supported. Only merge UTXOs you're sure contain no valuable inscriptions.</span>
+      </div>
       <div class="clean-scroll" id="clean-s1-body"></div>
       <div class="clean-footer">
         <button class="btn-cw-primary" id="clean-merge-btn">Merge Junk Inscriptions</button>
@@ -1354,6 +1374,10 @@
       <button class="panel-close" onclick="closeSplitAllModal()">&#10005;</button>
     </div>
     <div id="sa-s1">
+      <div class="satflow-warn">
+        <span class="satflow-warn-icon">&#9888;</span>
+        <span><strong>Move valued ordinals out first!</strong> Use <a href="https://satflow.com" target="_blank" rel="noopener">Satflow.com</a> to transfer inscriptions cheaply — as low as <strong>0.2 sats</strong>, multi-transfer supported. Only split UTXOs you're sure you want to restructure.</span>
+      </div>
       <div class="clean-scroll" id="sa-s1-body"></div>
       <div class="clean-footer">
         <button class="btn-cw-back" onclick="closeSplitAllModal()">Cancel</button>
@@ -1400,6 +1424,10 @@
 
     <!-- Step 1: configure -->
     <div id="split-s1">
+      <div class="satflow-warn">
+        <span class="satflow-warn-icon">&#9888;</span>
+        <span><strong>Move valued ordinals out first!</strong> Use <a href="https://satflow.com" target="_blank" rel="noopener">Satflow.com</a> to transfer inscriptions cheaply — as low as <strong>0.2 sats</strong>, multi-transfer supported. Only split UTXOs you're sure you want to restructure.</span>
+      </div>
       <div class="clean-scroll" id="split-s1-body"></div>
       <div class="clean-footer">
         <button class="btn-cw-back" onclick="closeSplitModal()">Cancel</button>
@@ -2962,6 +2990,8 @@ async function run() {
     loadProtocols();
     // Fetch UTXO ages in the background
     loadUtxoAges();
+    // Fetch locked UTXO status from UniSat (if connected)
+    loadLockedUtxos();
 
   } catch (e) {
     hideStatus();
@@ -3102,6 +3132,7 @@ function renderTable() {
     if (ins)     cls += ' has-ins';
     if (isLarge) cls += ' large';
     if (selectedIdxs.has(idx)) cls += ' sel-row';
+    if (_lockedUtxos.has(`${utxo.txid}:${utxo.vout}`)) cls += ' locked-row';
 
     // Danger warning icons for checkbox cell
     const sz = ordinalSize(utxo.value);
@@ -3110,6 +3141,7 @@ function renderTable() {
     else if (sz === 'fat') warnIcos += `<span class="warn-ico wi-fat" title="Fat ordinal — dangerous to merge">&#9679;</span>`;
     if (r.rarity && r.rarity !== 'common') warnIcos += `<span class="warn-ico wi-rare" title="Rare sat (${r.rarity}) — dangerous to merge">&#9733;</span>`;
     if (r.satributes && r.satributes.length) warnIcos += `<span class="warn-ico wi-attr" title="Has satributes — dangerous to merge">&#9670;</span>`;
+    if (_lockedUtxos.has(`${utxo.txid}:${utxo.vout}`)) warnIcos += `<span class="warn-ico wi-lock" title="UTXO locked in UniSat — cannot be spent or used in merge/split">&#128274;</span>`;
 
     // Preview thumbnail
     const thumb = ins ? thumbHtml(ins) : `<span class="no-ins-thumb">&#8212;</span>`;
@@ -3393,6 +3425,7 @@ function renderPanel({ utxo, ins, allIns, rarity, meta, satributes, specialSats,
         <button class="btn-exclude" onclick="excludeInscription('${id}')" style="margin-top:6px;">
           Hide this UTXO from results
         </button>
+        ${_lockedUtxos.has(`${utxo.txid}:${utxo.vout}`) && connectedWallet === 'UniSat' ? `<button id="panel-unlock-btn" onclick="unlockInscriptionLock('${utxo.txid}',${utxo.vout})" style="margin-top:6px;width:100%;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.4);border-radius:var(--radius-sm);color:#f59e0b;font-size:12px;font-weight:700;padding:7px 14px;cursor:pointer;">&#128274; Remove Inscription Lock</button>` : ''}
       </div>`;
 
     // Use cached metadata if already fetched by loadRarities(), otherwise fetch now
@@ -3600,6 +3633,7 @@ function renderPanel({ utxo, ins, allIns, rarity, meta, satributes, specialSats,
         onclick="togglePanelSelect()" style="margin-top:6px;font-size:11px;opacity:.7;">
         ${selectedIdxs.has(activeIdx) ? '&#10003; In merge selection — click to remove' : '+ Add to merge selection'}
       </button>
+      ${_lockedUtxos.has(`${utxo.txid}:${utxo.vout}`) && connectedWallet === 'UniSat' ? `<button id="panel-unlock-btn" onclick="unlockInscriptionLock('${utxo.txid}',${utxo.vout})" style="margin-top:6px;width:100%;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.4);border-radius:var(--radius-sm);color:#f59e0b;font-size:12px;font-weight:700;padding:7px 14px;cursor:pointer;">&#128274; Remove Inscription Lock</button>` : ''}
     </div>`;
   } else if (!ins && hasAnyTokenUtxo) {
     // Token-only UTXO (Rune / Stamp / Atomical / cBRC-20 but no inscription)
@@ -3633,6 +3667,7 @@ function renderPanel({ utxo, ins, allIns, rarity, meta, satributes, specialSats,
         onclick="togglePanelSelect()" style="margin-top:6px;font-size:11px;opacity:.7;">
         ${selectedIdxs.has(activeIdx) ? '&#10003; In merge selection — click to remove' : '+ Add to merge selection'}
       </button>
+      ${_lockedUtxos.has(`${utxo.txid}:${utxo.vout}`) && connectedWallet === 'UniSat' ? `<button id="panel-unlock-btn" onclick="unlockInscriptionLock('${utxo.txid}',${utxo.vout})" style="margin-top:6px;width:100%;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.4);border-radius:var(--radius-sm);color:#f59e0b;font-size:12px;font-weight:700;padding:7px 14px;cursor:pointer;">&#128274; Remove Inscription Lock</button>` : ''}
     </div>`;
   }
 
@@ -3797,6 +3832,7 @@ function copyText(text, btnId, label) {
 
 /* ─── Wallet connection ─────────────────────────────────────────────────── */
 let connectedWallet  = null; // 'Xverse' | 'UniSat' | 'OP_NET'
+let _lockedUtxos     = new Map(); // key: "txid:vout" — UTXOs locked in UniSat wallet
 let xverseTapInternalKey = null; // x-only 32-byte internal pubkey for PSBT_IN_TAP_INTERNAL_KEY
 
 function setWalletAddress(address, walletName) {
@@ -3865,6 +3901,7 @@ async function connectUniSat() {
     setWalletAddress(addr, 'UniSat');
     document.querySelectorAll('.btn-wallet').forEach(b => b.classList.remove('connected'));
     btn.classList.add('connected');
+    loadLockedUtxos();
   } catch (e) { showErr(e.message); }
   finally     { btn.disabled = false; }
 }
@@ -4832,6 +4869,43 @@ async function loadUtxoAges() {
         if (cell) cell.innerHTML = fmtAge(r.blockTime);
       }
     });
+  }
+}
+
+/* ─── Inscription lock (UniSat UTXO lock) ────────────────────────────────── */
+async function loadLockedUtxos() {
+  _lockedUtxos.clear();
+  if (connectedWallet !== 'UniSat' || typeof window.unisat?.getUtxos !== 'function') return;
+  try {
+    const utxos = await window.unisat.getUtxos();
+    for (const u of (utxos || [])) {
+      if (u.isLocked) _lockedUtxos.set(`${u.txid}:${u.vout}`, true);
+    }
+    if (_lockedUtxos.size > 0) renderTable();
+  } catch (e) {
+    console.warn('[loadLockedUtxos] UniSat getUtxos failed:', e.message);
+  }
+}
+
+async function unlockInscriptionLock(txid, vout) {
+  const btn = document.getElementById('panel-unlock-btn');
+  const origText = btn?.innerHTML;
+  if (btn) { btn.disabled = true; btn.textContent = 'Unlocking…'; }
+  try {
+    if (!window.unisat) throw new Error('UniSat not connected.');
+    if (typeof window.unisat.unlockUtxo !== 'function') {
+      throw new Error(
+        'Your UniSat version does not expose unlockUtxo via the extension API. ' +
+        'Open UniSat → UTXO Manager, find ' + txid.slice(0,8) + '…:' + vout + ' and click the lock icon to unlock it manually.'
+      );
+    }
+    await window.unisat.unlockUtxo({ txid, vout });
+    _lockedUtxos.delete(`${txid}:${vout}`);
+    renderTable();
+    if (activeIdx >= 0) openPanel(rows[activeIdx]);
+  } catch (e) {
+    if (btn) { btn.disabled = false; btn.innerHTML = origText; }
+    showErr('Unlock failed: ' + e.message);
   }
 }
 
